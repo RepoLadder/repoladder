@@ -1,0 +1,9 @@
+[
+ {
+  "name": "documenso",
+  "url": "https://github.com/documenso/documenso",
+  "sha": "38ecb217effcc53a7164d7123c51336f636bd3b2",
+  "shape": "2,000-file Remix + tRPC monorepo (timing reference for #257/#311)",
+  "license": "AGPL-3.0"
+ }
+]

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "summary": "A clinic's kiosk check-in, shaped like a large app: a web app calls a backend that keeps forms and accounts in Firestore.",
+  "children": [
+    {
+      "id": "web", "name": "Web app", "summary": "What patients and staff use.",
+      "children": [
+        {
+          "id": "web-checkin", "name": "Patient check-in", "summary": "The kiosk and QR check-in pages.",
+          "children": [
+            { "id": "checkin-pages", "name": "Check-in pages", "summary": "The kiosk and QR pages.", "files": ["web/src/pages/**"] },
+            { "id": "checkin-screens", "name": "Kiosk screens", "summary": "The screens a patient steps through.", "files": ["web/src/components/**"] },
+            { "id": "checkin-http", "name": "Kiosk calls", "summary": "Calls the backend.", "files": ["web/src/utils/**"] }
+          ]
+        },
+        { "id": "web-shell", "name": "App shell", "summary": "Routes and Firebase setup.", "files": ["web/src/shell/**"] }
+      ]
+    },
+    {
+      "id": "functions", "name": "Cloud backend", "summary": "Callable functions.",
+      "children": [
+        { "id": "fn-checkin", "name": "Check-in", "summary": "Checks a patient in.", "files": ["functions/src/checkin/**"] },
+        { "id": "fn-forms", "name": "Intake forms", "summary": "The forms a patient fills.", "files": ["functions/src/forms/**"] },
+        { "id": "fn-accounts", "name": "Accounts", "summary": "Patient accounts.", "files": ["functions/src/accounts/**"] }
+      ]
+    }
+  ]
+}

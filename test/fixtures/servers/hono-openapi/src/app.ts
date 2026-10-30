@@ -1,0 +1,12 @@
+import { OpenAPIHono } from "@hono/zod-openapi";
+import tasks from "./routes/tasks/tasks.index";
+import live, { health } from "./routes/health";
+import { notes } from "./routes/notes";
+const app = new OpenAPIHono().basePath("/api");
+const routes = [tasks] as const;
+routes.forEach((r) => app.route("/", r));
+[health].map((h) => app.route("/health", h));
+app.route("/health", live);
+const v2 = [notes];
+for (const r of v2) app.route("/v2", r);
+export default app;

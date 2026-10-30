@@ -1,0 +1,38 @@
+{
+ "fallback": {
+  "maxLargestShare": 0.4,
+  "minGroups": 2
+ },
+ "repos": {
+  "zustand": {
+   "maxLargestShare": 0.34,
+   "maxSingleFileGroups": 3,
+   "minGroups": 4
+  },
+  "express-boilerplate": {
+   "maxLargestShare": 0.21,
+   "maxSingleFileGroups": 2,
+   "minGroups": 7
+  },
+  "taxonomy": {
+   "maxLargestShare": 0.12,
+   "maxSingleFileGroups": 2,
+   "minGroups": 20
+  },
+  "react-most-wanted": {
+   "maxLargestShare": 0.08,
+   "maxSingleFileGroups": 9,
+   "minGroups": 70
+  },
+  "create-t3-turbo": {
+   "maxLargestShare": 0.25,
+   "maxSingleFileGroups": 6,
+   "minGroups": 11
+  },
+  "excalidraw": {
+   "maxLargestShare": 0.08,
+   "maxSingleFileGroups": 6,
+   "minGroups": 96
+  }
+ }
+}

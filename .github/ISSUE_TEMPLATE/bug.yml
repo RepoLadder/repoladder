@@ -1,0 +1,57 @@
+name: Bug report
+description: Something broke or gave a wrong result
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. /plugin install repoladder@repoladder
+        2. /map in ...
+    validations:
+      required: true
+  - type: input
+    id: plugin
+    attributes:
+      label: Plugin version
+      description: The plugin's commit, or what `/plugin` shows for repoladder (there is no version number or `--version` command).
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      description: From the `PREFLIGHT_OK node=...` line or `node -v`.
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+    validations:
+      required: true
+  - type: input
+    id: size
+    attributes:
+      label: Repo size
+      description: Roughly how many source files.
+  - type: textarea
+    id: error
+    attributes:
+      label: Error output
+      render: text
+  - type: input
+    id: repo
+    attributes:
+      label: Public repo link
+      description: If the repo is public, a link (and commit) helps. Never paste private code.

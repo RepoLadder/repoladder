@@ -1,0 +1,482 @@
+{
+  "version": 1,
+  "summary": "The Epic Stack, Kent C. Dodds' opinionated full-stack starter for React Router (Remix): a notes app with real sign-up, login, passkeys, two-factor and GitHub login, a Prisma database on SQLite with LiteFS, email through Resend and error tracking with Sentry.",
+  "children": [
+    {
+      "id": "site",
+      "name": "App shell & pages",
+      "summary": "How a request becomes a page: the entry points and root layout, the marketing pages, and small resource routes like images and the health check.",
+      "children": [
+        {
+          "id": "site-root",
+          "name": "Entry & root layout",
+          "summary": "The client and server entry points, the route table, and the root layout every page renders inside.",
+          "files": [
+            "app/entry.client.tsx",
+            "app/entry.server.tsx",
+            "app/root.tsx",
+            "app/routes.ts",
+            "app/routes/$.tsx"
+          ]
+        },
+        {
+          "id": "site-marketing",
+          "name": "Marketing pages",
+          "summary": "The landing, about, privacy, support and terms pages, with the sitemap and robots.txt.",
+          "files": [
+            "app/routes/_marketing/**",
+            "app/routes/_seo/**"
+          ],
+          "split": [
+            {
+              "id": "site-marketing-pages",
+              "name": "Public pages",
+              "summary": "Landing, about, privacy, support and terms.",
+              "files": [
+                "app/routes/_marketing/**"
+              ]
+            },
+            {
+              "id": "site-marketing-seo",
+              "name": "Sitemap & robots",
+              "summary": "sitemap.xml and robots.txt.",
+              "files": [
+                "app/routes/_seo/**"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "site-resources",
+          "name": "Resource routes",
+          "summary": "Routes that return data instead of pages: images, the theme switch, data export, the health check, and /me.",
+          "files": [
+            "app/routes/resources/**",
+            "app/routes/me.tsx"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accounts",
+      "name": "Accounts",
+      "summary": "Getting in and looking after your account: sign-up, login, passkeys and GitHub login, then profile, password and two-factor settings.",
+      "children": [
+        {
+          "id": "auth",
+          "name": "Sign-up & login",
+          "summary": "Everything about getting in: sign-up with email verification, login and logout, password reset, onboarding, GitHub login and passkeys.",
+          "children": [
+            {
+              "id": "auth-login",
+              "name": "Login & sign-up",
+              "summary": "The login, sign-up and logout routes, and the server code that starts a session.",
+              "files": [
+                "app/routes/_auth/login.tsx",
+                "app/routes/_auth/login.server.ts",
+                "app/routes/_auth/logout.tsx",
+                "app/routes/_auth/signup.tsx"
+              ]
+            },
+            {
+              "id": "auth-verify",
+              "name": "Verify & reset",
+              "summary": "One-time codes by email: verifying a sign-up, resetting a password.",
+              "files": [
+                "app/routes/_auth/verify.tsx",
+                "app/routes/_auth/verify.server.ts",
+                "app/routes/_auth/forgot-password.tsx",
+                "app/routes/_auth/reset-password.tsx",
+                "app/routes/_auth/reset-password.server.ts"
+              ]
+            },
+            {
+              "id": "auth-onboarding",
+              "name": "Onboarding",
+              "summary": "Finishes a new account after the email is verified, or after a first GitHub login.",
+              "files": [
+                "app/routes/_auth/onboarding/**"
+              ]
+            },
+            {
+              "id": "auth-github",
+              "name": "GitHub login",
+              "summary": "Log in with GitHub: the redirect, the callback, and the provider connections.",
+              "files": [
+                "app/routes/_auth/auth.$provider/**",
+                "app/utils/providers/**",
+                "app/utils/connections.server.ts",
+                "app/utils/connections.tsx"
+              ],
+              "split": [
+                {
+                  "id": "auth-github-routes",
+                  "name": "OAuth routes",
+                  "summary": "The redirect to GitHub and the callback.",
+                  "files": [
+                    "app/routes/_auth/auth.$provider/**"
+                  ]
+                },
+                {
+                  "id": "auth-github-providers",
+                  "name": "Providers",
+                  "summary": "The GitHub provider and connection helpers.",
+                  "files": [
+                    "app/utils/providers/**",
+                    "app/utils/connections.server.ts",
+                    "app/utils/connections.tsx"
+                  ]
+                }
+              ]
+            },
+            {
+              "id": "auth-passkeys",
+              "name": "Passkeys",
+              "summary": "Registering and signing in with a passkey (WebAuthn).",
+              "files": [
+                "app/routes/_auth/webauthn/**"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "settings",
+          "name": "Profile & settings",
+          "summary": "The signed-in user's settings: name, photo and email, password, passkeys, connected accounts and two-factor.",
+          "children": [
+            {
+              "id": "settings-profile",
+              "name": "Profile",
+              "summary": "The settings page, profile photo and changing your email.",
+              "files": [
+                "app/routes/settings/profile/_layout.tsx",
+                "app/routes/settings/profile/index.tsx",
+                "app/routes/settings/profile/photo.tsx",
+                "app/routes/settings/profile/change-email.tsx",
+                "app/routes/settings/profile/change-email.server.tsx",
+                "app/routes/resources/download-user-data.tsx"
+              ]
+            },
+            {
+              "id": "settings-security",
+              "name": "Password & passkeys",
+              "summary": "Changing or creating a password, managing passkeys and connected accounts.",
+              "files": [
+                "app/routes/settings/profile/password.tsx",
+                "app/routes/settings/profile/password_.create.tsx",
+                "app/routes/settings/profile/passkeys.tsx",
+                "app/routes/settings/profile/connections.tsx"
+              ]
+            },
+            {
+              "id": "settings-2fa",
+              "name": "Two-factor",
+              "summary": "Turning two-factor authentication on, verifying it, and turning it off.",
+              "files": [
+                "app/routes/settings/profile/two-factor/**"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "notes",
+      "name": "Users & notes",
+      "summary": "The example feature: a directory of users, and each user's notes with images, which they can create, edit and delete.",
+      "children": [
+        {
+          "id": "notes-list",
+          "name": "Users & note lists",
+          "summary": "The user search page, a user's profile, and their list of notes.",
+          "files": [
+            "app/routes/users/index.tsx",
+            "app/routes/users/$username/index.tsx",
+            "app/routes/users/$username/notes/_layout.tsx",
+            "app/routes/users/$username/notes/index.tsx"
+          ]
+        },
+        {
+          "id": "notes-editor",
+          "name": "Note editor",
+          "summary": "Viewing, creating and editing a note, with the shared editor form and its server action.",
+          "files": [
+            "app/routes/users/$username/notes/new.tsx",
+            "app/routes/users/$username/notes/$noteId.tsx",
+            "app/routes/users/$username/notes/$noteId_.edit.tsx",
+            "app/routes/users/$username/notes/+shared/**"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "server",
+      "name": "Server & data",
+      "summary": "The Express server under the app, sessions and permissions, the database and its cache, file storage, and email.",
+      "children": [
+        {
+          "id": "server-node",
+          "name": "Express server",
+          "summary": "Starts the Node server that serves the app, with Sentry monitoring.",
+          "files": [
+            "index.ts",
+            "server/**"
+          ]
+        },
+        {
+          "id": "server-session",
+          "name": "Sessions & permissions",
+          "summary": "Who is signed in: sessions, one-time codes, TOTP, permissions, and the honeypot against bots.",
+          "children": [
+            {
+              "id": "server-session-auth",
+              "name": "Sessions",
+              "summary": "Login sessions and the redirect cookie.",
+              "files": [
+                "app/utils/auth.server.ts",
+                "app/utils/session.server.ts",
+                "app/utils/redirect-cookie.server.ts"
+              ]
+            },
+            {
+              "id": "server-session-guard",
+              "name": "Codes & guards",
+              "summary": "Verification codes, TOTP, permissions and the honeypot.",
+              "files": [
+                "app/utils/permissions.server.ts",
+                "app/utils/verification.server.ts",
+                "app/utils/totp.server.ts",
+                "app/utils/honeypot.server.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "server-db",
+          "name": "Database & storage",
+          "summary": "The Prisma client, LiteFS replication, uploaded files in object storage, and the seed script.",
+          "files": [
+            "app/utils/db.server.ts",
+            "app/utils/storage.server.ts",
+            "app/utils/litefs.server.ts",
+            "prisma/seed.ts"
+          ]
+        },
+        {
+          "id": "server-cache",
+          "name": "Cache & admin",
+          "summary": "The cache (in memory and in SQLite) and the admin pages to inspect it.",
+          "files": [
+            "app/utils/cache.server.ts",
+            "app/routes/admin/cache/**"
+          ]
+        },
+        {
+          "id": "server-infra",
+          "name": "Email, toasts & headers",
+          "summary": "Sending email with Resend, flash toasts, environment checks, headers, timing and theme cookies.",
+          "files": [
+            "app/utils/email.server.ts",
+            "app/utils/toast.server.ts",
+            "app/utils/env.server.ts",
+            "app/utils/headers.server.ts",
+            "app/utils/timing.server.ts",
+            "app/utils/theme.server.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ui",
+      "name": "UI kit & helpers",
+      "summary": "The shared components every page is built from, client-side helpers, and the template's setup script.",
+      "children": [
+        {
+          "id": "ui-kit-fields",
+          "name": "Form fields",
+          "summary": "Inputs, OTP input, labels, text areas, checkboxes.",
+          "files": [
+            "app/components/ui/input.tsx",
+            "app/components/ui/input-otp.tsx",
+            "app/components/ui/label.tsx",
+            "app/components/ui/textarea.tsx",
+            "app/components/ui/checkbox.tsx"
+          ]
+        },
+        {
+          "id": "ui-kit-controls",
+          "name": "Buttons & icons",
+          "summary": "Buttons, status buttons, icons and tooltips.",
+          "files": [
+            "app/components/ui/button.tsx",
+            "app/components/ui/status-button.tsx",
+            "app/components/ui/icon.tsx",
+            "app/components/ui/tooltip.tsx"
+          ]
+        },
+        {
+          "id": "ui-components-forms",
+          "name": "Forms & errors",
+          "summary": "Form fields with errors, and the error boundary.",
+          "files": [
+            "app/components/forms.tsx",
+            "app/components/error-boundary.tsx",
+            "app/components/spacer.tsx",
+            "app/components/floating-toolbar.tsx"
+          ]
+        },
+        {
+          "id": "ui-components-chrome",
+          "name": "Page chrome",
+          "summary": "Search bar, the user menu and its dropdown, progress bar and toasts.",
+          "files": [
+            "app/components/search-bar.tsx",
+            "app/components/user-dropdown.tsx",
+            "app/components/ui/dropdown-menu.tsx",
+            "app/components/progress-bar.tsx",
+            "app/components/toaster.tsx",
+            "app/components/ui/sonner.tsx"
+          ]
+        },
+        {
+          "id": "ui-helpers-client",
+          "name": "Client helpers",
+          "summary": "Client hints, request info, user helpers and validation.",
+          "files": [
+            "app/utils/client-hints.tsx",
+            "app/utils/misc.tsx",
+            "app/utils/nonce-provider.ts",
+            "app/utils/request-info.ts",
+            "app/utils/user-validation.ts",
+            "app/utils/user.ts"
+          ]
+        },
+        {
+          "id": "ui-helpers-setup",
+          "name": "Monitoring & setup",
+          "summary": "Client Sentry, its filters, the icon script and template setup.",
+          "files": [
+            "app/utils/monitoring.client.tsx",
+            "app/utils/sentry-event-filters.ts",
+            "other/**",
+            "remix.init/**"
+          ]
+        }
+      ]
+    }
+  ],
+  "story": {
+    "actors": [
+      {
+        "id": "visitor",
+        "name": "Visitor",
+        "summary": "Reads the public pages.",
+        "kind": "person"
+      },
+      {
+        "id": "member",
+        "name": "Member",
+        "summary": "Signs up, writes notes and manages their account.",
+        "kind": "person"
+      },
+      {
+        "id": "github",
+        "name": "GitHub",
+        "summary": "Confirms who someone is when they log in with GitHub.",
+        "kind": "system"
+      }
+    ],
+    "uses": [
+      {
+        "actor": "visitor",
+        "part": "site",
+        "says": "reads the site",
+        "entry": "/"
+      },
+      {
+        "actor": "member",
+        "part": "accounts",
+        "says": "logs in",
+        "entry": "/login"
+      },
+      {
+        "actor": "member",
+        "part": "notes",
+        "says": "writes notes",
+        "entry": "/users/:username/notes/new"
+      },
+      {
+        "actor": "github",
+        "part": "accounts",
+        "says": "confirms logins",
+        "entry": "/auth/:provider/callback"
+      }
+    ],
+    "narrative": [
+      "A [[visitor]] lands on the [[site|public pages]].",
+      "A [[member]] signs up and logs in through [[auth]], with a code sent by [[svc-resend]], a passkey, or [[github]].",
+      "Once in, they write [[notes]] and look after their [[settings|profile and security]].",
+      "The [[server]] keeps their data in the database and reports errors to [[svc-sentry]]."
+    ]
+  },
+  "tours": [
+    {
+      "id": "log-in",
+      "title": "Logging in",
+      "chain": [
+        "app/routes/_auth/login.tsx",
+        "app/routes/_auth/login.server.ts",
+        "app/utils/auth.server.ts",
+        "store-prisma"
+      ],
+      "captions": [
+        "The /login page, a React Router route, checks the form in its action, then hands the user to the login helper.",
+        "The helper asks for a two-factor code when it's turned on, otherwise it starts the session.",
+        "The auth helper checks the password and creates a session row in the database."
+      ]
+    },
+    {
+      "id": "save-a-note",
+      "title": "Saving a note",
+      "chain": [
+        "app/routes/users/$username/notes/new.tsx",
+        "app/routes/users/$username/notes/+shared/note-editor.server.tsx",
+        "app/utils/db.server.ts",
+        "store-prisma"
+      ],
+      "captions": [
+        "The /users/:username/notes/new page shows the form; its action is the shared note editor's, re-exported, so the form posts there.",
+        "The shared action, used by both the new and edit routes, checks you own the notes and uploads any images first.",
+        "Then it saves the note and its images through the shared Prisma client."
+      ]
+    },
+    {
+      "id": "github-login",
+      "title": "Logging in with GitHub",
+      "chain": [
+        "app/routes/_auth/auth.$provider/index.ts",
+        "app/utils/auth.server.ts",
+        "app/utils/connections.server.ts",
+        "app/utils/providers/github.server.ts"
+      ],
+      "captions": [
+        "The GitHub button posts to the /auth/:provider resource route, which asks the auth helper for the provider named in the URL.",
+        "Connections maps each provider name to its implementation.",
+        "The GitHub provider redirects to GitHub and, on the way back, reads the user's profile."
+      ]
+    },
+    {
+      "id": "forgot-password",
+      "title": "Resetting a password",
+      "chain": [
+        "app/routes/_auth/forgot-password.tsx",
+        "app/utils/email.server.ts",
+        "svc-resend"
+      ],
+      "captions": [
+        "The /forgot-password page finds the account and prepares a one-time code.",
+        "It emails the code through Resend, and the user verifies it to set a new password."
+      ]
+    }
+  ]
+}

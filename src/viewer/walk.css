@@ -1,0 +1,168 @@
+/* A tour step (tour.ts): the step lit, the rest (passed steps too) dimmed but never hidden */
+.walk-panel .item[aria-pressed="true"] {
+  background: var(--soft);
+}
+.walk-panel .item[aria-pressed="true"] span:first-child {
+  font-weight: 600;
+}
+svg.walking g[data-hit] {
+  transition: opacity .35s ease;
+}
+svg.walking:not(.focusing) g[data-hit].wk-off {
+  opacity: .22;
+}
+svg.walking g.wire.wk-now .line {
+  stroke: var(--accent);
+  stroke-width: 2.4;
+}
+/* a lit or selected arrow's head matches its line (#281); only the ends that already have one */
+svg.walking g.wire.wk-now .line[marker-end],
+g.sel .line[marker-end] {
+  marker-end: url(#arw-lit);
+}
+svg.walking g.wire.wk-now .line[marker-start],
+g.sel .line[marker-start] {
+  marker-start: url(#arw-lit);
+}
+svg.walking g.node.wk-now .body {
+  stroke-width: 2.5;
+}
+.flow-fx {
+  pointer-events: none;
+}
+.flow-pulse {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 3px var(--halo));
+}
+.panel p.rd-note {
+  font-size: var(--text-small);
+  margin: 0 0 8px;
+}
+.rd-tap {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  svg.walking g[data-hit] {
+    transition: none;
+  }
+}
+/* The step's caption: a strip on the canvas under the board (walkfit.ts fits the board above it) */
+.canvas > .walk-card {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 4;
+}
+/* below the canvas, as wide as it (#164); the side panel spans every row, its extra height going to the last, so the strip sits right under the canvas */
+main {
+  grid-template-rows: auto auto 1fr;
+  row-gap: 0;
+}
+main > aside {
+  grid-area: 1 / 2 / 4;
+}
+main > .walk-card {
+  grid-column: 1;
+}
+.walk-card.panel {
+  box-sizing: border-box;
+  margin: 12px 0 0;
+  padding: 10px 14px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  column-gap: 18px;
+  align-items: center;
+  animation: walk-strip-in .25s ease-out;
+}
+.walk-card .tour-dots {
+  grid-column: 1 / -1;
+}
+.walk-card .num,
+.walk-card .rd-note {
+  grid-column: 1;
+  margin: 0;
+}
+.walk-card.panel p.tour-text {
+  grid-column: 1;
+  margin: 2px 0 0;
+}
+.walk-card .rd-note:first-of-type {
+  margin-top: 4px;
+}
+.walk-card .tour-nav {
+  grid-column: 2;
+  grid-row: 2 / span 4;
+  margin: 0;
+}
+.canvas.walking .fbar {
+  bottom: calc(var(--walk-h, 0px) + 20px);
+}
+@keyframes walk-strip-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .canvas > .walk-card {
+    animation: none;
+  }
+}
+@media (max-width: 760px) {
+  /* a compact strip; a tap on it steps on, so Next goes */
+  .walk-card .rd-note {
+    display: none;
+  }
+  .rd-tap {
+    display: inline;
+  }
+  .canvas > .walk-card {
+    display: block;
+    left: 8px;
+    right: 8px;
+    bottom: 16px;
+    padding: 8px 12px 10px;
+    cursor: pointer;
+  }
+  .walk-card .tour-dots,
+  .walk-card .num {
+    margin: 0 0 6px;
+    padding-right: 116px;
+  }
+  /* the step and the tour's title on one line, clear of the buttons */
+  .walk-card .num {
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .canvas > .walk-card p.tour-text {
+    margin: 2px 0 0;
+    font-size: var(--text-small);
+  }
+  .walk-card .tour-nav {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    gap: 4px;
+  }
+  .walk-card .tour-nav button {
+    padding: 4px 10px;
+  }
+  .walk-card .tour-nav .primary {
+    display: none;
+  }
+}
+.walk-panel .item .num {
+  white-space: nowrap;
+}
+/* a step's real edge the board does not draw (tour.ts): shown on a phone too */
+.walk-card .rd-undrawn {
+  margin: 4px 0 0;
+  font-size: var(--text-micro);
+  color: var(--muted, inherit);
+}

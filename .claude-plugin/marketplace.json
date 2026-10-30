@@ -1,0 +1,16 @@
+{
+  "name": "repoladder",
+  "owner": {
+    "name": "RepoLadder"
+  },
+  "plugins": [
+    {
+      "name": "repoladder",
+      "source": "./plugin",
+      "description": "Architecture diagrams grounded in your code that stay in sync."
+    }
+  ],
+  "metadata": {
+    "description": "RepoLadder: grounded, in-sync architecture diagrams for TS/JS repos."
+  }
+}

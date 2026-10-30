@@ -1,0 +1,1 @@
+{ "name": "@mono/api", "main": "./dist/index.js", "dependencies": { "@mono/config": "workspace:*" } }

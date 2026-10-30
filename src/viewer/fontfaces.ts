@@ -1,0 +1,2 @@
+/** The families boot.ts registers from the embedded fonts; theme.ts's `FONTS.display` and `FONTS.ui` lead with `display`, and `FONTS.mono` with `mono`. `@repoladder/brand` names the sans "Geist Variable" (fontsource's family name); the page registers its own copy as "Geist", so keep these names local. Its own module so the boot script doesn't bundle the palette. */
+export const FONT_FACES = { display: "Geist", mono: "Geist Mono" } as const;

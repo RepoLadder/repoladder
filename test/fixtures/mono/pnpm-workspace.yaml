@@ -1,0 +1,7 @@
+packages:
+  # apps and shared libraries
+  - "apps/*"
+  - 'packages/*'
+
+catalog:
+  react: ^19.0.0

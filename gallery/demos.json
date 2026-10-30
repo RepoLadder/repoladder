@@ -1,0 +1,30 @@
+[
+ {
+  "name": "excalidraw",
+  "url": "https://github.com/excalidraw/excalidraw",
+  "sha": "4c00f31ddcc20086bac1020428819fe0b9a30bce",
+  "shape": "Launch demo: the whiteboard app and its embeddable editor monorepo (532 files)",
+  "license": "MIT"
+ },
+ {
+  "name": "open-agents",
+  "url": "https://github.com/vercel-labs/open-agents",
+  "sha": "cf865e94de7729751c747171785b6ce57e7b178c",
+  "shape": "Launch demo: Vercel's background coding agent app (Next.js, durable agent workflow, Vercel sandbox, Postgres, Redis, GitHub)",
+  "license": "MIT"
+ },
+ {
+  "name": "taxonomy",
+  "url": "https://github.com/shadcn-ui/taxonomy",
+  "sha": "298a8857c7128a0d121e7f699dfd729f23b3966d",
+  "shape": "Launch demo: shadcn's Next.js app router example (Prisma, NextAuth, Stripe)",
+  "license": "MIT"
+ },
+ {
+  "name": "epic-stack",
+  "url": "https://github.com/epicweb-dev/epic-stack",
+  "sha": "64ca647630e15f71e6782b622ab0112c4b428f1f",
+  "shape": "Launch demo: Kent C. Dodds' React Router full-stack starter (Prisma, Resend, Sentry)",
+  "license": "MIT"
+ }
+]

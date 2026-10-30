@@ -1,0 +1,14 @@
+# Secrets scan for the leak guard (scripts/leakguard.ts runs gitleaks with this file).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated, vendored and local-only trees; known fixture false positives"
+paths = [
+  '''(^|/)node_modules/''',
+  '''(^|/)package-lock\.json$''',
+  '''^\.gallery/''',
+  '''^\.repoladder/''',
+  '''^\.npm-package/''',
+  '''^\.wrangler/''',
+]

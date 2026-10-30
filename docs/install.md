@@ -1,0 +1,33 @@
+# Install
+
+In Claude Code:
+
+```
+/plugin marketplace add repoladder/repoladder
+/plugin install repoladder@repoladder
+```
+
+Then open your repo and run `/map`. That's all.
+
+**Requirements:** Node.js 20.6 or newer (with npm, which comes with it), and Claude Code. macOS, Linux and Windows all work.
+
+**What gets installed:** the plugin and its two runtime packages, the TypeScript parser and the D2 layout engine (about 25MB to download, 80MB on disk). Claude Code installs them along with the plugin from its lockfile, with pinned versions and no install scripts. Nothing is installed globally and nothing goes into your repo except the `.repoladder/` output folder.
+
+**If `/map` says it's installing the runtime:** that happens when Claude Code couldn't install the packages itself (for example, the plugin was loaded from a local folder, or the install timed out on a slow network). `/map` runs the same pinned install once and carries on.
+
+**Update:** `/plugin` → Marketplaces → repoladder → Update, or turn on auto-update there. Updates track every commit on main: the plugin's version is the commit id.
+
+**Uninstall:** `/plugin uninstall repoladder@repoladder`. Delete `.repoladder/` from any repo you mapped if you don't want to keep the diagrams.
+
+## Without Claude Code (npm)
+
+```
+npx repoladder build . --default
+```
+
+Open `.repoladder/diagram.html` in a browser. This groups by folders instead of asking Claude, and still draws every arrow from your code. `npx repoladder export . --format svg` writes images.
+
+**Requirements:** Node.js 20.6 or newer. The first run downloads about 25MB (the D2 layout engine's ~22MB wasm plus TypeScript). For a permanent install, `npm i -g repoladder`.
+
+The first `build` from an interactive terminal asks once whether to share anonymous usage stats (default no; see [PRIVACY.md](../PRIVACY.md)). It never asks in CI or when piped.
+

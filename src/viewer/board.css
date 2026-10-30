@@ -1,0 +1,300 @@
+/* The diagram itself. Shared with the SVG export (build/export.ts), which swaps var(--x) for literal colors. */
+.node .body {
+  fill: var(--part);
+  stroke: var(--part-line);
+  stroke-width: 1.5;
+}
+.node .band,
+.node .glyph {
+  fill: var(--part-line);
+}
+.node .dot {
+  fill: var(--part);
+}
+.node .stack {
+  fill: var(--paper);
+  stroke: var(--part-line);
+  stroke-width: 1.25;
+}
+.node .inset {
+  fill: none;
+  stroke: var(--part-line);
+  stroke-width: 1;
+}
+.k-web .body {
+  fill: var(--web);
+  stroke: var(--web-line);
+}
+.k-web .band,
+.k-web .glyph {
+  fill: var(--web-line);
+}
+.k-web .dot {
+  fill: var(--web);
+}
+.k-web .stack,
+.k-web .inset {
+  stroke: var(--web-line);
+}
+.k-backend .body {
+  fill: var(--backend);
+  stroke: var(--backend-line);
+}
+.k-backend .band,
+.k-backend .glyph {
+  fill: var(--backend-line);
+}
+.k-backend .dot {
+  fill: var(--backend);
+}
+.k-backend .stack,
+.k-backend .inset {
+  stroke: var(--backend-line);
+}
+.k-library .body {
+  fill: var(--library);
+  stroke: var(--library-line);
+}
+.k-library .band,
+.k-library .glyph {
+  fill: var(--library-line);
+}
+.k-library .dot {
+  fill: var(--library);
+}
+.k-library .stack,
+.k-library .inset {
+  stroke: var(--library-line);
+}
+.k-scripts .body {
+  fill: var(--scripts);
+  stroke: var(--scripts-line);
+}
+.k-scripts .band,
+.k-scripts .glyph {
+  fill: var(--scripts-line);
+}
+.k-scripts .dot {
+  fill: var(--scripts);
+}
+.k-scripts .stack,
+.k-scripts .inset {
+  stroke: var(--scripts-line);
+}
+.node.ctx .body {
+  fill: var(--paper);
+  stroke-dasharray: 5 4;
+  stroke-width: 1.25;
+}
+.node.ctx .name {
+  fill: var(--muted);
+  font-weight: 500;
+}
+.node.svc .body {
+  fill: var(--svc);
+  stroke: var(--svc-line);
+}
+.node.svc .lid {
+  fill: var(--svc-line);
+  fill-opacity: .16;
+  stroke: var(--svc-line);
+  stroke-width: 1.5;
+}
+.node .name {
+  font-family: var(--font-display);
+  font-weight: 650;
+  font-size: 14.5px;
+  letter-spacing: -.01em;
+  fill: var(--ink);
+}
+.node .sub {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  fill: var(--sub);
+}
+.node .glyph {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 11px;
+}
+.wire .line {
+  fill: none;
+  stroke: var(--wire);
+  stroke-width: 1.25;
+}
+.arw {
+  fill: var(--wire);
+}
+.wire.call .line {
+  stroke: var(--call);
+  stroke-dasharray: 6 4;
+  stroke-width: 1.75;
+}
+.arw.call {
+  fill: var(--call);
+}
+.wire.svc .line {
+  stroke: var(--svc-line);
+  stroke-width: 1;
+  stroke-dasharray: 1.5 3;
+  stroke-linecap: round;
+  opacity: .75;
+}
+.arw.svc {
+  fill: var(--svc-line);
+}
+.wire .pill {
+  fill: var(--paper);
+  stroke: var(--line);
+}
+.wire .n {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.wire.call .n {
+  fill: var(--call);
+}
+.node.store .body {
+  fill: var(--store);
+  stroke: var(--store-line);
+}
+.node.store .lid {
+  fill: var(--store-line);
+  stroke: var(--store-line);
+}
+.wire.data .line {
+  stroke: var(--store-line);
+  stroke-width: 1.5;
+}
+.arw.data {
+  fill: var(--store-line);
+}
+.wire.data .n {
+  fill: var(--store-line);
+}
+/* Story level (figures.ts): actors and what they do, in ink */
+.node.actor .card {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1.5;
+}
+.node.actor .body {
+  fill: var(--paper);
+  stroke: var(--ink);
+  stroke-width: 1.25;
+}
+.node.actor .glyph {
+  fill: var(--ink);
+}
+.node.actor .name {
+  font-size: 16px;
+}
+.wire.story .line {
+  stroke: var(--ink);
+  stroke-width: 1.6;
+}
+.arw.story {
+  fill: var(--ink);
+}
+.arw.lit {
+  fill: var(--accent);
+}
+.wire.story .pill {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-opacity: .35;
+}
+.wire .say {
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 500;
+  fill: var(--ink);
+}
+.node .ico {
+  fill: none;
+  stroke: var(--svc-line);
+  stroke-width: 1.3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.node.store .ico {
+  stroke: var(--store-line);
+}
+/* Arrow weight (weight.ts): imports + 3 × calls, in four buckets. Call edges stay dashed. */
+.wire.w1 .line {
+  stroke-width: 1.25;
+}
+.wire.w2 .line {
+  stroke-width: 2;
+}
+.wire.w3 .line {
+  stroke-width: 3;
+}
+.wire.w4 .line {
+  stroke-width: 4.5;
+}
+.wire.call.w3 .line,
+.wire.call.w4 .line {
+  stroke-dasharray: 9 5;
+}
+/* Store boards (collections.ts): a collection is a box with its field count; one with subcollections frames them. */
+.node.store .stack {
+  stroke: var(--store-line);
+}
+.node.coll .body {
+  fill: var(--store);
+  stroke: var(--store-line);
+  stroke-width: 1.25;
+}
+.node.coll.group > .body {
+  fill: transparent;
+  stroke-dasharray: none;
+}
+.node.coll.group > .body {
+  stroke-opacity: 0.7;
+}
+/* Everything (everydraw.ts): groups as nested containers, shaded by depth; top-level parts outlined in their kind's hue. */
+.every-c .frame {
+  fill: var(--paper);
+  stroke: var(--line);
+  stroke-width: 1.5;
+}
+.every-c.even .frame {
+  fill: var(--soft);
+}
+.every-c.d1 .frame {
+  fill: var(--surface);
+  stroke: var(--part-line);
+  stroke-width: 3;
+  stroke-opacity: .55;
+}
+.every-c.d1.k-web .frame {
+  stroke: var(--web-line);
+}
+.every-c.d1.k-backend .frame {
+  stroke: var(--backend-line);
+}
+.every-c.d1.k-library .frame {
+  stroke: var(--library-line);
+}
+.every-c.d1.k-scripts .frame {
+  stroke: var(--scripts-line);
+}
+.every-name .band {
+  fill: transparent;
+}
+.every-name .cname {
+  font-family: var(--font-display);
+  font-weight: 650;
+  letter-spacing: -.01em;
+  fill: var(--ink);
+}
+.every-name.sel .cname {
+  text-decoration: underline;
+}
+.every-c:has(+ .every-name.sel) .frame {
+  stroke: var(--accent);
+  stroke-opacity: 1;
+}

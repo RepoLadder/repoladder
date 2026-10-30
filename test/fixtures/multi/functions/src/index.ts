@@ -1,0 +1,11 @@
+import * as functions from "firebase-functions";
+import { onRequest } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import Stripe from "stripe";
+import { app } from "./server";
+export const ping = functions.https.onCall(() => "pong");
+const pingHttp = onRequest((_req, res) => { res.send(new Stripe("")); });
+export { pingHttp };
+export const nightly = onSchedule("every day 00:00", async () => {});
+export const helper = () => "ping";
+export const api = onRequest(app);

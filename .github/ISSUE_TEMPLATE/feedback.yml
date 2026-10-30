@@ -1,0 +1,10 @@
+name: Feedback
+description: Something about a diagram you made or opened
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, or what would you like?
+      description: A link to a public diagram helps. Please leave out private code.
+    validations:
+      required: true

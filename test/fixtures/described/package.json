@@ -1,0 +1,1 @@
+{ "name": "described", "private": true, "workspaces": ["apps/*", "packages/*"] }

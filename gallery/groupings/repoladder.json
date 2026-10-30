@@ -1,0 +1,596 @@
+{
+  "version": 1,
+  "summary": "RepoLadder turns a TypeScript or JavaScript repo into a drill-down architecture diagram. It reads the code for facts (files, imports, calls, databases), lets Claude group and name the parts, then lays out one board per group and writes a single self-contained page you can click through.",
+  "story": {
+    "actors": [
+      {
+        "id": "developer",
+        "name": "Developer",
+        "summary": "Runs RepoLadder on their own repo to get a map of it.",
+        "kind": "person"
+      },
+      {
+        "id": "claude",
+        "name": "Claude",
+        "summary": "Reads the digest of facts and groups and names the parts.",
+        "kind": "system"
+      },
+      {
+        "id": "reader",
+        "name": "New teammate",
+        "summary": "Opens the published diagram to learn how the repo fits together.",
+        "kind": "person"
+      }
+    ],
+    "uses": [
+      {
+        "actor": "developer",
+        "part": "src-cli",
+        "says": "maps a repo",
+        "entry": "src/cli.ts"
+      },
+      {
+        "actor": "claude",
+        "part": "src-model",
+        "says": "groups and names the parts",
+        "entry": "src/model/grouping.ts"
+      },
+      {
+        "actor": "reader",
+        "part": "src-viewer",
+        "says": "clicks through the diagram",
+        "entry": "src/viewer/main.ts"
+      }
+    ],
+    "narrative": [
+      "A [[developer]] points the [[src-cli|command line]] at their code.",
+      "It [[src-analyze|reads the repo]] for plain facts: which files exist and what connects to what.",
+      "[[claude]] reads a short digest of those facts and names the parts, and the [[src-model|model]] checks every name against the facts.",
+      "The [[src-build|drawing step]] lays out one board per part and packs it all into a single page.",
+      "A [[reader|new teammate]] opens that page in the [[src-viewer|viewer]] and clicks down level by level."
+    ]
+  },
+  "tours": [
+    {
+      "id": "map-a-repo",
+      "title": "Reading a repo",
+      "chain": [
+        "src/cli.ts",
+        "src/analyze/index.ts",
+        "src/analyze/stores.ts",
+        "src/analyze/fields.ts"
+      ],
+      "captions": [
+        "You run the RepoLadder command on a repo. Its first stage reads the code into facts: files, imports, pages, endpoints and database use.",
+        "The analysis lists and parses every file, then asks the store finder which database collections each file reads and writes.",
+        "For every collection it finds, the store finder works out the fields the code writes and queries, so a database box can list them."
+      ]
+    },
+    {
+      "id": "lay-out-a-board",
+      "title": "Laying out a board",
+      "chain": [
+        "src/cli.ts",
+        "src/build/layout.ts",
+        "src/build/d2pool.ts"
+      ],
+      "captions": [
+        "Once the boards are rolled up, the command lays each one out: box sizes, lanes for the parts elsewhere, and room for labels.",
+        "Layout hands every board to a pool of D2 workers, which place the boxes and route the arrows, and caches each result."
+      ]
+    },
+    {
+      "id": "open-a-box",
+      "title": "Opening a box in the viewer",
+      "chain": [
+        "src/viewer/main.ts",
+        "src/viewer/navigate.ts",
+        "src/viewer/draw.ts",
+        "src/viewer/curves.ts"
+      ],
+      "captions": [
+        "The diagram page starts the viewer, which hands every click and key to navigation.",
+        "Double-clicking a box makes navigation open its board, and the board is drawn from scratch: boxes, cylinders, wires and labels.",
+        "Each arrow's path comes from the curve helpers, which round D2's routed points into smooth wires."
+      ]
+    }
+  ],
+  "children": [
+    {
+      "id": "src-cli",
+      "name": "Command line",
+      "summary": "The RepoLadder command: analyze a repo, print the digest Claude reads, and build the diagram page. It runs each stage in order.",
+      "files": [
+        "src/cli.ts",
+        "src/install.ts",
+        "src/usage.ts",
+        "src/version.ts"
+      ]
+    },
+    {
+      "id": "src-analyze",
+      "name": "Reading the repo",
+      "summary": "Reads the source code and writes down plain facts: which files exist, what imports what, which pages and endpoints there are, and which services and databases the code uses.",
+      "children": [
+        {
+          "id": "analyze-files",
+          "name": "Files & imports",
+          "summary": "Lists the source files, detects packages, and parses every file with the TypeScript compiler to resolve its imports. index.ts runs the whole analysis.",
+          "files": [
+            "src/analyze/files.ts",
+            "src/analyze/index.ts",
+            "src/analyze/packages.ts",
+            "src/analyze/resolve.ts",
+            "src/analyze/input.ts",
+            "src/analyze/options.ts",
+            "src/analyze/readmes.ts",
+            "src/analyze/source.ts"
+          ]
+        },
+        {
+          "id": "analyze-routes",
+          "name": "Pages & endpoints",
+          "summary": "Finds the app's pages and server endpoints (Next.js, Express-style routes, cloud functions) and matches string literals in the code to them as runtime calls.",
+          "files": [
+            "src/analyze/nextjs.ts",
+            "src/analyze/pages.ts",
+            "src/analyze/routes.ts",
+            "src/analyze/calls.ts",
+            "src/analyze/remix.ts"
+          ]
+        },
+        {
+          "id": "analyze-data",
+          "name": "Services & databases",
+          "summary": "Maps SDK imports to outside services, and finds every database read and write per collection or table, with the fields used.",
+          "files": [
+            "src/analyze/services.ts",
+            "src/analyze/stores.ts",
+            "src/analyze/fields.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "src-model",
+      "name": "Building the model",
+      "summary": "Checks Claude's grouping against the facts and rolls the file-level facts up into one board per group, with the story, tours and flows that guide a reader.",
+      "children": [
+        {
+          "id": "model-grouping",
+          "name": "Grouping & digest",
+          "summary": "The schemas, glob matching, the default folder grouping and its validation, the depth rules, and the digest Claude reads before it writes a grouping.",
+          "files": [
+            "src/model/schema.ts",
+            "src/model/glob.ts",
+            "src/model/grouping.ts",
+            "src/model/communities.ts",
+            "src/model/depth.ts",
+            "src/model/summary.ts",
+            "src/model/autosplits.ts",
+            "src/model/boxnames.ts",
+            "src/model/budgetsplit.ts",
+            "src/model/clustername.ts",
+            "src/model/filenames.ts",
+            "src/model/simple.ts",
+            "src/model/splits.ts"
+          ]
+        },
+        {
+          "id": "model-boards",
+          "name": "Boards & rollup",
+          "summary": "Rolls imports, calls and database use up to the boxes on each board, and builds the file and database boards with their code snippets.",
+          "files": [
+            "src/model/rollup.ts",
+            "src/model/orphans.ts",
+            "src/model/fileboards.ts",
+            "src/model/storeboards.ts",
+            "src/model/snippets.ts",
+            "src/model/endpoints.ts",
+            "src/model/fgraph.ts",
+            "src/model/rollrules.ts",
+            "src/model/storeroom.ts",
+            "src/model/coverage.ts",
+            "src/model/drawn.ts",
+            "src/model/draws.ts"
+          ]
+        },
+        {
+          "id": "model-guides",
+          "name": "Story, tours & flows",
+          "summary": "Validates the story board, places each guided tour step on a board, and finds the flows: chains of arrows from an entry point to a service or store.",
+          "files": [
+            "src/model/story.ts",
+            "src/model/tours.ts",
+            "src/model/flows.ts",
+            "src/model/chaindigest.ts",
+            "src/model/chains.ts",
+            "src/model/chaintours.ts",
+            "src/model/compose.ts",
+            "src/model/derivedtours.ts",
+            "src/model/tourgraph.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "src-build",
+      "name": "Drawing the diagram",
+      "summary": "Lays out every board, measures the result for defects and readability, and packs everything into one small self-contained page.",
+      "children": [
+        {
+          "id": "build-layout",
+          "name": "Laying out boards",
+          "summary": "Writes each board as D2 source and lays it out on a pool of workers, with the lane of outside boxes and the special layouts for file, database and story boards.",
+          "files": [
+            "src/build/layout.ts",
+            "src/build/lane.ts",
+            "src/build/cylgap.ts",
+            "src/build/d2pool.ts",
+            "src/build/filelayout.ts",
+            "src/build/storelayout.ts",
+            "src/build/storylayout.ts",
+            "src/build/boxsize.ts",
+            "src/build/layoutsession.ts",
+            "src/build/passes.ts",
+            "src/build/rangeorder.ts"
+          ],
+          "split": [
+            {
+              "id": "layout-d2",
+              "name": "D2 boards",
+              "summary": "Writes a board as D2 source and compiles it on a pool of workers, cached by source.",
+              "files": [
+                "src/build/layout.ts",
+                "src/build/d2pool.ts",
+                "src/build/boxsize.ts",
+                "src/build/layoutsession.ts",
+                "src/build/passes.ts"
+              ]
+            },
+            {
+              "id": "layout-spacing",
+              "name": "Lane & spacing",
+              "summary": "Puts outside boxes in a lane at the board's edge and keeps stacked databases apart.",
+              "files": [
+                "src/build/lane.ts",
+                "src/build/cylgap.ts",
+                "src/build/rangeorder.ts"
+              ]
+            },
+            {
+              "id": "layout-special",
+              "name": "File, store & story boards",
+              "summary": "The layouts for boards that aren't groups: a leaf's files, a database's collections and the story board.",
+              "files": [
+                "src/build/filelayout.ts",
+                "src/build/storelayout.ts",
+                "src/build/storylayout.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "build-engines",
+          "name": "Other layout engines",
+          "summary": "Alternative layout engines (ELK and a column layout) behind one interface, used to compare against D2.",
+          "files": [
+            "src/build/engines/**"
+          ]
+        },
+        {
+          "id": "build-checks",
+          "name": "Layout checks",
+          "summary": "The layout lint (overlaps, wires through boxes, label collisions) and the digestibility budget that says when a board needs another rung.",
+          "files": [
+            "src/build/lint.ts",
+            "src/build/outline.ts",
+            "src/build/budget.ts",
+            "src/build/everylint.ts"
+          ]
+        },
+        {
+          "id": "build-page",
+          "name": "Page & export",
+          "summary": "Bundles the viewer, packs the page data small, writes the self-contained HTML page, and exports boards as standalone images.",
+          "files": [
+            "src/build/html.ts",
+            "src/build/filepack.ts",
+            "src/build/pagesize.ts",
+            "src/build/viewer.ts",
+            "src/build/export.ts",
+            "src/build/brand.ts",
+            "src/build/limits.ts",
+            "src/build/mark.ts",
+            "src/build/pipeline.ts",
+            "src/build/timings.ts",
+            "src/build/progress.ts",
+            "src/build/interrupt.ts",
+            "src/build/layoutstats.ts",
+            "src/build/stability.ts",
+            "src/features.ts",
+            "src/lib.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "src-viewer",
+      "name": "Diagram viewer",
+      "summary": "The interactive page a reader clicks through: it draws each board, opens deeper rungs, pans and zooms, and explains any box or arrow with its evidence.",
+      "children": [
+        {
+          "id": "viewer-start",
+          "name": "Startup & page data",
+          "summary": "Boots the page: unpacks the viewer itself and the compressed page data, starts the viewer, and holds the shared state: the current board and selection.",
+          "files": [
+            "src/viewer/main.ts",
+            "src/viewer/boot.ts",
+            "src/viewer/state.ts",
+            "src/viewer/unpack.ts",
+            "src/viewer/rawinflate.ts",
+            "src/viewer/base91.ts",
+            "src/viewer/wire.ts",
+            "src/viewer/theme.ts",
+            "src/viewer/esc.ts",
+            "src/viewer/mono.ts",
+            "src/viewer/embed.ts",
+            "src/viewer/fontfaces.ts"
+          ],
+          "split": [
+            {
+              "id": "start-boot",
+              "name": "Boot & state",
+              "summary": "The page's one script, the viewer's entry point, its shared state and its color tokens.",
+              "files": [
+                "src/viewer/boot.ts",
+                "src/viewer/main.ts",
+                "src/viewer/state.ts",
+                "src/viewer/theme.ts",
+                "src/viewer/esc.ts",
+                "src/viewer/mono.ts",
+                "src/viewer/embed.ts",
+                "src/viewer/fontfaces.ts"
+              ]
+            },
+            {
+              "id": "start-unpack",
+              "name": "Unpacking the data",
+              "summary": "Decodes the packed page data: basE91 text, inflate, and the wire format back into boards.",
+              "files": [
+                "src/viewer/unpack.ts",
+                "src/viewer/rawinflate.ts",
+                "src/viewer/base91.ts",
+                "src/viewer/wire.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "viewer-draw",
+          "name": "Drawing boards",
+          "summary": "Turns a laid-out board into SVG: box shapes, arrows and their labels.",
+          "children": [
+            {
+              "id": "viewer-draw-boxes",
+              "name": "Boxes & shapes",
+              "summary": "Draws the boxes: one silhouette per kind, database cylinders with their collections, icons, and arrow weights.",
+              "files": [
+                "src/viewer/draw.ts",
+                "src/viewer/shapes.ts",
+                "src/viewer/bounds.ts",
+                "src/viewer/weight.ts",
+                "src/viewer/where.ts",
+                "src/viewer/icons.ts",
+                "src/viewer/collections.ts",
+                "src/viewer/everydraw.ts",
+                "src/viewer/namewrap.ts"
+              ]
+            },
+            {
+              "id": "viewer-draw-wires",
+              "name": "Arrows & labels",
+              "summary": "Arrow curves, wires the layout did not route, and placing labels so they don't collide.",
+              "files": [
+                "src/viewer/curves.ts",
+                "src/viewer/labels.ts",
+                "src/viewer/placement.ts",
+                "src/viewer/storylabels.ts",
+                "src/viewer/xwire.ts",
+                "src/viewer/storewire.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "viewer-move",
+          "name": "Moving around",
+          "summary": "Everything about getting around the diagram: opening rungs, going back, links, panning and zooming.",
+          "children": [
+            {
+              "id": "viewer-move-open",
+              "name": "Opening boards",
+              "summary": "Shows a board and handles clicks and keys, animates the zoom between rungs, remembers history for Back, jumps across branches, and searches.",
+              "files": [
+                "src/viewer/navigate.ts",
+                "src/viewer/transition.ts",
+                "src/viewer/history.ts",
+                "src/viewer/jump.ts",
+                "src/viewer/search.ts"
+              ]
+            },
+            {
+              "id": "viewer-move-where",
+              "name": "Breadcrumbs & links",
+              "summary": "Shows where you are (breadcrumbs and depth) and keeps a shareable link to the current board and selection.",
+              "files": [
+                "src/viewer/crumbs.ts",
+                "src/viewer/depthbadge.ts",
+                "src/viewer/deeplink.ts",
+                "src/viewer/idchip.ts",
+                "src/viewer/repotitle.ts"
+              ]
+            },
+            {
+              "id": "viewer-move-view",
+              "name": "Pan, zoom & fit",
+              "summary": "Pans and zooms the board, fits it to the screen, zooms to a selection, and clears it on an empty click.",
+              "files": [
+                "src/viewer/panzoom.ts",
+                "src/viewer/zoomlimits.ts",
+                "src/viewer/fit.ts",
+                "src/viewer/focus.ts",
+                "src/viewer/focuszoom.ts",
+                "src/viewer/corner.ts",
+                "src/viewer/deselect.ts",
+                "src/viewer/sheet.ts",
+                "src/viewer/focuscorner.ts",
+                "src/viewer/reframe.ts",
+                "src/viewer/fullscreen.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "viewer-dial",
+          "name": "Detail dial",
+          "summary": "Lets the reader choose how much a board shows: a dial of stops, from fewest boxes to everything, where boards are rolled up or opened in the browser to fit a box budget and laid out on demand. Travel animates the move between boards.",
+          "children": [
+            {
+              "id": "dial-stops",
+              "name": "Stops & the tree",
+              "summary": "The dial's stops and the tree of fine and coarse nodes each stop shows, with the stores and the story cut.",
+              "files": [
+                "src/viewer/dial.ts",
+                "src/viewer/dialmap.ts",
+                "src/viewer/stops.ts",
+                "src/viewer/stopmodel.ts",
+                "src/viewer/stoplayout.ts",
+                "src/viewer/stopstores.ts",
+                "src/viewer/stopview.ts",
+                "src/viewer/stopsimple.ts",
+                "src/viewer/finetree.ts",
+                "src/viewer/stoptree.ts",
+                "src/viewer/storycut.ts"
+              ]
+            },
+            {
+              "id": "dial-fit",
+              "name": "Fitting & travel",
+              "summary": "Rolls boards up or opens them in the browser to fit a box budget, lays them out on demand, and animates the travel between boards.",
+              "files": [
+                "src/viewer/budget.ts",
+                "src/viewer/cutboard.ts",
+                "src/viewer/cutview.ts",
+                "src/viewer/elkload.ts",
+                "src/viewer/everyfit.ts",
+                "src/viewer/everylayout.ts",
+                "src/viewer/everyview.ts",
+                "src/viewer/gutters.ts",
+                "src/viewer/layers.ts",
+                "src/viewer/skyline.ts",
+                "src/viewer/travel.ts"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "viewer-panels",
+          "name": "Side panel & legend",
+          "summary": "The panel that explains a selected box or arrow with its evidence, plus the legend and its filters.",
+          "files": [
+            "src/viewer/panels.ts",
+            "src/viewer/categories.ts",
+            "src/viewer/counts.ts",
+            "src/viewer/files.ts",
+            "src/viewer/legend.ts",
+            "src/viewer/filter.ts",
+            "src/viewer/filterui.ts",
+            "src/viewer/exportsvg.ts",
+            "src/viewer/exportui.ts",
+            "src/viewer/box.ts",
+            "src/viewer/codelink.ts",
+            "src/viewer/keycard.ts"
+          ]
+        },
+        {
+          "id": "viewer-guides",
+          "name": "Story, tours & reading",
+          "summary": "The guided parts: the story board with its actors, tours, and the board walkthrough that steps through flows with a pulse along each arrow.",
+          "files": [
+            "src/viewer/story.ts",
+            "src/viewer/figures.ts",
+            "src/viewer/tour.ts",
+            "src/viewer/walk.ts",
+            "src/viewer/walkorder.ts",
+            "src/viewer/pulse.ts",
+            "src/viewer/readorder.ts",
+            "src/viewer/tourlink.ts",
+            "src/viewer/tourstep.ts",
+            "src/viewer/tourtrail.ts",
+            "src/viewer/tourwire.ts",
+            "src/viewer/walkfit.ts"
+          ],
+          "split": [
+            {
+              "id": "guides-story",
+              "name": "Story board",
+              "summary": "The board above the parts: actors, their arrows and the narrative.",
+              "files": [
+                "src/viewer/story.ts",
+                "src/viewer/figures.ts"
+              ]
+            },
+            {
+              "id": "guides-tours",
+              "name": "Guided tours",
+              "summary": "Plays a tour step by step across boards.",
+              "files": [
+                "src/viewer/tour.ts",
+                "src/viewer/tourlink.ts",
+                "src/viewer/tourstep.ts",
+                "src/viewer/tourtrail.ts",
+                "src/viewer/tourwire.ts"
+              ]
+            },
+            {
+              "id": "guides-walk",
+              "name": "Board walkthrough",
+              "summary": "Steps through a board's flows, or its layers, with a pulse along each arrow.",
+              "files": [
+                "src/viewer/walk.ts",
+                "src/viewer/walkorder.ts",
+                "src/viewer/pulse.ts",
+                "src/viewer/readorder.ts",
+                "src/viewer/walkfit.ts"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tools",
+      "name": "Developer tools",
+      "summary": "Tools for working on RepoLadder itself: the bundle build, the diagram gallery and screenshots, and the usage-ping server.",
+      "children": [
+        {
+          "id": "scripts",
+          "name": "Build, gallery & shots",
+          "summary": "Builds the plugin bundle, builds the gallery of real repos, takes screenshots of every board, and runs the layout lint.",
+          "files": [
+            "scripts/*.ts"
+          ]
+        },
+        {
+          "id": "server-ping",
+          "name": "Usage ping server",
+          "summary": "The small Cloudflare Worker behind the opt-in usage ping: it counts runs and stores nothing about the repo.",
+          "files": [
+            "server/ping/**"
+          ]
+        }
+      ]
+    }
+  ]
+}

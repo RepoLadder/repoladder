@@ -1,0 +1,1 @@
+{ "name": "remix-v1", "private": true, "dependencies": { "@remix-run/node": "*", "@remix-run/react": "*", "@remix-run/serve": "*", "react": "*", "react-dom": "*" } }

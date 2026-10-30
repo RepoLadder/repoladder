@@ -1,0 +1,10 @@
+node_modules/
+.DS_Store
+.repoladder/
+.gallery/
+gallery/local.json
+gallery/local
+.claude/worktrees/
+.wrangler/
+.npm-package/
+.leakguard.local.json

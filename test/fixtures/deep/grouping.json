@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "summary": "A small billing app nested five rungs deep, to exercise the viewer at depth.",
+  "children": [
+    { "id": "api", "name": "API server", "summary": "HTTP endpoints for plans and invoices.", "files": ["src/api/**"] },
+    {
+      "id": "app", "name": "Customer app", "summary": "What the customer uses.",
+      "children": [
+        { "id": "shell", "name": "App shell", "summary": "Starts the app.", "files": ["src/app/shell/**"] },
+        {
+          "id": "billing", "name": "Billing & payments", "summary": "Plans, invoices and payment.",
+          "children": [
+            { "id": "plans", "name": "Plans", "summary": "The plans you can buy, priced through Stripe.", "files": ["src/app/billing/plans/**"] },
+            {
+              "id": "invoices", "name": "Invoices", "summary": "Creates and downloads invoices.",
+              "children": [
+                { "id": "inv-store", "name": "Invoice store", "summary": "Keeps the invoices.", "files": ["src/app/billing/invoices/store/**"] },
+                {
+                  "id": "pdf", "name": "PDF generation", "summary": "Turns an invoice into a printable page.",
+                  "children": [
+                    { "id": "pdf-layout", "name": "Page layout", "summary": "Pages and tables.", "files": ["src/app/billing/invoices/pdf/layout/**"] },
+                    { "id": "pdf-render", "name": "Rendering engine", "summary": "Fonts and the final render.", "files": ["src/app/billing/invoices/pdf/render/**"] }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "tours": [
+    { "id": "download", "title": "Downloading an invoice", "steps": [
+      { "text": "The app asks the invoice store for a download.", "node": "shell" },
+      { "text": "Four rungs down, the renderer lays out the page.", "edge": ["pdf-render", "pdf-layout"] },
+      { "text": "Back at the top: the API server.", "node": "api" }
+    ] }
+  ]
+}

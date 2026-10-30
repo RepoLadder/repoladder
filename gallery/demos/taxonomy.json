@@ -1,0 +1,573 @@
+{
+  "version": 1,
+  "summary": "Taxonomy, shadcn's example app for the Next.js App Router: a blogging product with a marketing site, docs, a writer's dashboard and editor, and Stripe subscriptions. Posts and users live in a Prisma database; sign-in is by GitHub or an email magic link.",
+  "children": [
+    {
+      "id": "site",
+      "name": "Public site & docs",
+      "summary": "Everything a visitor sees without signing in: the landing page, pricing, the blog and the documentation.",
+      "children": [
+        {
+          "id": "marketing-pages",
+          "name": "Landing, pricing & blog",
+          "summary": "The landing page, pricing page, blog index and posts, and the root layout.",
+          "files": [
+            "app/(marketing)/**",
+            "app/layout.tsx",
+            "app/robots.ts"
+          ],
+          "split": [
+            {
+              "id": "marketing-pages-landing",
+              "name": "Landing & pricing",
+              "summary": "Landing page, pricing page, static pages and the root layout.",
+              "files": [
+                "app/(marketing)/layout.tsx",
+                "app/(marketing)/page.tsx",
+                "app/(marketing)/pricing/page.tsx",
+                "app/(marketing)/[...slug]/page.tsx",
+                "app/layout.tsx",
+                "app/robots.ts"
+              ]
+            },
+            {
+              "id": "marketing-pages-blog",
+              "name": "Blog",
+              "summary": "The blog index and a blog post.",
+              "files": [
+                "app/(marketing)/blog/**"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "marketing-nav",
+          "name": "Site navigation",
+          "summary": "Header menus for desktop and phone, the footer, the theme switch and the site config.",
+          "files": [
+            "components/site-footer.tsx",
+            "components/main-nav.tsx",
+            "components/mobile-nav.tsx",
+            "components/mode-toggle.tsx",
+            "config/marketing.ts",
+            "config/site.ts"
+          ]
+        },
+        {
+          "id": "docs-pages",
+          "name": "Docs pages",
+          "summary": "The docs and guides pages and their layouts.",
+          "files": [
+            "app/(docs)/**"
+          ],
+          "split": [
+            {
+              "id": "docs-pages-docs",
+              "name": "Docs",
+              "summary": "The docs page and its layouts.",
+              "files": [
+                "app/(docs)/layout.tsx",
+                "app/(docs)/docs/**"
+              ]
+            },
+            {
+              "id": "docs-pages-guides",
+              "name": "Guides",
+              "summary": "The guides index and a guide.",
+              "files": [
+                "app/(docs)/guides/**"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "docs-mdx",
+          "name": "Content rendering",
+          "summary": "Turns MDX into pages: components, callouts, table of contents, pager, the docs sidebar and its config, and search.",
+          "files": [
+            "components/mdx-components.tsx",
+            "components/mdx-card.tsx",
+            "components/callout.tsx",
+            "components/toc.tsx",
+            "components/pager.tsx",
+            "components/sidebar-nav.tsx",
+            "components/search.tsx",
+            "lib/toc.ts",
+            "config/docs.ts"
+          ],
+          "split": [
+            {
+              "id": "docs-mdx-content",
+              "name": "MDX components",
+              "summary": "How MDX content is drawn: components, cards, callouts.",
+              "files": [
+                "components/mdx-components.tsx",
+                "components/mdx-card.tsx",
+                "components/callout.tsx"
+              ]
+            },
+            {
+              "id": "docs-mdx-nav",
+              "name": "Docs navigation",
+              "summary": "Table of contents, pager, the sidebar and its config, and search.",
+              "files": [
+                "components/toc.tsx",
+                "lib/toc.ts",
+                "components/pager.tsx",
+                "components/sidebar-nav.tsx",
+                "components/search.tsx",
+                "config/docs.ts"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "name": "Writer dashboard",
+      "summary": "Where a signed-in writer lists, creates and edits their posts and changes their settings, with the API routes that save them.",
+      "children": [
+        {
+          "id": "dashboard-pages-routes",
+          "name": "Dashboard & settings",
+          "summary": "The dashboard and settings pages and their loading states.",
+          "files": [
+            "app/(dashboard)/dashboard/layout.tsx",
+            "app/(dashboard)/dashboard/loading.tsx",
+            "app/(dashboard)/dashboard/page.tsx",
+            "app/(dashboard)/dashboard/settings/**"
+          ]
+        },
+        {
+          "id": "dashboard-pages-shell",
+          "name": "Dashboard shell",
+          "summary": "Header, page shell and side navigation.",
+          "files": [
+            "config/dashboard.ts",
+            "components/header.tsx",
+            "components/shell.tsx",
+            "components/nav.tsx",
+            "components/page-header.tsx"
+          ]
+        },
+        {
+          "id": "dashboard-posts",
+          "name": "Posts list",
+          "summary": "The list of the writer's posts, with create, delete and empty states.",
+          "files": [
+            "components/post-create-button.tsx",
+            "components/post-item.tsx",
+            "components/post-operations.tsx",
+            "components/empty-placeholder.tsx",
+            "components/card-skeleton.tsx"
+          ]
+        },
+        {
+          "id": "dashboard-editor",
+          "name": "Post editor",
+          "summary": "The block editor page where a post is written and saved.",
+          "files": [
+            "app/(editor)/**",
+            "components/editor.tsx"
+          ]
+        },
+        {
+          "id": "dashboard-profile",
+          "name": "Profile",
+          "summary": "The account menu, avatar and the form to change your name.",
+          "files": [
+            "components/user-name-form.tsx",
+            "components/user-account-nav.tsx",
+            "components/user-avatar.tsx"
+          ]
+        },
+        {
+          "id": "dashboard-api",
+          "name": "Posts & users API",
+          "summary": "The API routes the dashboard calls: creating, saving and deleting posts, renaming the user, and drawing social images.",
+          "children": [
+            {
+              "id": "api-posts",
+              "name": "Posts API",
+              "summary": "Lists, creates, updates and deletes posts, enforcing the free plan's limit.",
+              "files": [
+                "app/api/posts/**",
+                "lib/validations/post.ts",
+                "lib/exceptions.ts",
+                "lib/db.ts"
+              ]
+            },
+            {
+              "id": "api-users",
+              "name": "Users & images API",
+              "summary": "Renames a user, and renders Open Graph images for shared links.",
+              "files": [
+                "app/api/users/[userId]/route.ts",
+                "lib/validations/user.ts",
+                "app/api/og/route.tsx",
+                "lib/validations/og.ts"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "billing",
+      "name": "Subscriptions",
+      "summary": "The Pro plan: the billing page, Stripe checkout and customer portal, and the webhook that records payments.",
+      "children": [
+        {
+          "id": "billing-page",
+          "name": "Billing page",
+          "summary": "Shows the current plan and sends the writer to Stripe to upgrade or manage it.",
+          "files": [
+            "app/(dashboard)/dashboard/billing/**",
+            "components/billing-form.tsx"
+          ]
+        },
+        {
+          "id": "billing-server",
+          "name": "Checkout & webhooks",
+          "summary": "Starts a Stripe checkout or portal session, reads the plan, and handles Stripe's payment events.",
+          "files": [
+            "app/api/users/stripe/route.ts",
+            "app/api/webhooks/stripe/route.ts",
+            "lib/stripe.ts",
+            "lib/subscription.ts",
+            "config/subscriptions.ts"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "accounts",
+      "name": "Sign-in",
+      "summary": "Login and register pages, NextAuth with GitHub and email magic links, and the middleware that keeps the dashboard private.",
+      "children": [
+        {
+          "id": "accounts-pages",
+          "name": "Login & register",
+          "summary": "The login and register pages and their form.",
+          "files": [
+            "app/(auth)/**",
+            "components/user-auth-form.tsx",
+            "lib/validations/auth.ts"
+          ]
+        },
+        {
+          "id": "accounts-server",
+          "name": "Sessions",
+          "summary": "NextAuth setup, the current session, and the route guard.",
+          "files": [
+            "lib/auth.ts",
+            "lib/session.ts",
+            "middleware.ts",
+            "pages/api/auth/**",
+            "app/api/auth/**"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shared",
+      "name": "UI kit & helpers",
+      "summary": "The shadcn/ui components every page is built from, plus icons, theming, analytics and environment checks.",
+      "children": [
+        {
+          "id": "shared-forms-text",
+          "name": "Buttons & text fields",
+          "summary": "Buttons, inputs, labels and text areas.",
+          "files": [
+            "components/ui/button.tsx",
+            "components/ui/input.tsx",
+            "components/ui/label.tsx",
+            "components/ui/textarea.tsx"
+          ]
+        },
+        {
+          "id": "shared-forms-choice",
+          "name": "Choices",
+          "summary": "Checkboxes, radios, selects, switches, sliders and toggles.",
+          "files": [
+            "components/ui/checkbox.tsx",
+            "components/ui/radio-group.tsx",
+            "components/ui/select.tsx",
+            "components/ui/switch.tsx",
+            "components/ui/slider.tsx",
+            "components/ui/toggle.tsx"
+          ]
+        },
+        {
+          "id": "shared-overlays-dialogs",
+          "name": "Dialogs & popovers",
+          "summary": "Modal dialogs, sheets, popovers, hover cards, tooltips and the command menu.",
+          "files": [
+            "components/ui/alert-dialog.tsx",
+            "components/ui/dialog.tsx",
+            "components/ui/sheet.tsx",
+            "components/ui/popover.tsx",
+            "components/ui/hover-card.tsx",
+            "components/ui/tooltip.tsx",
+            "components/ui/command.tsx"
+          ],
+          "split": [
+            {
+              "id": "shared-overlays-dialogs-modal",
+              "name": "Modals",
+              "summary": "Alert dialogs, dialogs, sheets and the command menu.",
+              "files": [
+                "components/ui/alert-dialog.tsx",
+                "components/ui/dialog.tsx",
+                "components/ui/sheet.tsx",
+                "components/ui/command.tsx"
+              ]
+            },
+            {
+              "id": "shared-overlays-dialogs-float",
+              "name": "Popovers & tooltips",
+              "summary": "Popovers, hover cards and tooltips.",
+              "files": [
+                "components/ui/popover.tsx",
+                "components/ui/hover-card.tsx",
+                "components/ui/tooltip.tsx"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shared-overlays-toasts",
+          "name": "Toasts",
+          "summary": "Toast messages and the hook that raises them.",
+          "files": [
+            "components/ui/toast.tsx",
+            "components/ui/toaster.tsx",
+            "components/ui/use-toast.ts"
+          ]
+        },
+        {
+          "id": "shared-menus",
+          "name": "Menus & tabs",
+          "summary": "Dropdown, context and navigation menus, tabs, accordions and collapsibles.",
+          "files": [
+            "components/ui/dropdown-menu.tsx",
+            "components/ui/context-menu.tsx",
+            "components/ui/menubar.tsx",
+            "components/ui/navigation-menu.tsx",
+            "components/ui/tabs.tsx",
+            "components/ui/accordion.tsx",
+            "components/ui/collapsible.tsx"
+          ],
+          "split": [
+            {
+              "id": "shared-menus-menus",
+              "name": "Menus",
+              "summary": "Dropdown, context, bar and navigation menus.",
+              "files": [
+                "components/ui/dropdown-menu.tsx",
+                "components/ui/context-menu.tsx",
+                "components/ui/menubar.tsx",
+                "components/ui/navigation-menu.tsx"
+              ]
+            },
+            {
+              "id": "shared-menus-fold",
+              "name": "Tabs & folds",
+              "summary": "Tabs, accordions and collapsibles.",
+              "files": [
+                "components/ui/tabs.tsx",
+                "components/ui/accordion.tsx",
+                "components/ui/collapsible.tsx"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "shared-display-cards",
+          "name": "Cards & alerts",
+          "summary": "Cards, alerts, avatars and badges.",
+          "files": [
+            "components/ui/alert.tsx",
+            "components/ui/avatar.tsx",
+            "components/ui/badge.tsx",
+            "components/ui/card.tsx"
+          ]
+        },
+        {
+          "id": "shared-display-layout",
+          "name": "Layout pieces",
+          "summary": "Aspect ratios, scroll areas, separators, skeletons, progress and the calendar.",
+          "files": [
+            "components/ui/aspect-ratio.tsx",
+            "components/ui/scroll-area.tsx",
+            "components/ui/separator.tsx",
+            "components/ui/skeleton.tsx",
+            "components/ui/progress.tsx",
+            "components/ui/calendar.tsx"
+          ]
+        },
+        {
+          "id": "shared-helpers",
+          "name": "Icons & setup",
+          "summary": "The icon set, theme provider, analytics, small hooks, class-name helper and the checked environment variables.",
+          "files": [
+            "components/icons.tsx",
+            "components/theme-provider.tsx",
+            "components/tailwind-indicator.tsx",
+            "components/analytics.tsx",
+            "hooks/**",
+            "lib/utils.ts",
+            "env.mjs"
+          ],
+          "split": [
+            {
+              "id": "shared-helpers-look",
+              "name": "Icons & theme",
+              "summary": "Icons, the theme provider and the screen-size indicator.",
+              "files": [
+                "components/icons.tsx",
+                "components/theme-provider.tsx",
+                "components/tailwind-indicator.tsx"
+              ]
+            },
+            {
+              "id": "shared-helpers-code",
+              "name": "Hooks, env & analytics",
+              "summary": "Small hooks, the class-name helper, environment checks and analytics.",
+              "files": [
+                "components/analytics.tsx",
+                "hooks/**",
+                "lib/utils.ts",
+                "env.mjs"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "story": {
+    "actors": [
+      {
+        "id": "visitor",
+        "name": "Visitor",
+        "summary": "Reads the landing page, blog and docs.",
+        "kind": "person"
+      },
+      {
+        "id": "writer",
+        "name": "Writer",
+        "summary": "Signs in to write and publish posts, and may pay for Pro.",
+        "kind": "person"
+      },
+      {
+        "id": "stripe-events",
+        "name": "Stripe",
+        "summary": "Tells the app when a subscription is paid.",
+        "kind": "system"
+      }
+    ],
+    "uses": [
+      {
+        "actor": "visitor",
+        "part": "site",
+        "says": "reads the site",
+        "entry": "/"
+      },
+      {
+        "actor": "writer",
+        "part": "accounts",
+        "says": "signs in",
+        "entry": "/login"
+      },
+      {
+        "actor": "writer",
+        "part": "dashboard",
+        "says": "writes posts",
+        "entry": "/editor/[postId]"
+      },
+      {
+        "actor": "writer",
+        "part": "billing",
+        "says": "pays for Pro",
+        "entry": "/dashboard/billing"
+      },
+      {
+        "actor": "stripe-events",
+        "part": "billing",
+        "says": "confirms Pro",
+        "entry": "/api/webhooks/stripe"
+      }
+    ],
+    "narrative": [
+      "A [[visitor]] reads the [[site]]: the landing page, the blog and the docs.",
+      "A [[writer]] signs in through [[accounts|sign-in]], with GitHub or a link sent by [[svc-email|email]].",
+      "In the [[dashboard]] they write posts, which are saved to the database.",
+      "Free writers get a few posts; [[billing]] sends them to [[svc-stripe]] to upgrade.",
+      "[[stripe-events|Stripe]] reports back when they pay, and the plan is unlocked."
+    ]
+  },
+  "tours": [
+    {
+      "id": "upgrade-to-pro",
+      "title": "Upgrading to Pro",
+      "chain": [
+        "app/(dashboard)/dashboard/billing/page.tsx",
+        "components/billing-form.tsx",
+        "app/api/users/stripe/route.ts",
+        "lib/stripe.ts",
+        "svc-stripe"
+      ],
+      "captions": [
+        "The billing page shows your plan and a button to upgrade or manage it.",
+        "Pressing it calls the app's Stripe route on the server.",
+        "The route checks your plan and opens a Stripe checkout for free users, or the billing portal for Pro users.",
+        "The Stripe client sends that request to Stripe, which returns the page to send you to."
+      ]
+    },
+    {
+      "id": "stripe-webhook",
+      "title": "Stripe confirms a payment",
+      "chain": [
+        "app/api/webhooks/stripe/route.ts",
+        "lib/db.ts",
+        "store-prisma"
+      ],
+      "captions": [
+        "Stripe calls the webhook when a checkout completes or a subscription renews; the route checks the signature and reads the subscription.",
+        "It saves the Stripe customer, plan and period end on the user, which unlocks Pro."
+      ]
+    },
+    {
+      "id": "create-a-post",
+      "title": "Creating a post",
+      "chain": [
+        "app/(dashboard)/dashboard/page.tsx",
+        "components/post-create-button.tsx",
+        "app/api/posts/route.ts",
+        "lib/subscription.ts",
+        "store-prisma"
+      ],
+      "captions": [
+        "The dashboard lists your posts with a New post button on top.",
+        "The button posts to the posts API, then opens the editor on the new post.",
+        "The posts route checks your plan before it creates anything.",
+        "The plan comes from your user row: free users are capped at three posts."
+      ]
+    },
+    {
+      "id": "magic-link",
+      "title": "Signing in by email",
+      "chain": [
+        "pages/api/auth/[...nextauth].ts",
+        "lib/auth.ts",
+        "svc-email"
+      ],
+      "captions": [
+        "Every sign-in request lands on NextAuth's route, which loads the app's auth settings.",
+        "For email sign-in, the auth settings send a one-time login link through the email provider."
+      ]
+    }
+  ]
+}

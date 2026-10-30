@@ -1,0 +1,1 @@
+{ "name": "functions", "dependencies": { "firebase-functions": "5.0.0", "firebase-admin": "12.0.0" } }

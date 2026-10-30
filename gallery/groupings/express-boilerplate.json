@@ -1,0 +1,22 @@
+{
+ "version": 1,
+ "summary": "A starter REST API for Node.js: it gives a new project user sign-up, login with tokens, email verification and password reset, and user management out of the box, backed by a MongoDB database. It also ships a small command that copies the starter into a new project.",
+ "children": [
+  {
+   "id": "api",
+   "name": "Web API",
+   "summary": "Receives requests from apps and browsers, checks who is asking and whether the input is valid, and sends back answers.",
+   "children": [
+    { "id": "create-nodejs-express-app-src-routes", "name": "Routes", "summary": "The URL map for version 1 of the API: auth, users and the interactive API docs.", "files": ["src/routes/v1/**"] },
+    { "id": "create-nodejs-express-app-src-validations", "name": "Input checks", "summary": "Joi schemas that reject malformed request bodies, params and queries before they reach the handlers.", "files": ["src/validations/**"] },
+    { "id": "create-nodejs-express-app-src-middlewares", "name": "Guards & errors", "summary": "Express middleware for JWT auth and role checks, rate limiting on auth routes, validation, and turning errors into JSON responses.", "files": ["src/middlewares/**"] },
+    { "id": "create-nodejs-express-app-src-controllers", "name": "Handlers", "summary": "Thin request handlers that call the services and shape the HTTP response.", "files": ["src/controllers/**"] }
+   ]
+  },
+  { "id": "create-nodejs-express-app-src-services", "name": "Accounts & tokens", "summary": "The actual rules: registering and finding users, issuing and checking login and reset tokens, and sending account emails.", "files": ["src/services/**"] },
+  { "id": "create-nodejs-express-app-src-models", "name": "Database records", "summary": "Mongoose models for users and tokens, plus plugins that add paging and clean JSON output.", "files": ["src/models/**"] },
+  { "id": "startup", "name": "Server setup", "summary": "Starts the server, wires Express with security middleware and Passport, loads settings from the environment, and defines API docs and logging.", "files": ["src/app.js", "src/index.js", "src/config/**", "src/docs/**"] },
+  { "id": "create-nodejs-express-app-src-utils", "name": "Shared helpers", "summary": "Small helpers used everywhere: an API error type, an async wrapper for handlers, and object picking.", "files": ["src/utils/**"] },
+  { "id": "generator", "name": "Project generator", "summary": "The create-nodejs-express-app command that clones this starter into a new folder.", "files": ["bin/**"] }
+ ]
+}

@@ -1,0 +1,26 @@
+/* Detail dial stops (stopview.ts): a spinner on the canvas while a stop's board is laid out, shown only after 150ms */
+.stop-busy {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.stop-busy span {
+  width: 28px;
+  height: 28px;
+  border: 3px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: stop-spin .8s linear infinite;
+}
+@keyframes stop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stop-busy span {
+    animation-duration: 2.4s;
+  }
+}

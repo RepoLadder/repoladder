@@ -1,0 +1,6 @@
+{
+  "allowlist": [
+    "scripts/leakguard.private.json"
+  ],
+  "baseline": {}
+}

@@ -1,0 +1,7 @@
+{
+  "name": "@mono/ui",
+  "exports": {
+    ".": "./src/index.ts",
+    "./card": { "types": "./dist/card.d.ts", "import": "./dist/card.js" }
+  }
+}

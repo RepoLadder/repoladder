@@ -1,0 +1,2004 @@
+{
+ "version": 1,
+ "summary": "Vercel's open-source reference app for background coding agents: a developer describes a coding task in a web app, a durable agent plans and edits the code by calling tools, and it works inside a separate sandbox machine with its own files, shell and git. When it finishes it can commit the changes and open a pull request on GitHub.",
+ "children": [
+  {
+   "id": "workspace",
+   "name": "Coding workspace",
+   "summary": "The page where a developer talks to the agent and watches it work: the chat, the tool calls it makes, its code changes, and the sidebar of past sessions.",
+   "children": [
+    {
+     "id": "ws-session",
+     "name": "Chat screen",
+     "summary": "The chat page itself and the plumbing that keeps a run alive when the connection drops.",
+     "children": [
+      {
+       "id": "ws-session-page",
+       "name": "Chat page",
+       "summary": "The page for one chat: its content, header, tabs and the loading and error states around it.",
+       "children": [
+        {
+         "id": "ws-session-page-content",
+         "name": "Page & content",
+         "summary": "The page and the chat content it renders, with the shared chat context.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/page.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/session-chat-content.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/session-chat-context.tsx"
+         ]
+        },
+        {
+         "id": "ws-session-page-header",
+         "name": "Header & tabs",
+         "summary": "The session header, the chat tabs and the side panel.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/session-header.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/chat-tabs.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/chat-sidebar.tsx"
+         ]
+        },
+        {
+         "id": "ws-session-page-states",
+         "name": "Loading & errors",
+         "summary": "What shows while the chat loads, fails or is not found.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/loading.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/error.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/not-found.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-session-run",
+       "name": "Run & recover",
+       "summary": "Starts a chat run, creates the sandbox when needed and picks a reply stream back up after a dropped connection.",
+       "files": [
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/only-chat-in-session.ts",
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/sandbox-create.ts",
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/sandbox-create-error-banner.tsx",
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/stream-recovery-policy.ts",
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-session-chat-runtime.ts",
+        "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-stream-recovery.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ws-conversation",
+     "name": "Conversation",
+     "summary": "How the agent's work is shown: the stream of messages, the cards for each tool it calls, and how each kind of tool looks.",
+     "children": [
+      {
+       "id": "ws-transcript",
+       "name": "Message stream",
+       "summary": "Groups the agent's messages, reasoning and task lists into the running transcript.",
+       "children": [
+        {
+         "id": "ws-transcript-messages",
+         "name": "Messages & reasoning",
+         "summary": "Grouped assistant messages, file links, thinking blocks and the summary of tool calls.",
+         "files": [
+          "apps/web/components/assistant-message-groups.tsx",
+          "apps/web/components/assistant-file-link.tsx",
+          "apps/web/components/thinking-block.tsx",
+          "apps/web/components/tool-calls-summary-bar.tsx"
+         ]
+        },
+        {
+         "id": "ws-transcript-tasks",
+         "name": "Tasks & icons",
+         "summary": "The task groups, the pinned to-do list and the icons used in the stream.",
+         "files": [
+          "apps/web/components/task-group-view.tsx",
+          "apps/web/components/pinned-todo-panel.tsx",
+          "apps/web/components/file-type-icons.tsx",
+          "apps/web/components/provider-icons.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-toolcall",
+       "name": "Tool call cards",
+       "summary": "The frame every tool call is drawn in, with its approve and deny buttons.",
+       "children": [
+        {
+         "id": "ws-toolcall-frame",
+         "name": "Card frame",
+         "summary": "The tool call card, its layout and the lookup that picks how to draw it.",
+         "files": [
+          "apps/web/components/tool-call/tool-call.tsx",
+          "apps/web/components/tool-call/tool-layout.tsx",
+          "apps/web/components/tool-call/index.ts",
+          "apps/web/app/lib/render-tool.tsx"
+         ]
+        },
+        {
+         "id": "ws-toolcall-actions",
+         "name": "Approvals & file links",
+         "summary": "Approve and deny buttons, and the pills that open the file a tool touched.",
+         "files": [
+          "apps/web/components/tool-call/approval-buttons.tsx",
+          "apps/web/components/tool-call/file-name-pill.tsx",
+          "apps/web/components/tool-call/open-file-context.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-renderers",
+       "name": "Tool renderers",
+       "summary": "One renderer per tool the agent can call: how a file read, an edit or a shell command appears in the chat.",
+       "children": [
+        {
+         "id": "ws-renderers-files",
+         "name": "File tools",
+         "summary": "Read, write, edit, find and search results.",
+         "files": [
+          "apps/web/components/tool-call/renderers/read-renderer.tsx",
+          "apps/web/components/tool-call/renderers/write-renderer.tsx",
+          "apps/web/components/tool-call/renderers/edit-renderer.tsx",
+          "apps/web/components/tool-call/renderers/glob-renderer.tsx",
+          "apps/web/components/tool-call/renderers/grep-renderer.tsx"
+         ]
+        },
+        {
+         "id": "ws-renderers-shell",
+         "name": "Shell & web",
+         "summary": "Shell commands and web fetches.",
+         "files": [
+          "apps/web/components/tool-call/renderers/bash-renderer.tsx",
+          "apps/web/components/tool-call/renderers/fetch-renderer.tsx"
+         ]
+        },
+        {
+         "id": "ws-renderers-agent",
+         "name": "Agent helpers",
+         "summary": "Questions for the user, skills, sub-tasks and to-do lists.",
+         "files": [
+          "apps/web/components/tool-call/renderers/ask-user-question-renderer.tsx",
+          "apps/web/components/tool-call/renderers/skill-renderer.tsx",
+          "apps/web/components/tool-call/renderers/task-renderer.tsx",
+          "apps/web/components/tool-call/renderers/todo-renderer.tsx"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ws-input",
+     "name": "Message box",
+     "summary": "Where the developer writes a task: the prompt box with its shortcuts, attachments and voice, and the model picker.",
+     "children": [
+      {
+       "id": "ws-prompt",
+       "name": "Prompt box",
+       "summary": "The text box with slash commands, file mentions, quoted snippets and inline questions from the agent.",
+       "children": [
+        {
+         "id": "ws-prompt-slash",
+         "name": "Slash commands",
+         "summary": "The command menu and its data.",
+         "files": [
+          "apps/web/components/slash-command-dropdown.tsx",
+          "apps/web/hooks/use-slash-commands.ts"
+         ]
+        },
+        {
+         "id": "ws-prompt-mentions",
+         "name": "File mentions",
+         "summary": "Suggests files as the developer types.",
+         "files": [
+          "apps/web/components/file-suggestions-dropdown.tsx",
+          "apps/web/hooks/use-file-suggestions.ts"
+         ]
+        },
+        {
+         "id": "ws-prompt-inline",
+         "name": "Questions & snippets",
+         "summary": "The agent's inline questions, quoted snippets and the selection popover.",
+         "files": [
+          "apps/web/components/inline-question-input.tsx",
+          "apps/web/components/snippet-chip.tsx",
+          "apps/web/components/selection-popover.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-attach",
+       "name": "Attachments & voice",
+       "summary": "Adds images, pasted text and recorded voice to a message.",
+       "files": [
+        "apps/web/components/image-attachments-preview.tsx",
+        "apps/web/components/text-attachments-preview.tsx",
+        "apps/web/hooks/use-image-attachments.ts",
+        "apps/web/hooks/use-text-attachments.ts",
+        "apps/web/hooks/use-audio-recording.ts"
+       ]
+      },
+      {
+       "id": "ws-models",
+       "name": "Model picker",
+       "summary": "Chooses which AI model a task runs on and shows which one answered.",
+       "files": [
+        "apps/web/components/model-combobox.tsx",
+        "apps/web/components/model-selector-compact.tsx",
+        "apps/web/components/message-model-pill.tsx",
+        "apps/web/hooks/use-model-options.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ws-code",
+     "name": "Code & git",
+     "summary": "What the agent changed: the diff, the files, the branch, the commit and the pull request, plus an in-browser editor and dev-server preview.",
+     "children": [
+      {
+       "id": "ws-diff",
+       "name": "Diff & files",
+       "summary": "Shows the agent's changes as a diff and lets the developer browse the files in the sandbox.",
+       "children": [
+        {
+         "id": "ws-diff-diff",
+         "name": "Diff view",
+         "summary": "The diff tabs, viewer and download.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/diff-tab-view.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/diff-viewer.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/download-diff-dialog.tsx",
+          "apps/web/components/diffs-provider.tsx",
+          "apps/web/lib/diffs-config.ts"
+         ]
+        },
+        {
+         "id": "ws-diff-files",
+         "name": "File view",
+         "summary": "The file tree and file viewer.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/file-tab-view.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/file-tree.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/workspace-file-viewer.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-diffdata",
+       "name": "Diff data",
+       "summary": "Fetches the diff, the file list and the git status for a session.",
+       "children": [
+        {
+         "id": "ws-diffdata-diff",
+         "name": "Diff",
+         "summary": "Computes and fetches the diff.",
+         "files": [
+          "apps/web/lib/diff/**",
+          "apps/web/hooks/use-session-diff.ts"
+         ]
+        },
+        {
+         "id": "ws-diffdata-files",
+         "name": "Files & status",
+         "summary": "Fetches the file list and the git status.",
+         "files": [
+          "apps/web/hooks/use-session-files.ts",
+          "apps/web/hooks/use-session-git-status.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-git",
+       "name": "Commit & branch",
+       "summary": "The git panel, committing the agent's work and switching branches.",
+       "children": [
+        {
+         "id": "ws-git-panel",
+         "name": "Git panel",
+         "summary": "The panel, its state and the auto-commit status.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/git-panel.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/git-panel-context.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/commit-action-button.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-auto-commit-status.ts"
+         ]
+        },
+        {
+         "id": "ws-git-branches",
+         "name": "Commit & branches",
+         "summary": "The commit dialog and the branch pickers.",
+         "files": [
+          "apps/web/components/commit-dialog.tsx",
+          "apps/web/components/branch-picker-dialog.tsx",
+          "apps/web/components/branch-selector-compact.tsx",
+          "apps/web/components/branch-selector.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-pr",
+       "name": "Pull requests",
+       "summary": "Opens, checks, merges and closes the pull request, and asks the developer to reconnect GitHub when needed.",
+       "children": [
+        {
+         "id": "ws-pr-open",
+         "name": "Open & close",
+         "summary": "Dialogs to open and close a pull request.",
+         "files": [
+          "apps/web/components/create-pr-dialog.tsx",
+          "apps/web/components/close-pr-dialog.tsx"
+         ]
+        },
+        {
+         "id": "ws-pr-merge",
+         "name": "Merge & checks",
+         "summary": "Merge, its check runs and the polling that waits for them.",
+         "files": [
+          "apps/web/components/merge-pr-dialog.tsx",
+          "apps/web/components/merge-pr-dialog-actions.tsx",
+          "apps/web/components/merge-check-runs.tsx",
+          "apps/web/lib/merge-readiness-polling.ts",
+          "apps/web/lib/pr-deployment-polling.ts"
+         ]
+        },
+        {
+         "id": "ws-pr-reconnect",
+         "name": "Reconnect GitHub",
+         "summary": "Prompts to reconnect when the GitHub link has expired.",
+         "files": [
+          "apps/web/components/github-reconnect-dialog.tsx",
+          "apps/web/components/github-reconnect-gate.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-editor",
+       "name": "Editor & preview",
+       "summary": "Opens the sandbox in a code editor and runs a dev server preview.",
+       "children": [
+        {
+         "id": "ws-editor-editor",
+         "name": "Code editor",
+         "summary": "The in-browser editor and its menu.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/code-editor-menu-items.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-code-editor.ts",
+          "apps/web/app/codespace/**"
+         ]
+        },
+        {
+         "id": "ws-editor-preview",
+         "name": "Dev server",
+         "summary": "Starts and previews the project's dev server.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/dev-server-menu-items.tsx",
+          "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-dev-server.ts"
+         ]
+        },
+        {
+         "id": "ws-editor-status",
+         "name": "Skills & status",
+         "summary": "The skills list and the workspace status.",
+         "files": [
+          "apps/web/hooks/use-session-skills.ts",
+          "apps/web/lib/workspace-status-store.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "ws-sessions",
+     "name": "Sessions & sidebar",
+     "summary": "Finding and starting sessions: the session pages, the inbox of past chats and the screens for choosing a repo.",
+     "children": [
+      {
+       "id": "ws-pages",
+       "name": "Session pages",
+       "summary": "The shells around the sessions list and around one session.",
+       "children": [
+        {
+         "id": "ws-pages-list",
+         "name": "Sessions list",
+         "summary": "The sessions index page and its shell.",
+         "files": [
+          "apps/web/app/sessions/*"
+         ]
+        },
+        {
+         "id": "ws-pages-one",
+         "name": "One session",
+         "summary": "The layout and loading state of a single session.",
+         "files": [
+          "apps/web/app/sessions/[sessionId]/*"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-inbox",
+       "name": "Inbox sidebar",
+       "summary": "The sidebar of past sessions, its rename dialog and the data behind it.",
+       "children": [
+        {
+         "id": "ws-inbox-sidebar",
+         "name": "Sidebar",
+         "summary": "The sidebar and the session list.",
+         "files": [
+          "apps/web/components/session-drawer.tsx",
+          "apps/web/components/session-list.tsx",
+          "apps/web/components/inbox-sidebar.tsx"
+         ]
+        },
+        {
+         "id": "ws-inbox-rename",
+         "name": "Rename & skeleton",
+         "summary": "Renaming a session and the loading skeleton.",
+         "files": [
+          "apps/web/components/inbox-sidebar-rename-dialog.tsx",
+          "apps/web/components/home-skeleton.tsx",
+          "apps/web/components/inbox-sidebar-rename.ts"
+         ]
+        },
+        {
+         "id": "ws-inbox-chats",
+         "name": "Chat data",
+         "summary": "The chat switcher and the hooks that load sessions and chats and notify of replies.",
+         "files": [
+          "apps/web/components/chat-switcher-dropdown.tsx",
+          "apps/web/hooks/use-sessions.ts",
+          "apps/web/hooks/use-session-chats.ts",
+          "apps/web/hooks/use-background-chat-notifications.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "ws-start",
+       "name": "Start a session",
+       "summary": "The dialogs and pickers for choosing a repo and sandbox and starting a new session.",
+       "children": [
+        {
+         "id": "ws-start-starter",
+         "name": "Session starter",
+         "summary": "The new-session dialog and starter form.",
+         "files": [
+          "apps/web/components/new-session-dialog.tsx",
+          "apps/web/components/session-starter.tsx",
+          "apps/web/components/session-starter-vercel-sync-section.tsx"
+         ]
+        },
+        {
+         "id": "ws-start-repo",
+         "name": "Repo picker",
+         "summary": "Choosing or creating a repo.",
+         "files": [
+          "apps/web/components/repo-selection-screen.tsx",
+          "apps/web/components/repo-selector.tsx",
+          "apps/web/components/repo-selector-compact.tsx",
+          "apps/web/components/create-repo-dialog.tsx",
+          "apps/web/hooks/use-installation-repos.ts"
+         ]
+        },
+        {
+         "id": "ws-start-sandbox",
+         "name": "Sandbox & Vercel",
+         "summary": "Choosing a sandbox and linking a Vercel project.",
+         "files": [
+          "apps/web/components/sandbox-selector-compact.tsx",
+          "apps/web/hooks/use-vercel-repo-projects.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "pages",
+   "name": "Home, settings & sharing",
+   "summary": "Everything outside a session: the landing page and sign-in, the settings screens and the public pages for shared chats and profiles.",
+   "children": [
+    {
+     "id": "pg-home",
+     "name": "Landing & sign-in",
+     "summary": "The first thing a visitor sees, signing in, and getting set up.",
+     "children": [
+      {
+       "id": "pg-shell",
+       "name": "App shell",
+       "summary": "The root layout, providers and home page, social cards and the edge proxy.",
+       "children": [
+        {
+         "id": "pg-shell-pages",
+         "name": "Pages & providers",
+         "summary": "The home page, layout and providers.",
+         "files": [
+          "apps/web/app/home-page.tsx",
+          "apps/web/app/page.tsx",
+          "apps/web/app/layout.tsx",
+          "apps/web/app/providers.tsx"
+         ]
+        },
+        {
+         "id": "pg-shell-config",
+         "name": "Config & social cards",
+         "summary": "Config, shared types and the social preview images.",
+         "files": [
+          "apps/web/app/config.ts",
+          "apps/web/app/types.ts",
+          "apps/web/app/opengraph-image.tsx",
+          "apps/web/app/twitter-image.tsx"
+         ]
+        },
+        {
+         "id": "pg-shell-edge",
+         "name": "Edge & analytics",
+         "summary": "The proxy and the client instrumentation.",
+         "files": [
+          "apps/web/proxy.ts",
+          "apps/web/instrumentation-client.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pg-landing",
+       "name": "Landing page",
+       "summary": "The marketing page: navigation, feature sections and the animated app mockups.",
+       "children": [
+        {
+         "id": "pg-landing-chrome",
+         "name": "Navigation & footer",
+         "summary": "Navigation, footer, logo and theme toggle.",
+         "files": [
+          "apps/web/components/landing/nav.tsx",
+          "apps/web/components/landing/footer.tsx",
+          "apps/web/components/landing/logo.tsx",
+          "apps/web/components/landing/theme-toggle.tsx",
+          "apps/web/components/landing/github-link.tsx"
+         ]
+        },
+        {
+         "id": "pg-landing-features",
+         "name": "Feature sections",
+         "summary": "The feature list, bento grid and the three feature stories.",
+         "files": [
+          "apps/web/components/landing/features.tsx",
+          "apps/web/components/landing/bento.tsx",
+          "apps/web/components/landing/feature-agent.tsx",
+          "apps/web/components/landing/feature-sandbox.tsx",
+          "apps/web/components/landing/feature-workflow.tsx"
+         ]
+        },
+        {
+         "id": "pg-landing-mockups",
+         "name": "Hero mockups",
+         "summary": "The app mockup, stage, terminal and window shown in the hero.",
+         "files": [
+          "apps/web/components/landing/app-mockup.tsx",
+          "apps/web/components/landing/stage.tsx",
+          "apps/web/components/landing/terminal.tsx",
+          "apps/web/components/landing/window.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pg-auth",
+       "name": "Sign-in & get started",
+       "summary": "Sign-in, the signed-out hero and the first-run steps for a new developer.",
+       "children": [
+        {
+         "id": "pg-auth-signin",
+         "name": "Sign-in",
+         "summary": "The sign-in button, the auth guard and the user menu.",
+         "files": [
+          "apps/web/components/auth/auth-guard.tsx",
+          "apps/web/components/auth/sign-in-button.tsx",
+          "apps/web/components/user-avatar-dropdown.tsx",
+          "apps/web/lib/redirect-safety.ts"
+         ]
+        },
+        {
+         "id": "pg-auth-hero",
+         "name": "Signed-out hero",
+         "summary": "What a signed-out visitor sees.",
+         "files": [
+          "apps/web/components/auth/signed-out-hero.tsx",
+          "apps/web/components/auth/hero-app-mockup.tsx",
+          "apps/web/components/auth/hero-icons.tsx"
+         ]
+        },
+        {
+         "id": "pg-auth-start",
+         "name": "Get started",
+         "summary": "The get-started flow, deploy-your-own page and trial logic.",
+         "files": [
+          "apps/web/app/get-started/**",
+          "apps/web/app/deploy-your-own/**",
+          "apps/web/lib/onboarding.ts",
+          "apps/web/lib/managed-template-trial.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "pg-settings",
+     "name": "Settings",
+     "summary": "The developer's settings: accounts, models, preferences and usage.",
+     "children": [
+      {
+       "id": "pg-set-pages",
+       "name": "Settings pages",
+       "summary": "One page per settings tab, plus the settings layout.",
+       "children": [
+        {
+         "id": "pg-set-pages-account",
+         "name": "Account pages",
+         "summary": "Accounts, connections and profile.",
+         "files": [
+          "apps/web/app/settings/accounts/**",
+          "apps/web/app/settings/connections/**",
+          "apps/web/app/settings/profile/**"
+         ]
+        },
+        {
+         "id": "pg-set-pages-models",
+         "name": "Model & preference pages",
+         "summary": "Models and preferences.",
+         "files": [
+          "apps/web/app/settings/models/**",
+          "apps/web/app/settings/preferences/**"
+         ]
+        },
+        {
+         "id": "pg-set-pages-rest",
+         "name": "Leaderboard, admin & layout",
+         "summary": "The leaderboard and admin pages and the shared settings layout.",
+         "files": [
+          "apps/web/app/settings/leaderboard/**",
+          "apps/web/app/settings/admin/**",
+          "apps/web/app/settings/*"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pg-set-sections",
+       "name": "Settings sections",
+       "summary": "The forms and panels each settings page is built from.",
+       "children": [
+        {
+         "id": "pg-set-sections-accounts",
+         "name": "Accounts & profile",
+         "summary": "Accounts, profile and Vercel connection panels.",
+         "files": [
+          "apps/web/app/settings/accounts-section.tsx",
+          "apps/web/app/settings/profile-section.tsx",
+          "apps/web/app/settings/vercel-section.tsx"
+         ]
+        },
+        {
+         "id": "pg-set-sections-models",
+         "name": "Models & preferences",
+         "summary": "Model variants and preferences panels.",
+         "files": [
+          "apps/web/app/settings/model-variants-section.tsx",
+          "apps/web/app/settings/preferences-section.tsx"
+         ]
+        },
+        {
+         "id": "pg-set-sections-usage",
+         "name": "Usage",
+         "summary": "Usage and leaderboard panels.",
+         "files": [
+          "apps/web/app/settings/leaderboard-section.tsx",
+          "apps/web/app/settings/usage-section.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pg-set-usage",
+       "name": "Usage insights",
+       "summary": "Charts of how much the developer uses agents and how they rank.",
+       "files": [
+        "apps/web/app/settings/usage/**",
+        "apps/web/components/contribution-chart.tsx",
+        "apps/web/hooks/use-leaderboard-rank.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "pg-public",
+     "name": "Shared & public pages",
+     "summary": "Pages anyone can open: a shared chat and public profiles.",
+     "children": [
+      {
+       "id": "pg-shared",
+       "name": "Shared chat",
+       "summary": "A read-only chat page reached by a link, with secrets redacted and a social preview.",
+       "children": [
+        {
+         "id": "pg-shared-page",
+         "name": "Shared page",
+         "summary": "The page, its content and loading and error states.",
+         "files": [
+          "apps/web/app/shared/[shareId]/page.tsx",
+          "apps/web/app/shared/[shareId]/shared-chat-content.tsx",
+          "apps/web/app/shared/[shareId]/loading.tsx",
+          "apps/web/app/shared/[shareId]/error.tsx"
+         ]
+        },
+        {
+         "id": "pg-shared-status",
+         "name": "Status & redaction",
+         "summary": "Whether the chat is still running, and hiding secrets in it.",
+         "files": [
+          "apps/web/app/shared/[shareId]/shared-chat-status.tsx",
+          "apps/web/app/shared/[shareId]/shared-chat-status-utils.ts",
+          "apps/web/app/shared/[shareId]/redact-shared-env-content.ts"
+         ]
+        },
+        {
+         "id": "pg-shared-cards",
+         "name": "Social cards",
+         "summary": "The preview images for a shared link.",
+         "files": [
+          "apps/web/app/shared/[shareId]/opengraph-image.tsx",
+          "apps/web/app/shared/[shareId]/twitter-image.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pg-profile",
+       "name": "Profiles",
+       "summary": "Public pages for a developer and for one of their repos.",
+       "children": [
+        {
+         "id": "pg-profile-user",
+         "name": "Profile pages",
+         "summary": "A developer's public page.",
+         "files": [
+          "apps/web/app/[username]/page.tsx",
+          "apps/web/app/[username]/loading.tsx",
+          "apps/web/app/u/[username]/page.tsx"
+         ]
+        },
+        {
+         "id": "pg-profile-repo",
+         "name": "Repo page",
+         "summary": "A page for one repo.",
+         "files": [
+          "apps/web/app/[username]/[repo]/**"
+         ]
+        },
+        {
+         "id": "pg-profile-cards",
+         "name": "Social cards",
+         "summary": "The profile preview images.",
+         "files": [
+          "apps/web/app/[username]/og/**",
+          "apps/web/app/u/[username]/og/**"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "api",
+   "name": "Server routes",
+   "summary": "The app's HTTP API: every request from the browser or from GitHub lands in one of these routes.",
+   "children": [
+    {
+     "id": "api-chat-group",
+     "name": "Chat & AI",
+     "summary": "Starting and stopping an agent run, and the small AI helpers around it.",
+     "children": [
+      {
+       "id": "api-chat",
+       "name": "Chat endpoint",
+       "summary": "Starts an agent run for a message, lets the browser resume or stop it, and saves the result.",
+       "children": [
+        {
+         "id": "api-chat-start",
+         "name": "Start a run",
+         "summary": "The chat route, its request parsing and runtime.",
+         "files": [
+          "apps/web/app/api/chat/route.ts",
+          "apps/web/app/api/chat/_lib/request.ts",
+          "apps/web/app/api/chat/_lib/chat-context.ts",
+          "apps/web/app/api/chat/_lib/runtime.ts"
+         ]
+        },
+        {
+         "id": "api-chat-control",
+         "name": "Stream & stop",
+         "summary": "Resume a reply stream and stop a run.",
+         "files": [
+          "apps/web/app/api/chat/[chatId]/**"
+         ]
+        },
+        {
+         "id": "api-chat-models",
+         "name": "Models & results",
+         "summary": "Picks the model and saves tool results.",
+         "files": [
+          "apps/web/app/api/chat/_lib/model-selection.ts",
+          "apps/web/app/api/chat/_lib/persist-tool-results.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "api-ai",
+       "name": "AI helpers",
+       "summary": "Small AI jobs: naming a chat, writing a commit message or PR text, fixing failing checks and transcribing voice.",
+       "children": [
+        {
+         "id": "api-ai-text",
+         "name": "Titles & messages",
+         "summary": "Chat titles, commit messages and PR descriptions.",
+         "files": [
+          "apps/web/app/api/generate-title/**",
+          "apps/web/app/api/generate-pr/**",
+          "apps/web/app/api/sessions/[sessionId]/generate-commit-message/**"
+         ]
+        },
+        {
+         "id": "api-ai-other",
+         "name": "Fixes, voice & models",
+         "summary": "Auto-fixing checks, transcription and the model list.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/checks/**",
+          "apps/web/app/api/transcribe/**",
+          "apps/web/app/api/models/**"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "api-sessions-group",
+     "name": "Sessions & chats",
+     "summary": "Creating and managing sessions, the chats in them, their files and the links that share them.",
+     "children": [
+      {
+       "id": "api-sess-core",
+       "name": "Sessions",
+       "summary": "Create, read, update, share and delete a session.",
+       "children": [
+        {
+         "id": "api-sess-core-crud",
+         "name": "Create & read",
+         "summary": "Create, list, read, update and delete a session.",
+         "files": [
+          "apps/web/app/api/sessions/route.ts",
+          "apps/web/app/api/sessions/_lib/**",
+          "apps/web/app/api/sessions/[sessionId]/route.ts"
+         ]
+        },
+        {
+         "id": "api-sess-core-extras",
+         "name": "Share & skills",
+         "summary": "Share a session and list its skills.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/share/**",
+          "apps/web/app/api/sessions/[sessionId]/skills/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "api-sess-chats",
+       "name": "Chats in a session",
+       "summary": "Create, fork, rename, read and share the chats inside a session, and add or delete messages.",
+       "children": [
+        {
+         "id": "api-sess-chats-records",
+         "name": "Chat records",
+         "summary": "List, create, update and mark chats read.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/chats/route.ts",
+          "apps/web/app/api/sessions/[sessionId]/chats/[chatId]/route.ts",
+          "apps/web/app/api/sessions/[sessionId]/chats/[chatId]/read/**"
+         ]
+        },
+        {
+         "id": "api-sess-chats-messages",
+         "name": "Messages & forks",
+         "summary": "Add or delete messages and fork a chat.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/chats/[chatId]/messages/**",
+          "apps/web/app/api/sessions/[sessionId]/chats/[chatId]/fork/**"
+         ]
+        },
+        {
+         "id": "api-sess-chats-share",
+         "name": "Chat sharing",
+         "summary": "Create or remove a share link for a chat.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/chats/[chatId]/share/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "api-sess-files",
+       "name": "Files, diffs & preview",
+       "summary": "Reads files and diffs from the sandbox and starts the code editor and dev server.",
+       "children": [
+        {
+         "id": "api-sess-files-diff",
+         "name": "Diffs",
+         "summary": "The diff, its cached copy and patch.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/diff/**"
+         ]
+        },
+        {
+         "id": "api-sess-files-files",
+         "name": "Files",
+         "summary": "The file list and file contents.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/files/**"
+         ]
+        },
+        {
+         "id": "api-sess-files-tools",
+         "name": "Editor & preview",
+         "summary": "The code editor and dev server.",
+         "files": [
+          "apps/web/app/api/sessions/[sessionId]/code-editor/**",
+          "apps/web/app/api/sessions/[sessionId]/dev-server/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "api-shared",
+       "name": "Shared chat links",
+       "summary": "Serves a shared chat as markdown and reports whether it is still running.",
+       "files": [
+        "apps/web/app/api/shared/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "api-sandbox",
+     "name": "Sandbox control",
+     "summary": "Create, reconnect, extend, snapshot and delete a session's sandbox, and report whether it is awake.",
+     "children": [
+      {
+       "id": "api-sandbox-life",
+       "name": "Create & delete",
+       "summary": "Make a sandbox or remove it.",
+       "files": [
+        "apps/web/app/api/sandbox/route.ts"
+       ]
+      },
+      {
+       "id": "api-sandbox-state",
+       "name": "Status & reconnect",
+       "summary": "Report status and reconnect to a running sandbox.",
+       "files": [
+        "apps/web/app/api/sandbox/status/**",
+        "apps/web/app/api/sandbox/reconnect/**",
+        "apps/web/app/api/sandbox/activity/**"
+       ]
+      },
+      {
+       "id": "api-sandbox-keep",
+       "name": "Extend & snapshot",
+       "summary": "Extend the sandbox's life or save a snapshot.",
+       "files": [
+        "apps/web/app/api/sandbox/extend/**",
+        "apps/web/app/api/sandbox/snapshot/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "api-github-group",
+     "name": "GitHub & Vercel",
+     "summary": "Connecting a GitHub account or app, listing repos and branches, and receiving GitHub's webhooks.",
+     "children": [
+      {
+       "id": "api-gh-app",
+       "name": "GitHub app & webhook",
+       "summary": "Installs the GitHub app, completes sign-in, reports the connection and receives webhooks.",
+       "files": [
+        "apps/web/app/api/github/app/**",
+        "apps/web/app/api/github/webhook/**",
+        "apps/web/app/api/github/post-link/**",
+        "apps/web/app/api/github/connection-status/**",
+        "apps/web/app/api/github/user/**"
+       ]
+      },
+      {
+       "id": "api-gh-repos",
+       "name": "Repos & branches",
+       "summary": "Lists organisations, installations, repos and branches, and creates a repo.",
+       "files": [
+        "apps/web/app/api/github/branches/**",
+        "apps/web/app/api/github/create-repo/**",
+        "apps/web/app/api/github/installations/**",
+        "apps/web/app/api/github/orgs/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "api-account",
+     "name": "Account, settings & usage",
+     "summary": "Sign-in, user settings, usage totals and the link to Vercel projects.",
+     "children": [
+      {
+       "id": "api-account-auth",
+       "name": "Sign-in",
+       "summary": "The auth endpoints.",
+       "files": [
+        "apps/web/app/api/auth/**"
+       ]
+      },
+      {
+       "id": "api-account-settings",
+       "name": "Settings & Vercel",
+       "summary": "Preferences, model variants and Vercel projects.",
+       "files": [
+        "apps/web/app/api/settings/**",
+        "apps/web/app/api/vercel/**"
+       ]
+      },
+      {
+       "id": "api-account-usage",
+       "name": "Usage",
+       "summary": "Usage totals and rank.",
+       "files": [
+        "apps/web/app/api/usage/**"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "agent",
+   "name": "Agent & workflows",
+   "summary": "The coding agent: the loop that plans and calls tools, the helpers it can delegate to, and the background run that carries a task from start to a finished commit.",
+   "children": [
+    {
+     "id": "agent-core",
+     "name": "Agent core",
+     "summary": "The agent itself: its system prompt, model choices and the loop that calls tools.",
+     "children": [
+      {
+       "id": "agent-core-loop",
+       "name": "Agent loop",
+       "summary": "The agent and its entry point, and usage counting.",
+       "files": [
+        "packages/agent/open-agent.ts",
+        "packages/agent/index.ts",
+        "packages/agent/usage.ts"
+       ]
+      },
+      {
+       "id": "agent-core-prompt",
+       "name": "Prompt & models",
+       "summary": "The system prompt, the model list and shared types.",
+       "files": [
+        "packages/agent/system-prompt.ts",
+        "packages/agent/models.ts",
+        "packages/agent/types.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "agent-tools",
+     "name": "Agent tools",
+     "summary": "The things the agent can do: read, write and search files, run shell commands and fetch the web.",
+     "children": [
+      {
+       "id": "agent-tools-files",
+       "name": "File tools",
+       "summary": "Read, write, find and search files, with path safety checks.",
+       "files": [
+        "packages/agent/tools/read.ts",
+        "packages/agent/tools/write.ts",
+        "packages/agent/tools/glob.ts",
+        "packages/agent/tools/grep.ts",
+        "packages/agent/tools/path-security.ts"
+       ]
+      },
+      {
+       "id": "agent-tools-shell",
+       "name": "Shell & web",
+       "summary": "Run shell commands and fetch web pages.",
+       "files": [
+        "packages/agent/tools/bash.ts",
+        "packages/agent/tools/fetch.ts",
+        "packages/agent/tools/utils.ts",
+        "packages/agent/tools/index.ts"
+       ]
+      },
+      {
+       "id": "agent-tools-helpers",
+       "name": "Asking & planning",
+       "summary": "Ask the user, load a skill, hand off a sub-task and keep a to-do list.",
+       "files": [
+        "packages/agent/tools/ask-user-question.ts",
+        "packages/agent/tools/skill.ts",
+        "packages/agent/tools/task.ts",
+        "packages/agent/tools/todo.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "agent-subagents",
+     "name": "Subagents",
+     "summary": "Smaller agents the main agent hands work to, such as one that explores the code or one that designs a UI.",
+     "children": [
+      {
+       "id": "agent-subagents-roles",
+       "name": "Explorer & designer",
+       "summary": "The two ready-made subagents and their settings.",
+       "files": [
+        "packages/agent/subagents/explorer.ts",
+        "packages/agent/subagents/design.ts",
+        "packages/agent/subagents/constants.ts"
+       ]
+      },
+      {
+       "id": "agent-subagents-runtime",
+       "name": "Running subagents",
+       "summary": "Registers a subagent and runs it.",
+       "files": [
+        "packages/agent/subagents/executor.ts",
+        "packages/agent/subagents/registry.ts",
+        "packages/agent/subagents/types.ts",
+        "packages/agent/subagents/index.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "agent-skills",
+     "name": "Skills & context",
+     "summary": "Loads reusable skills for the agent and keeps a long conversation within the model's limits.",
+     "children": [
+      {
+       "id": "agent-skills-skills",
+       "name": "Skills",
+       "summary": "Finds and loads skills.",
+       "files": [
+        "packages/agent/skills/**"
+       ]
+      },
+      {
+       "id": "agent-skills-context",
+       "name": "Context management",
+       "summary": "Compacts a long conversation and sets cache hints.",
+       "files": [
+        "packages/agent/context-management/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "agent-run",
+     "name": "Durable chat run",
+     "summary": "The background run for one message: it builds the agent, drives the sandbox and streams the reply, and survives a restart.",
+     "children": [
+      {
+       "id": "agent-run-run",
+       "name": "The run",
+       "summary": "Builds the agent, drives the sandbox and tracks usage.",
+       "files": [
+        "apps/web/app/workflows/chat.ts",
+        "apps/web/app/workflows/chat-sandbox-runtime.ts",
+        "apps/web/app/workflows/gateway-metadata.ts",
+        "apps/web/app/workflows/usage-utils.ts"
+       ]
+      },
+      {
+       "id": "agent-run-stream",
+       "name": "Reply stream",
+       "summary": "A cancelable reply stream and tidying repeated reasoning.",
+       "files": [
+        "apps/web/lib/chat/create-cancelable-readable-stream.ts",
+        "apps/web/lib/chat/dedupe-message-reasoning.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "agent-finish",
+     "name": "After the run",
+     "summary": "When a run succeeds, commits the changes and can open a pull request.",
+     "files": [
+      "apps/web/app/workflows/chat-post-finish.ts",
+      "apps/web/lib/chat/auto-commit-direct.ts",
+      "apps/web/lib/chat/auto-pr-direct.ts",
+      "apps/web/lib/chat-auto-commit.ts"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sandbox",
+   "name": "Sandbox",
+   "summary": "The machine the agent works on: a separate virtual computer with files, a shell and git, which can sleep and wake up without losing work.",
+   "children": [
+    {
+     "id": "sbx-interface",
+     "name": "Sandbox interface",
+     "summary": "The contract any sandbox must meet, plus the helper that picks one.",
+     "children": [
+      {
+       "id": "sbx-interface-contract",
+       "name": "Contract",
+       "summary": "What a sandbox can do, and its types.",
+       "files": [
+        "packages/sandbox/interface.ts",
+        "packages/sandbox/types.ts",
+        "packages/sandbox/index.ts"
+       ]
+      },
+      {
+       "id": "sbx-interface-pick",
+       "name": "Picking & git",
+       "summary": "Chooses the sandbox to use and runs git inside it.",
+       "files": [
+        "packages/sandbox/factory.ts",
+        "packages/sandbox/git.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sbx-vercel",
+     "name": "Vercel sandbox driver",
+     "summary": "Runs the sandbox on Vercel: connecting, running commands and saving snapshots.",
+     "children": [
+      {
+       "id": "sbx-vercel-connect",
+       "name": "Connecting",
+       "summary": "Connect to a sandbox and track its saved state.",
+       "files": [
+        "packages/sandbox/vercel/connect.ts",
+        "packages/sandbox/vercel/config.ts",
+        "packages/sandbox/vercel/state.ts"
+       ]
+      },
+      {
+       "id": "sbx-vercel-run",
+       "name": "Running & snapshots",
+       "summary": "Run commands and refresh the base snapshot.",
+       "files": [
+        "packages/sandbox/vercel/sandbox.ts",
+        "packages/sandbox/vercel/snapshot-refresh.ts",
+        "packages/sandbox/vercel/utils.ts",
+        "packages/sandbox/vercel/index.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sbx-lifecycle",
+     "name": "Start, pause & archive",
+     "summary": "Creates a sandbox for a session, puts it to sleep when idle and archives it when the session ends.",
+     "children": [
+      {
+       "id": "sbx-lifecycle-start",
+       "name": "Provisioning",
+       "summary": "Builds a fresh sandbox and clones the repo into it.",
+       "files": [
+        "apps/web/app/workflows/sandbox-provisioning.ts",
+        "apps/web/lib/sandbox/provisioning.ts",
+        "apps/web/lib/sandbox/provisioning-kick.ts"
+       ]
+      },
+      {
+       "id": "sbx-lifecycle-life",
+       "name": "Pause & archive",
+       "summary": "Idle shutdown, wake-up and archiving.",
+       "files": [
+        "apps/web/app/workflows/sandbox-lifecycle.ts",
+        "apps/web/lib/sandbox/lifecycle.ts",
+        "apps/web/lib/sandbox/lifecycle-kick.ts",
+        "apps/web/lib/sandbox/archive-session.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sbx-setup",
+     "name": "Setup & tooling",
+     "summary": "Sandbox settings, how skills get installed into it and the scripts that prepare its base image.",
+     "children": [
+      {
+       "id": "sbx-setup-config",
+       "name": "Sandbox settings",
+       "summary": "Sandbox config, home folder and size.",
+       "files": [
+        "apps/web/lib/sandbox/config.ts",
+        "apps/web/lib/sandbox/home-directory.ts",
+        "apps/web/lib/sandbox/utils.ts",
+        "apps/web/lib/deployment/**"
+       ]
+      },
+      {
+       "id": "sbx-setup-skills",
+       "name": "Skill install",
+       "summary": "Installs global skills into a sandbox.",
+       "files": [
+        "apps/web/lib/skills/**"
+       ]
+      },
+      {
+       "id": "sbx-setup-scripts",
+       "name": "Base image scripts",
+       "summary": "Refresh the base snapshot and test in isolation.",
+       "files": [
+        "scripts/**"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "platform",
+   "name": "GitHub, accounts & data",
+   "summary": "What the rest of the app stands on: talking to GitHub and git, who the developer is, and the database that keeps sessions and usage.",
+   "children": [
+    {
+     "id": "pf-github",
+     "name": "GitHub & Git",
+     "summary": "Everything that reads or changes a repo.",
+     "children": [
+      {
+       "id": "pf-gh-connect",
+       "name": "GitHub connection",
+       "summary": "Signs the app in to GitHub as an app or a user and holds the tokens.",
+       "children": [
+        {
+         "id": "pf-gh-connect-auth",
+         "name": "App & tokens",
+         "summary": "The GitHub app, its tokens and access checks.",
+         "files": [
+          "apps/web/lib/github/app.ts",
+          "apps/web/lib/github/token.ts",
+          "apps/web/lib/github/access.ts"
+         ]
+        },
+        {
+         "id": "pf-gh-connect-client",
+         "name": "Client & users",
+         "summary": "The API client, URLs, users and unlinking.",
+         "files": [
+          "apps/web/lib/github/client.ts",
+          "apps/web/lib/github/users.ts",
+          "apps/web/lib/github/urls.ts",
+          "apps/web/lib/github/actions/connection.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-gh-commits",
+       "name": "Commits & sync",
+       "summary": "Turns the agent's changes into a commit and keeps the repo in sync.",
+       "files": [
+        "apps/web/lib/github/commit-intent.ts",
+        "apps/web/lib/github/commit.ts",
+        "apps/web/lib/github/sync.ts",
+        "apps/web/lib/github/repos.ts",
+        "apps/web/lib/github/actions/commit.ts"
+       ]
+      },
+      {
+       "id": "pf-gh-prs",
+       "name": "Pull requests",
+       "summary": "Writes, opens, checks and merges pull requests.",
+       "children": [
+        {
+         "id": "pf-gh-prs-text",
+         "name": "Text & status",
+         "summary": "Writes the pull request text and reads its status.",
+         "files": [
+          "apps/web/lib/github/pr-content.ts",
+          "apps/web/lib/github/status.ts"
+         ]
+        },
+        {
+         "id": "pf-gh-prs-actions",
+         "name": "Open & merge",
+         "summary": "Opens, merges and closes a pull request.",
+         "files": [
+          "apps/web/lib/github/pulls.ts",
+          "apps/web/lib/github/actions/pr.ts"
+         ]
+        },
+        {
+         "id": "pf-gh-prs-queries",
+         "name": "Checks & deployments",
+         "summary": "Reads merge readiness and the preview deployment.",
+         "files": [
+          "apps/web/lib/github/queries/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-git",
+       "name": "Git operations",
+       "summary": "Branches, discards and status inside the sandbox's repo.",
+       "children": [
+        {
+         "id": "pf-git-core",
+         "name": "Branches & helpers",
+         "summary": "Lists branches and shared git helpers.",
+         "files": [
+          "apps/web/lib/git/branches.ts",
+          "apps/web/lib/git/helpers.ts"
+         ]
+        },
+        {
+         "id": "pf-git-actions",
+         "name": "Actions & status",
+         "summary": "Creates a branch, discards changes and reads the status.",
+         "files": [
+          "apps/web/lib/git/actions/**",
+          "apps/web/lib/git/queries/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-vercel",
+       "name": "Vercel projects",
+       "summary": "Finds a repo's Vercel projects and its environment settings.",
+       "files": [
+        "apps/web/lib/vercel/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "pf-data",
+     "name": "Accounts & data",
+     "summary": "Who is signed in, what is stored about them, and the limits on what they can use.",
+     "children": [
+      {
+       "id": "pf-db-core",
+       "name": "Database setup",
+       "summary": "Connects to Postgres, defines its tables and runs migrations.",
+       "children": [
+        {
+         "id": "pf-db-core-schema",
+         "name": "Connection & tables",
+         "summary": "The Postgres client, its tables and migrations.",
+         "files": [
+          "apps/web/lib/db/client.ts",
+          "apps/web/lib/db/schema.ts",
+          "apps/web/lib/db/migrate.ts"
+         ]
+        },
+        {
+         "id": "pf-db-core-runs",
+         "name": "Runs & checks",
+         "summary": "Records of background runs and the migration check script.",
+         "files": [
+          "apps/web/lib/db/workflow-runs.ts",
+          "apps/web/scripts/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-db-sessions",
+       "name": "Sessions & installs",
+       "summary": "Reads and writes sessions, users and GitHub installations.",
+       "children": [
+        {
+         "id": "pf-db-sessions-sessions",
+         "name": "Sessions",
+         "summary": "Sessions, their cache and the last repo used.",
+         "files": [
+          "apps/web/lib/db/sessions.ts",
+          "apps/web/lib/db/sessions-cache.ts",
+          "apps/web/lib/db/last-repo.ts"
+         ]
+        },
+        {
+         "id": "pf-db-sessions-people",
+         "name": "Users & installs",
+         "summary": "Users, GitHub installations and Vercel project links.",
+         "files": [
+          "apps/web/lib/db/installations.ts",
+          "apps/web/lib/db/users.ts",
+          "apps/web/lib/db/vercel-project-links.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-db-usage",
+       "name": "Usage & preferences",
+       "summary": "Stores usage, leaderboards and each developer's preferences.",
+       "children": [
+        {
+         "id": "pf-db-usage-usage",
+         "name": "Usage records",
+         "summary": "Usage, its insights and the leaderboard.",
+         "files": [
+          "apps/web/lib/db/usage.ts",
+          "apps/web/lib/db/usage-insights.ts",
+          "apps/web/lib/db/usage-domain-leaderboard.ts"
+         ]
+        },
+        {
+         "id": "pf-db-usage-people",
+         "name": "Profiles & preferences",
+         "summary": "Public usage profiles and each developer's preferences.",
+         "files": [
+          "apps/web/lib/db/public-usage-profile.ts",
+          "apps/web/lib/db/user-preferences.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-auth",
+       "name": "Sign-in & sessions",
+       "summary": "Signs the developer in and finds who is making a request.",
+       "children": [
+        {
+         "id": "pf-auth-auth",
+         "name": "Sign-in",
+         "summary": "The sign-in config and username rules.",
+         "files": [
+          "apps/web/lib/auth/**"
+         ]
+        },
+        {
+         "id": "pf-auth-session",
+         "name": "Current user",
+         "summary": "Finds the signed-in user on the server, and admin token revocation.",
+         "files": [
+          "apps/web/lib/session/**",
+          "apps/web/lib/admin/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "pf-limits",
+       "name": "Limits & usage maths",
+       "summary": "Rate limits, bot checks and the maths behind usage insights.",
+       "children": [
+        {
+         "id": "pf-limits-limits",
+         "name": "Rate limits",
+         "summary": "Redis, rate limiting and the bot check.",
+         "files": [
+          "apps/web/lib/redis.ts",
+          "apps/web/lib/rate-limit.ts",
+          "apps/web/lib/botid.ts"
+         ]
+        },
+        {
+         "id": "pf-limits-maths",
+         "name": "Usage maths",
+         "summary": "Date ranges and insight calculations.",
+         "files": [
+          "apps/web/lib/usage/**"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "shared",
+   "name": "Shared UI & helpers",
+   "summary": "Building blocks used everywhere: the button and dialog kit, the shared package, the model catalog and small helpers.",
+   "children": [
+    {
+     "id": "sh-ui",
+     "name": "UI kit",
+     "summary": "Plain interface pieces with no business logic.",
+     "children": [
+      {
+       "id": "sh-ui-forms",
+       "name": "Buttons & fields",
+       "summary": "Buttons, switches and the pieces of a form.",
+       "children": [
+        {
+         "id": "sh-ui-forms-buttons",
+         "name": "Buttons & switches",
+         "summary": "Buttons, button groups and switches.",
+         "files": [
+          "apps/web/components/ui/button.tsx",
+          "apps/web/components/ui/button-group.tsx",
+          "apps/web/components/ui/switch.tsx"
+         ]
+        },
+        {
+         "id": "sh-ui-forms-fields",
+         "name": "Form fields",
+         "summary": "Inputs, text areas, labels, fields and selects.",
+         "files": [
+          "apps/web/components/ui/input.tsx",
+          "apps/web/components/ui/input-group.tsx",
+          "apps/web/components/ui/textarea.tsx",
+          "apps/web/components/ui/label.tsx",
+          "apps/web/components/ui/field.tsx",
+          "apps/web/components/ui/select.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "sh-ui-overlays",
+       "name": "Dialogs & menus",
+       "summary": "Dialogs, drawers, menus, tooltips and the sidebar.",
+       "children": [
+        {
+         "id": "sh-ui-overlays-panels",
+         "name": "Dialogs & panels",
+         "summary": "Dialogs, drawers, sheets and popovers.",
+         "files": [
+          "apps/web/components/ui/dialog.tsx",
+          "apps/web/components/ui/drawer.tsx",
+          "apps/web/components/ui/sheet.tsx",
+          "apps/web/components/ui/popover.tsx"
+         ]
+        },
+        {
+         "id": "sh-ui-overlays-menus",
+         "name": "Menus & sidebar",
+         "summary": "Menus, the command palette, tooltips and the sidebar.",
+         "files": [
+          "apps/web/components/ui/dropdown-menu.tsx",
+          "apps/web/components/ui/command.tsx",
+          "apps/web/components/ui/tooltip.tsx",
+          "apps/web/components/ui/sidebar.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "sh-ui-display",
+       "name": "Content & layout",
+       "summary": "Cards, tables, tabs, avatars, calendars and loading skeletons.",
+       "children": [
+        {
+         "id": "sh-ui-display-content",
+         "name": "Cards, tables & tabs",
+         "summary": "Content containers.",
+         "files": [
+          "apps/web/components/ui/avatar.tsx",
+          "apps/web/components/ui/card.tsx",
+          "apps/web/components/ui/table.tsx",
+          "apps/web/components/ui/tabs.tsx",
+          "apps/web/components/ui/empty.tsx"
+         ]
+        },
+        {
+         "id": "sh-ui-display-dates",
+         "name": "Dates",
+         "summary": "Calendar and date range picker.",
+         "files": [
+          "apps/web/components/ui/calendar.tsx",
+          "apps/web/components/ui/date-range-picker.tsx"
+         ]
+        },
+        {
+         "id": "sh-ui-display-layout",
+         "name": "Scrolling & placeholders",
+         "summary": "Scroll areas, separators and skeletons.",
+         "files": [
+          "apps/web/components/ui/scroll-area.tsx",
+          "apps/web/components/ui/separator.tsx",
+          "apps/web/components/ui/skeleton.tsx"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sh-package",
+     "name": "Shared package",
+     "summary": "Small contexts and helpers shared between the web app and the agent.",
+     "children": [
+      {
+       "id": "sh-package-contexts",
+       "name": "View contexts",
+       "summary": "Whether reasoning, to-dos and long output are expanded.",
+       "files": [
+        "packages/shared/hooks/**"
+       ]
+      },
+      {
+       "id": "sh-package-helpers",
+       "name": "Helpers",
+       "summary": "Diff, paste and tool-state helpers.",
+       "files": [
+        "packages/shared/lib/**",
+        "packages/shared/index.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sh-chat",
+     "name": "Chat client helpers",
+     "summary": "The browser side of a chat: the stream transport, in-flight state, file links and attachment helpers.",
+     "children": [
+      {
+       "id": "sh-chat-stream",
+       "name": "Stream & state",
+       "summary": "Streams a reply and tracks chats in flight.",
+       "files": [
+        "apps/web/lib/abortable-chat-transport.ts",
+        "apps/web/lib/chat-instance-manager.ts",
+        "apps/web/lib/chat-route-cleanup.ts",
+        "apps/web/lib/chat-streaming-state.ts"
+       ]
+      },
+      {
+       "id": "sh-chat-links",
+       "name": "Links & markdown",
+       "summary": "File links, suggestions and markdown rendering.",
+       "files": [
+        "apps/web/lib/assistant-file-links.ts",
+        "apps/web/lib/file-suggestions.ts",
+        "apps/web/lib/streamdown-config.tsx"
+       ]
+      },
+      {
+       "id": "sh-chat-attach",
+       "name": "Attachments & cache",
+       "summary": "Text and image helpers and the skills cache.",
+       "files": [
+        "apps/web/lib/text-attachment-utils.ts",
+        "apps/web/lib/image-utils.ts",
+        "apps/web/lib/skills-cache.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sh-models",
+     "name": "Model catalog",
+     "summary": "Which AI models exist, which the developer may use and their options.",
+     "children": [
+      {
+       "id": "sh-models-access",
+       "name": "Access & options",
+       "summary": "Who may use which model, and the options on offer.",
+       "files": [
+        "apps/web/lib/model-access.ts",
+        "apps/web/lib/model-availability.ts",
+        "apps/web/lib/model-options.ts"
+       ]
+      },
+      {
+       "id": "sh-models-catalog",
+       "name": "Catalog",
+       "summary": "The model list, its variants and context sizes.",
+       "files": [
+        "apps/web/lib/model-variants.ts",
+        "apps/web/lib/models-with-context.ts",
+        "apps/web/lib/models.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "sh-helpers",
+     "name": "Small helpers & hooks",
+     "summary": "Formatting, theming and the hooks every screen uses.",
+     "children": [
+      {
+       "id": "sh-helpers-format",
+       "name": "Formatting & themes",
+       "summary": "Time formatting, class helpers and themes.",
+       "files": [
+        "apps/web/lib/format-relative-time.ts",
+        "apps/web/lib/random-city.ts",
+        "apps/web/lib/utils.ts",
+        "apps/web/lib/vercel-themes.ts"
+       ]
+      },
+      {
+       "id": "sh-helpers-data",
+       "name": "Data hooks",
+       "summary": "Fetching, the current user and preferences.",
+       "files": [
+        "apps/web/lib/swr.ts",
+        "apps/web/hooks/use-session.ts",
+        "apps/web/hooks/use-github-connection-status.ts",
+        "apps/web/hooks/use-user-preferences.ts"
+       ]
+      },
+      {
+       "id": "sh-helpers-browser",
+       "name": "Browser hooks",
+       "summary": "Phone detection and scroll helpers.",
+       "files": [
+        "apps/web/hooks/use-mobile.ts",
+        "apps/web/hooks/use-scroll-to-bottom.ts"
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "story": {
+  "actors": [
+   {
+    "id": "developer",
+    "name": "Developer",
+    "summary": "Describes coding tasks, watches the agent work and reviews what it produced.",
+    "kind": "person"
+   },
+   {
+    "id": "teammate",
+    "name": "Teammate",
+    "summary": "Opens a link to read a chat someone shared.",
+    "kind": "person"
+   },
+   {
+    "id": "github",
+    "name": "GitHub",
+    "summary": "Tells the app when something changes on a repo or pull request.",
+    "kind": "system"
+   }
+  ],
+  "uses": [
+   {
+    "actor": "developer",
+    "part": "pages",
+    "says": "signs in",
+    "entry": "/"
+   },
+   {
+    "actor": "developer",
+    "part": "pages",
+    "says": "chooses models",
+    "entry": "/settings/models"
+   },
+   {
+    "actor": "developer",
+    "part": "workspace",
+    "says": "assigns coding tasks",
+    "entry": "/sessions/[sessionId]/chats/[chatId]"
+   },
+   {
+    "actor": "teammate",
+    "part": "pages",
+    "says": "reads shared chats",
+    "entry": "/shared/[shareId]"
+   },
+   {
+    "actor": "github",
+    "part": "api",
+    "says": "sends repo events",
+    "entry": "/api/github/webhook"
+   }
+  ],
+  "narrative": [
+   "A [[developer]] signs in on the [[pages]], picks a repo and describes a coding task in the [[workspace]].",
+   "The [[api]] hands the task to the [[agent]], a background worker that plans, reads and edits code by calling tools and asking the [[svc-ai-model]].",
+   "The agent never works inside the app itself: it drives a separate [[sandbox]] that holds the files, a shell and git.",
+   "When a run succeeds, the [[platform]] commits the changes and can open a pull request through [[svc-github]].",
+   "[[svc-postgres]] keeps sessions, chats and usage, and [[svc-redis]] keeps each person under their rate limit.",
+   "A [[teammate]] can read a shared chat, and [[github]] tells the app when a pull request changes."
+  ]
+ },
+ "tours": [
+  {
+   "id": "give-the-agent-a-task",
+   "title": "Giving the agent a task",
+   "chain": [
+    "apps/web/app/sessions/[sessionId]/chats/[chatId]/page.tsx",
+    "apps/web/app/sessions/[sessionId]/chats/[chatId]/session-chat-context.tsx",
+    "apps/web/app/sessions/[sessionId]/chats/[chatId]/hooks/use-session-chat-runtime.ts",
+    "apps/web/app/api/chat/route.ts",
+    "apps/web/app/workflows/chat.ts",
+    "packages/agent/open-agent.ts",
+    "svc-ai-model"
+   ],
+   "captions": [
+    "The chat page wraps everything in a chat context that owns the conversation.",
+    "The context starts the chat runtime, which sends each message to the server.",
+    "The runtime posts the message to the chat route, which can also resume or stop a run.",
+    "The route checks who is asking and starts the background chat run.",
+    "The run builds the coding agent and gives it the tools and the sandbox.",
+    "The agent asks the AI model what to do next, and keeps calling tools until the task is done."
+   ]
+  },
+  {
+   "id": "start-a-sandbox",
+   "title": "Starting a sandbox",
+   "chain": [
+    "apps/web/app/api/sessions/route.ts",
+    "apps/web/lib/sandbox/provisioning-kick.ts",
+    "apps/web/app/workflows/sandbox-provisioning.ts",
+    "apps/web/lib/sandbox/provisioning.ts",
+    "apps/web/lib/github/access.ts",
+    "apps/web/lib/github/client.ts",
+    "svc-github"
+   ],
+   "captions": [
+    "Creating a session also asks for a sandbox to be built for it.",
+    "The kick-off helper starts the provisioning workflow so the request can return at once.",
+    "The workflow does the slow work in the background, step by step.",
+    "Provisioning builds the sandbox and needs access to the repo before it can clone it.",
+    "The access check finds a GitHub token the app may use for this repo.",
+    "The GitHub client asks the GitHub API for the repo and its permissions."
+   ]
+  },
+  {
+   "id": "commit-the-work",
+   "title": "Committing the work",
+   "chain": [
+    "apps/web/app/workflows/chat.ts",
+    "apps/web/app/workflows/chat-post-finish.ts",
+    "apps/web/lib/chat/auto-commit-direct.ts",
+    "apps/web/lib/git/helpers.ts",
+    "svc-ai-model"
+   ],
+   "captions": [
+    "When the run ends, the chat run hands over to its finish step.",
+    "If the developer turned auto-commit on, the finish step commits the sandbox's changes.",
+    "The commit step asks the git helpers for the changes and a commit message.",
+    "The helpers ask the AI model to write a message that describes the change."
+   ]
+  },
+  {
+   "id": "open-a-pull-request",
+   "title": "Opening a pull request",
+   "chain": [
+    "apps/web/components/create-pr-dialog.tsx",
+    "apps/web/lib/github/actions/pr.ts",
+    "apps/web/lib/github/pulls.ts",
+    "apps/web/lib/github/client.ts",
+    "svc-github"
+   ],
+   "captions": [
+    "The create-PR dialog collects the title and description and calls a server action.",
+    "The action checks the session, pushes the branch from the sandbox and opens the pull request.",
+    "The pull request helpers build the request to GitHub.",
+    "The GitHub client sends it to the GitHub API."
+   ]
+  }
+ ]
+}

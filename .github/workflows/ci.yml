@@ -1,0 +1,177 @@
+name: CI
+
+on:
+  # Non-draft PRs into develop and main run CI, and so does every push to main. Docs-only PRs skip the heavy
+  # jobs (changes classifier). Draft PRs get no CI; marking one ready (ready_for_review) starts it.
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # PRs: a new push cancels the superseded run. main: one group per commit, never cancelled or replaced.
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  changes:
+    # Decides which heavy jobs a PR needs (scripts/cichanges.ts). Skipped on drafts, so their jobs are skipped too.
+    # Push to main, manual runs and any PR into main (the release PR) always get code=true windows=true.
+    name: changes
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.f.outputs.code }}
+      windows: ${{ steps.f.outputs.windows }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - id: f
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: node scripts/cichanges.ts
+
+  leak-guard:
+    # Internal terms, home-directory paths and secrets (scripts/leakguard.ts + gitleaks). Not gated by
+    # changes.outputs.code: docs-only PRs are where leaks land, and cichanges.ts skips them for `check`.
+    name: leak guard
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+      - uses: ./.github/actions/leakguard
+
+  check:
+    name: test, typecheck, build
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run typecheck
+      - run: npm run build
+
+  gallery-default:
+    # Default-grouping gate (#361): clones the pinned gallery repos and runs analyze + score only (no layout),
+    # failing when one breaks gallery/thresholds.json. See gallery/README.md.
+    name: gallery default-grouping gate
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      REPOLADDER_NO_USAGE: "1"
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .gallery/repos
+          key: gallery-repos-${{ hashFiles('gallery/repos.json') }}
+          restore-keys: gallery-repos-
+      - name: Check default-grouping scores
+        run: npm run gallery -- --check --jobs 2
+
+  install:
+    # A user's install: the plugin fetched from git into a fresh Claude config dir by the real
+    # `claude plugin install`, which installs its runtime deps, then preflight, summary and build
+    # on a fixture, all outside the repo so nothing resolves from its node_modules. Also the npm
+    # package (the repoladder bin and the library): packed, installed from the tarball, the bin run on a fixture and the library type-checked (--pack).
+    name: plugin install (${{ matrix.os }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows runs on main and on PRs touching install/packaging code (windows output); costs 2x.
+        os: ${{ fromJSON(needs.changes.outputs.windows == 'true' && '["ubuntu-latest","windows-latest"]' || '["ubuntu-latest"]') }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm install -g @anthropic-ai/claude-code@2.1.296
+      - run: node scripts/installcheck.ts
+      - run: node scripts/installcheck.ts --simulate
+      - run: node scripts/installcheck.ts --pack
+      - if: runner.os == 'Linux'
+        run: node scripts/npm-package.ts --out .npm-package && npm publish --dry-run .npm-package
+
+  no-dist:
+    name: PR does not touch plugin/dist
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check for plugin/dist changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Three-dot diff: only what this PR changed since it branched, so bot
+          # rebuilds landing on main in the meantime don't count against it (nor does a back-merge).
+          changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- plugin/dist)
+          if [ -n "$changed" ]; then
+            echo "::error title=plugin/dist is built on main::This PR changes the committed bundle:"
+            echo "$changed"
+            cat <<'MSG'
+
+          plugin/dist/ is rebuilt and committed by the "Rebuild bundle" workflow on main
+          after each release. Feature work on develop must not commit it, otherwise
+          every parallel branch conflicts on the same generated file.
+
+          To fix, on a branch cut from develop, restore it to what main and develop last
+          shared, and merge that through a PR into develop:
+            git checkout $(git merge-base origin/main HEAD) -- plugin/dist
+            git commit -m "Drop plugin/dist changes"
+          MSG
+            exit 1
+          fi
+          echo "OK: plugin/dist untouched."

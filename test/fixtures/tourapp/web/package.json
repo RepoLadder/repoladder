@@ -1,0 +1,1 @@
+{ "name": "@clinic/web", "dependencies": { "firebase": "10.0.0", "react": "19.0.0", "react-router-dom": "7.0.0" } }

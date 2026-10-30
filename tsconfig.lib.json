@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": { "noEmit": false, "declaration": true, "emitDeclarationOnly": true, "rootDir": "src", "outDir": ".npm-package/dist/types" },
+  "include": [],
+  "files": ["src/lib.ts"]
+}

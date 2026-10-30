@@ -1,0 +1,13 @@
+{
+  "defaultBranch": "main",
+  "requiredChecks": [
+    "changes",
+    "leak guard",
+    "test, typecheck, build",
+    "plugin install (ubuntu-latest)",
+    "PR does not touch plugin/dist"
+  ],
+  "requireCodeOwnerReview": false,
+  "allowedBypassActorTypes": ["Integration", "DeployKey"],
+  "interactionLimit": { "limit": "existing_users", "expiry": "one_week" }
+}

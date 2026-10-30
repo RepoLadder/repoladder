@@ -1,0 +1,1 @@
+{ "name": "remix-app", "private": true, "type": "module", "dependencies": { "@prisma/client": "6.0.0", "react": "19.0.0", "react-router": "7.6.0", "@react-router/node": "7.6.0" } }

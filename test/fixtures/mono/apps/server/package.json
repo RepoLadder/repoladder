@@ -1,0 +1,1 @@
+{ "name": "@mono/server", "dependencies": { "express": "*", "@mono/api": "workspace:*" } }

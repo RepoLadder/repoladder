@@ -1,0 +1,19 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Website {
+  id     String  @id
+  name   String
+  domain String?
+}
+
+model Session {
+  id        String @id
+  websiteId String
+}

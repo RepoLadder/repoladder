@@ -1,0 +1,39 @@
+# Guardrail paths: changes here need review from the owner once the public repo's
+# ruleset turns on "Require review from Code Owners". Until then (private repo on
+# the free plan) GitHub does not enforce this file; it is documentation, and
+# test/codeowners.test.ts keeps it honest.
+#
+# The last matching pattern wins, and an ownerless pattern would unset ownership,
+# so every line below names an owner. There is deliberately no catch-all "*" line:
+# a catch-all would own every file and block every ordinary agent PR.
+
+/.github/ @repoladder/maintainers
+/.claude-plugin/ @repoladder/maintainers
+/plugin/.claude-plugin/ @repoladder/maintainers
+/plugin/skills/map/SKILL.md @repoladder/maintainers
+/plugin/dist/ @repoladder/maintainers
+/.claude/ @repoladder/maintainers
+/.githooks/ @repoladder/maintainers
+/.gitleaks.toml @repoladder/maintainers
+/CLAUDE.md @repoladder/maintainers
+/scripts/build.ts @repoladder/maintainers
+/scripts/bundle.ts @repoladder/maintainers
+/scripts/cichanges.ts @repoladder/maintainers
+/scripts/npm-package.ts @repoladder/maintainers
+/scripts/installcheck.ts @repoladder/maintainers
+/scripts/githooks.ts @repoladder/maintainers
+/scripts/leakguard.ts @repoladder/maintainers
+/scripts/leakguard.config.json @repoladder/maintainers
+/scripts/leakguard.private.json @repoladder/maintainers
+/package.json @repoladder/maintainers
+/package-lock.json @repoladder/maintainers
+/plugin/package.json @repoladder/maintainers
+/plugin/package-lock.json @repoladder/maintainers
+/test/releaseflow.test.ts @repoladder/maintainers
+/test/cichanges.test.ts @repoladder/maintainers
+/test/leakguard.test.ts @repoladder/maintainers
+/test/codeowners.test.ts @repoladder/maintainers
+/LICENSE* @repoladder/maintainers
+/NOTICE @repoladder/maintainers
+/plugin/LICENSE* @repoladder/maintainers
+/plugin/NOTICE @repoladder/maintainers

@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "about": "Leak guard rules (patterns only). Terms are assembled from parts at load time so this file never holds them. Owner-only extras go in .leakguard.local.json (gitignored).",
+  "rules": [
+    { "id": "private-app", "why": "internal app name", "parts": ["front", "desk"] },
+    { "id": "private-owner-org", "why": "internal organisation name", "parts": ["evan", "ossege"] },
+    { "id": "private-repo", "why": "private archive repo slug", "parts": ["qtweh", "by/", "code", "wehb"] },
+    {
+      "id": "user-path",
+      "why": "absolute home-directory path",
+      "regex": "(?:^|[^A-Za-z0-9_.-])/(?:Users|home)/([A-Za-z0-9_.-]+)/",
+      "placeholderGroup": 1
+    },
+    { "id": "secret-private-key", "why": "private key block", "regex": "-----BEGIN [A-Z ]*PRIVATE KEY-----" },
+    { "id": "secret-aws-key", "why": "AWS access key id", "regex": "AKIA[0-9A-Z]{16}" },
+    { "id": "secret-github-token", "why": "GitHub token", "regex": "(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,})" },
+    { "id": "secret-slack-token", "why": "Slack token", "regex": "xox[baprs]-[A-Za-z0-9-]{10,}" },
+    { "id": "secret-anthropic-key", "why": "Anthropic API key", "regex": "sk-ant-[A-Za-z0-9_-]{20,}" },
+    {
+      "id": "secret-assignment",
+      "why": "hard-coded API or secret key value",
+      "regex": "(?:api|secret)[_-]?key\\s*[:=]\\s*['\"][^'\"\\s]{20,}",
+      "flags": "i"
+    }
+  ],
+  "placeholders": ["me", "you", "user", "username", "name", "example", "foo", "runner", "shared"]
+}

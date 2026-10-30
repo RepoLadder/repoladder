@@ -1,0 +1,40 @@
+name: Verify bundle
+
+# Rebuilds plugin/dist on a clean ubuntu-latest checkout of main and fails if it differs from the
+# committed bundle (scripts/verifydist.ts). Not a ci.yml job: a push-CI run starts on the release
+# merge commit, whose bundle is stale until the rebuild bot commits, so it would always be red.
+# Not run on pull requests either: a release PR's plugin/dist is legitimately stale.
+on:
+  workflow_run:
+    workflows: ["Rebuild bundle"]
+    types: [completed]
+    branches: [main]
+  schedule:
+    - cron: "47 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-dist
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # A newer release may already be waiting for its own bot run, so only the workflow_run trigger tolerates a stale bundle.
+      - run: node scripts/verifydist.ts ${{ github.event_name == 'workflow_run' && '--allow-stale' || '' }}

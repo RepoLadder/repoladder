@@ -1,0 +1,2022 @@
+{
+ "version": 1,
+ "summary": "Excalidraw, the open-source virtual whiteboard for hand-drawn-style diagrams. The editor is a React package anyone can embed; excalidraw.com wraps it with end-to-end encrypted live collaboration, share links and storage in Firebase.",
+ "children": [
+  {
+   "id": "app",
+   "name": "Excalidraw.com",
+   "summary": "The hosted whiteboard at excalidraw.com: it wraps the editor with live collaboration, share links, saving to Firebase, the AI features and translations.",
+   "children": [
+    {
+     "id": "app-shell",
+     "name": "App shell",
+     "summary": "Boots the site, wraps the editor component, and adds error reporting and debug tools.",
+     "children": [
+      {
+       "id": "app-shell-boot",
+       "name": "Startup",
+       "summary": "The entry point, the app component and its state.",
+       "files": [
+        "excalidraw-app/App.tsx",
+        "excalidraw-app/index.tsx",
+        "excalidraw-app/app-jotai.ts",
+        "excalidraw-app/app_constants.ts",
+        "excalidraw-app/useHandleAppTheme.ts",
+        "public/**"
+       ]
+      },
+      {
+       "id": "app-shell-debug",
+       "name": "Errors & debugging",
+       "summary": "Sentry, bug reports, stats and debug helpers.",
+       "files": [
+        "excalidraw-app/sentry.ts",
+        "excalidraw-app/bug-issue-template.js",
+        "excalidraw-app/CustomStats.tsx",
+        "excalidraw-app/debugCollaborators.ts",
+        "excalidraw-app/ExcalidrawPlusIframeExport.tsx"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "app-collab",
+     "name": "Collaboration & sharing",
+     "summary": "Live sessions with other people, end-to-end encrypted, and the share dialog with its link and QR code.",
+     "files": [
+      "excalidraw-app/collab/**",
+      "excalidraw-app/share/**"
+     ]
+    },
+    {
+     "id": "app-storage",
+     "name": "Saving & files",
+     "summary": "Keeps the drawing in the browser, syncs between tabs, and stores shared scenes and images in Firebase.",
+     "children": [
+      {
+       "id": "app-storage-local",
+       "name": "Browser storage",
+       "summary": "Local saves, tab sync and the save lock.",
+       "files": [
+        "excalidraw-app/data/LocalData.ts",
+        "excalidraw-app/data/localStorage.ts",
+        "excalidraw-app/data/tabSync.ts",
+        "excalidraw-app/data/Locker.ts",
+        "excalidraw-app/data/TTDStorage.ts"
+       ]
+      },
+      {
+       "id": "app-storage-cloud",
+       "name": "Firebase & files",
+       "summary": "Shared scenes and images in Firebase.",
+       "files": [
+        "excalidraw-app/data/firebase.ts",
+        "excalidraw-app/data/index.ts",
+        "excalidraw-app/data/FileManager.ts",
+        "excalidraw-app/data/fileStatusStore.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "app-menus",
+     "name": "Site menus & AI",
+     "summary": "The site's own main menu, sidebar, welcome screen, footer, the AI plugin and Excalidraw+ promos.",
+     "children": [
+      {
+       "id": "app-menus-menus",
+       "name": "Menus & welcome",
+       "summary": "Main menu, sidebar, footer and welcome screen.",
+       "files": [
+        "excalidraw-app/components/AppFooter.tsx",
+        "excalidraw-app/components/AppMainMenu.tsx",
+        "excalidraw-app/components/AppSidebar.tsx",
+        "excalidraw-app/components/AppWelcomeScreen.tsx",
+        "excalidraw-app/components/TopErrorBoundary.tsx"
+       ]
+      },
+      {
+       "id": "app-menus-plus",
+       "name": "AI & Excalidraw+",
+       "summary": "The AI plugin, debug canvas and Excalidraw+ promos.",
+       "files": [
+        "excalidraw-app/components/AI.tsx",
+        "excalidraw-app/components/DebugCanvas.tsx",
+        "excalidraw-app/components/EncryptedIcon.tsx",
+        "excalidraw-app/components/ExcalidrawPlusPromoBanner.tsx",
+        "excalidraw-app/components/ExportToExcalidrawPlus.tsx"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "app-language",
+     "name": "Languages",
+     "summary": "Detects the visitor's language and lets them switch it.",
+     "files": [
+      "excalidraw-app/app-language/**"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "editor",
+   "name": "Editor UI",
+   "summary": "The React editor everyone embeds: the canvas and its input handling, toolbars, panels, dialogs and the text-to-diagram assistant.",
+   "children": [
+    {
+     "id": "editor-canvas",
+     "name": "Canvas & input",
+     "summary": "The heart of the editor: one big component that turns pointer and keyboard input into shapes, and the canvases it draws on.",
+     "children": [
+      {
+       "id": "editor-canvas-app",
+       "name": "Editor component",
+       "summary": "The main editor component and its viewport, scrolling, zoom and cursor handling.",
+       "children": [
+        {
+         "id": "editor-canvas-app-core",
+         "name": "Editor core",
+         "summary": "The editor component and its state observer.",
+         "files": [
+          "packages/excalidraw/components/App.tsx",
+          "packages/excalidraw/components/AppStateObserver.ts"
+         ]
+        },
+        {
+         "id": "editor-canvas-app-view",
+         "name": "Viewport & cursor",
+         "summary": "Zoom, scroll, pan and cursor.",
+         "files": [
+          "packages/excalidraw/components/App.viewport.ts",
+          "packages/excalidraw/components/App.wheel.ts",
+          "packages/excalidraw/components/App.pan.ts",
+          "packages/excalidraw/components/App.cursor.ts",
+          "packages/excalidraw/components/App.modifiers.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-canvas-tools",
+       "name": "Drawing tools",
+       "summary": "What each tool does with the pointer: shapes, selection, text, arrows, bucket fill, flowcharts.",
+       "files": [
+        "packages/excalidraw/components/App.drawshape.ts",
+        "packages/excalidraw/components/App.toolDrag.ts",
+        "packages/excalidraw/components/App.selectionTool.ts",
+        "packages/excalidraw/components/App.textTool.ts",
+        "packages/excalidraw/components/App.text.ts",
+        "packages/excalidraw/components/App.arrowText.ts",
+        "packages/excalidraw/components/App.bucketFill.ts",
+        "packages/excalidraw/components/App.flowchart.ts"
+       ],
+       "split": [
+        {
+         "id": "editor-canvas-tools-shapes",
+         "name": "Shapes & selection",
+         "summary": "Drawing shapes, dragging tools and selecting.",
+         "files": [
+          "packages/excalidraw/components/App.drawshape.ts",
+          "packages/excalidraw/components/App.toolDrag.ts",
+          "packages/excalidraw/components/App.selectionTool.ts",
+          "packages/excalidraw/components/App.bucketFill.ts",
+          "packages/excalidraw/components/App.flowchart.ts"
+         ]
+        },
+        {
+         "id": "editor-canvas-tools-text",
+         "name": "Text tools",
+         "summary": "Typing text and labels on arrows.",
+         "files": [
+          "packages/excalidraw/components/App.textTool.ts",
+          "packages/excalidraw/components/App.text.ts",
+          "packages/excalidraw/components/App.arrowText.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-canvas-paste",
+       "name": "Paste, drop & duplicate",
+       "summary": "Pasting and dropping content onto the canvas, duplicating, and picking colors from it.",
+       "files": [
+        "packages/excalidraw/components/App.clipboard.ts",
+        "packages/excalidraw/components/App.duplicate.ts",
+        "packages/excalidraw/components/FileDropOverlay.tsx",
+        "packages/excalidraw/components/EyeDropper.tsx"
+       ]
+      },
+      {
+       "id": "editor-canvas-layers",
+       "name": "Canvas layers",
+       "summary": "The stacked canvases (static scene, new element, interactive handles) and what floats over them.",
+       "children": [
+        {
+         "id": "editor-canvas-layers-canvases",
+         "name": "Canvases",
+         "summary": "The three canvas layers.",
+         "files": [
+          "packages/excalidraw/components/canvases/**"
+         ]
+        },
+        {
+         "id": "editor-canvas-layers-overlay",
+         "name": "Overlays",
+         "summary": "Buttons, hints and SVG drawn over the canvas.",
+         "files": [
+          "packages/excalidraw/components/SVGLayer.tsx",
+          "packages/excalidraw/components/ElementCanvasButtons.tsx",
+          "packages/excalidraw/components/CursorHint.tsx",
+          "packages/excalidraw/components/positionElementBesideCursor.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "editor-chrome",
+     "name": "Toolbars & menus",
+     "summary": "Everything around the canvas: the tool bar, shape properties, the phone layout, main menu, welcome screen and dropdowns.",
+     "children": [
+      {
+       "id": "editor-chrome-layer",
+       "name": "Layer UI & toolbar",
+       "summary": "Lays out all UI over the canvas: the tool bar, the shape properties panel and hints.",
+       "children": [
+        {
+         "id": "editor-chrome-layer-layout",
+         "name": "UI layout",
+         "summary": "LayerUI, toolbar and tool list.",
+         "files": [
+          "packages/excalidraw/components/LayerUI.tsx",
+          "packages/excalidraw/components/Toolbar.tsx",
+          "packages/excalidraw/components/Tools.tsx",
+          "packages/excalidraw/components/ToolPopover.tsx"
+         ]
+        },
+        {
+         "id": "editor-chrome-layer-props",
+         "name": "Shape properties",
+         "summary": "The properties panel and the hints.",
+         "files": [
+          "packages/excalidraw/components/Actions.tsx",
+          "packages/excalidraw/components/shapeActionPredicates.ts",
+          "packages/excalidraw/components/HintViewer.tsx",
+          "packages/excalidraw/components/PropertiesPopover.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-chrome-mobile",
+       "name": "Phone layout",
+       "summary": "The phone version of the menus and toolbar, and the floating island containers.",
+       "files": [
+        "packages/excalidraw/components/MobileMenu.tsx",
+        "packages/excalidraw/components/MobileToolbar.tsx",
+        "packages/excalidraw/components/FixedSideContainer.tsx",
+        "packages/excalidraw/components/Island.tsx",
+        "packages/excalidraw/components/Section.tsx",
+        "packages/excalidraw/components/Stack.tsx"
+       ]
+      },
+      {
+       "id": "editor-chrome-buttons",
+       "name": "Tool buttons",
+       "summary": "Pen mode, laser pointer, lock, AI magic, help and dark mode buttons.",
+       "files": [
+        "packages/excalidraw/components/PenModeButton.tsx",
+        "packages/excalidraw/components/LaserPointerButton.tsx",
+        "packages/excalidraw/components/LockButton.tsx",
+        "packages/excalidraw/components/MagicButton.tsx",
+        "packages/excalidraw/components/HelpButton.tsx",
+        "packages/excalidraw/components/DarkModeToggle.tsx",
+        "packages/excalidraw/components/ButtonIconCycle.tsx",
+        "packages/excalidraw/components/ButtonSeparator.tsx"
+       ],
+       "split": [
+        {
+         "id": "editor-chrome-buttons-modes",
+         "name": "Mode buttons",
+         "summary": "Pen, laser, lock and magic.",
+         "files": [
+          "packages/excalidraw/components/PenModeButton.tsx",
+          "packages/excalidraw/components/LaserPointerButton.tsx",
+          "packages/excalidraw/components/LockButton.tsx",
+          "packages/excalidraw/components/MagicButton.tsx"
+         ]
+        },
+        {
+         "id": "editor-chrome-buttons-misc",
+         "name": "Help & theme",
+         "summary": "Help, dark mode and button pieces.",
+         "files": [
+          "packages/excalidraw/components/HelpButton.tsx",
+          "packages/excalidraw/components/DarkModeToggle.tsx",
+          "packages/excalidraw/components/ButtonIconCycle.tsx",
+          "packages/excalidraw/components/ButtonSeparator.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-chrome-menu",
+       "name": "Main menu & welcome",
+       "summary": "The hamburger menu with its default items, the footer, and the welcome screen.",
+       "files": [
+        "packages/excalidraw/components/main-menu/**",
+        "packages/excalidraw/components/footer/**",
+        "packages/excalidraw/components/welcome-screen/**"
+       ],
+       "split": [
+        {
+         "id": "editor-chrome-menu-menu",
+         "name": "Main menu & footer",
+         "summary": "Menu items and the footer.",
+         "files": [
+          "packages/excalidraw/components/main-menu/**",
+          "packages/excalidraw/components/footer/**"
+         ]
+        },
+        {
+         "id": "editor-chrome-menu-welcome",
+         "name": "Welcome screen",
+         "summary": "The hints shown on an empty canvas.",
+         "files": [
+          "packages/excalidraw/components/welcome-screen/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-chrome-dropdown",
+       "name": "Dropdown menus",
+       "summary": "The dropdown menu building block the menus are made of.",
+       "children": [
+        {
+         "id": "editor-chrome-dropdown-frame",
+         "name": "Menu frame",
+         "summary": "Menu, content, groups and triggers.",
+         "files": [
+          "packages/excalidraw/components/dropdownMenu/DropdownMenu.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuContent.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuGroup.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuSeparator.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuTrigger.tsx"
+         ]
+        },
+        {
+         "id": "editor-chrome-dropdown-sub",
+         "name": "Submenus & helpers",
+         "summary": "Nested menus and shared helpers.",
+         "files": [
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuSub*",
+          "packages/excalidraw/components/dropdownMenu/common.ts",
+          "packages/excalidraw/components/dropdownMenu/dropdownMenuUtils.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-chrome-items",
+       "name": "Menu items",
+       "summary": "The kinds of item a dropdown can hold: plain, checkbox, radio, link, custom.",
+       "files": [
+        "packages/excalidraw/components/dropdownMenu/DropdownMenuItem*"
+       ],
+       "split": [
+        {
+         "id": "editor-chrome-items-plain",
+         "name": "Plain items",
+         "summary": "Item, its content and links.",
+         "files": [
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItem.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItemContent.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItemLink.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItemCustom.tsx"
+         ]
+        },
+        {
+         "id": "editor-chrome-items-choice",
+         "name": "Choice items",
+         "summary": "Checkbox and radio items.",
+         "files": [
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItemCheckbox.tsx",
+          "packages/excalidraw/components/dropdownMenu/DropdownMenuItemContentRadio.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-chrome-popups",
+       "name": "Context menus & popups",
+       "summary": "Right-click menu, the convert-shape popup, popovers and the unlock popup.",
+       "files": [
+        "packages/excalidraw/components/ContextMenu.tsx",
+        "packages/excalidraw/components/ConvertElementTypePopup.tsx",
+        "packages/excalidraw/components/UnlockPopup.tsx",
+        "packages/excalidraw/components/Popover.tsx"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "editor-panels",
+     "name": "Panels & pickers",
+     "summary": "The side panels and pickers: colors, fonts, the stats panel, the sidebar and shape library, and search.",
+     "children": [
+      {
+       "id": "editor-panels-color",
+       "name": "Color picker",
+       "summary": "The color picker with its palette, shades, recent picks and keyboard navigation.",
+       "children": [
+        {
+         "id": "editor-panels-color-ui",
+         "name": "Picker UI",
+         "summary": "The picker and its lists.",
+         "files": [
+          "packages/excalidraw/components/ColorPicker/ColorPicker.tsx",
+          "packages/excalidraw/components/ColorPicker/Picker.tsx",
+          "packages/excalidraw/components/ColorPicker/PickerColorList.tsx",
+          "packages/excalidraw/components/ColorPicker/PickerHeading.tsx",
+          "packages/excalidraw/components/ColorPicker/ShadeList.tsx",
+          "packages/excalidraw/components/ColorPicker/CustomColorList.tsx"
+         ]
+        },
+        {
+         "id": "editor-panels-color-input",
+         "name": "Input & top picks",
+         "summary": "Hex input, top picks and keyboard handling.",
+         "files": [
+          "packages/excalidraw/components/ColorPicker/ColorInput.tsx",
+          "packages/excalidraw/components/ColorPicker/TopPicks.tsx",
+          "packages/excalidraw/components/ColorPicker/HotkeyLabel.tsx",
+          "packages/excalidraw/components/ColorPicker/colorPickerUtils.ts",
+          "packages/excalidraw/components/ColorPicker/colorTopPicksDnD.ts",
+          "packages/excalidraw/components/ColorPicker/keyboardNavHandlers.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-panels-fonts",
+       "name": "Font & icon pickers",
+       "summary": "The font picker, the icon picker and the draggable top picks they share.",
+       "children": [
+        {
+         "id": "editor-panels-fonts-font",
+         "name": "Font picker",
+         "summary": "Font list, trigger and keyboard handling.",
+         "files": [
+          "packages/excalidraw/components/FontPicker/**"
+         ]
+        },
+        {
+         "id": "editor-panels-fonts-picks",
+         "name": "Icons & top picks",
+         "summary": "Icon picker and draggable top picks.",
+         "files": [
+          "packages/excalidraw/components/IconPicker.tsx",
+          "packages/excalidraw/components/TopPicksDnD/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-panels-stats",
+       "name": "Stats panel",
+       "summary": "The panel showing and editing a shape's size, position, angle and font size.",
+       "files": [
+        "packages/excalidraw/components/Stats/Angle.tsx",
+        "packages/excalidraw/components/Stats/CanvasGrid.tsx",
+        "packages/excalidraw/components/Stats/Collapsible.tsx",
+        "packages/excalidraw/components/Stats/Dimension.tsx",
+        "packages/excalidraw/components/Stats/DragInput.tsx",
+        "packages/excalidraw/components/Stats/FontSize.tsx",
+        "packages/excalidraw/components/Stats/Position.tsx",
+        "packages/excalidraw/components/Stats/index.tsx",
+        "packages/excalidraw/components/Stats/utils.ts"
+       ],
+       "split": [
+        {
+         "id": "editor-panels-stats-panel",
+         "name": "Panel",
+         "summary": "The panel, grid and inputs.",
+         "files": [
+          "packages/excalidraw/components/Stats/index.tsx",
+          "packages/excalidraw/components/Stats/CanvasGrid.tsx",
+          "packages/excalidraw/components/Stats/Collapsible.tsx",
+          "packages/excalidraw/components/Stats/DragInput.tsx",
+          "packages/excalidraw/components/Stats/utils.ts"
+         ]
+        },
+        {
+         "id": "editor-panels-stats-fields",
+         "name": "One shape",
+         "summary": "Angle, size, position, font size.",
+         "files": [
+          "packages/excalidraw/components/Stats/Angle.tsx",
+          "packages/excalidraw/components/Stats/Dimension.tsx",
+          "packages/excalidraw/components/Stats/FontSize.tsx",
+          "packages/excalidraw/components/Stats/Position.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-panels-multi",
+       "name": "Multi-shape stats",
+       "summary": "The stats fields used when several shapes are selected.",
+       "files": [
+        "packages/excalidraw/components/Stats/Multi*"
+       ]
+      },
+      {
+       "id": "editor-panels-sidebar",
+       "name": "Sidebar",
+       "summary": "The docked sidebar, its tabs and the default sidebar.",
+       "children": [
+        {
+         "id": "editor-panels-sidebar-frame",
+         "name": "Sidebar frame",
+         "summary": "Sidebar, header and trigger.",
+         "files": [
+          "packages/excalidraw/components/Sidebar/Sidebar.tsx",
+          "packages/excalidraw/components/Sidebar/SidebarHeader.tsx",
+          "packages/excalidraw/components/Sidebar/SidebarTrigger.tsx",
+          "packages/excalidraw/components/Sidebar/common.ts",
+          "packages/excalidraw/components/DefaultSidebar.tsx"
+         ]
+        },
+        {
+         "id": "editor-panels-sidebar-tabs",
+         "name": "Tabs",
+         "summary": "Sidebar tabs and their triggers.",
+         "files": [
+          "packages/excalidraw/components/Sidebar/SidebarTab*",
+          "packages/excalidraw/components/Sidebar/siderbar.test.helpers.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-panels-library",
+       "name": "Shape library",
+       "summary": "The library of saved shapes: browsing, adding and publishing them.",
+       "children": [
+        {
+         "id": "editor-panels-library-menu",
+         "name": "Library menu",
+         "summary": "The library panel and its header.",
+         "files": [
+          "packages/excalidraw/components/LibraryMenu.tsx",
+          "packages/excalidraw/components/LibraryMenuHeaderContent.tsx",
+          "packages/excalidraw/components/LibraryMenuBrowseButton.tsx",
+          "packages/excalidraw/components/LibraryMenuControlButtons.tsx"
+         ]
+        },
+        {
+         "id": "editor-panels-library-items",
+         "name": "Items & publishing",
+         "summary": "Library items and publishing a library.",
+         "files": [
+          "packages/excalidraw/components/LibraryMenuItems.tsx",
+          "packages/excalidraw/components/LibraryMenuSection.tsx",
+          "packages/excalidraw/components/LibraryUnit.tsx",
+          "packages/excalidraw/hooks/useLibraryItemSvg.ts",
+          "packages/excalidraw/components/PublishLibrary.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-panels-search",
+       "name": "Search, commands & links",
+       "summary": "Search in the scene, the command palette, and links on shapes.",
+       "children": [
+        {
+         "id": "editor-panels-search-search",
+         "name": "Scene search",
+         "summary": "The search menu that finds text on the canvas, and its search box.",
+         "files": [
+          "packages/excalidraw/components/SearchMenu.tsx",
+          "packages/excalidraw/components/QuickSearch.tsx"
+         ]
+        },
+        {
+         "id": "editor-panels-search-palette",
+         "name": "Command palette",
+         "summary": "The command palette and its default commands.",
+         "files": [
+          "packages/excalidraw/components/CommandPalette/**"
+         ]
+        },
+        {
+         "id": "editor-panels-search-links",
+         "name": "Links",
+         "summary": "Hyperlinks and links between shapes.",
+         "files": [
+          "packages/excalidraw/components/hyperlink/**",
+          "packages/excalidraw/components/ElementLinkDialog.tsx"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "editor-dialogs",
+     "name": "Dialogs & export",
+     "summary": "Modal dialogs: confirmations, errors, help, and exporting or sharing the drawing.",
+     "children": [
+      {
+       "id": "editor-dialogs-frame",
+       "name": "Dialog frame",
+       "summary": "The dialog and modal building blocks, confirmations, errors and the help dialog.",
+       "children": [
+        {
+         "id": "editor-dialogs-frame-frame",
+         "name": "Modal & dialog",
+         "summary": "Modal, dialog and their buttons.",
+         "files": [
+          "packages/excalidraw/components/Dialog.tsx",
+          "packages/excalidraw/components/Modal.tsx",
+          "packages/excalidraw/components/DialogActionButton.tsx",
+          "packages/excalidraw/components/FilledButton.tsx",
+          "packages/excalidraw/components/LinkButton.tsx",
+          "packages/excalidraw/components/Card.tsx"
+         ]
+        },
+        {
+         "id": "editor-dialogs-frame-kinds",
+         "name": "Confirm, error & help",
+         "summary": "Confirmations, errors and the help dialog.",
+         "files": [
+          "packages/excalidraw/components/ConfirmDialog.tsx",
+          "packages/excalidraw/components/ActiveConfirmDialog.tsx",
+          "packages/excalidraw/components/ErrorDialog.tsx",
+          "packages/excalidraw/components/BraveMeasureTextError.tsx",
+          "packages/excalidraw/components/HelpDialog.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-dialogs-export",
+       "name": "Export & share",
+       "summary": "Export as image or file, the shareable link, overwrite warnings and the live-collaboration button.",
+       "files": [
+        "packages/excalidraw/components/ImageExportDialog.tsx",
+        "packages/excalidraw/components/JSONExportDialog.tsx",
+        "packages/excalidraw/components/ShareableLinkDialog.tsx",
+        "packages/excalidraw/components/OverwriteConfirm/**",
+        "packages/excalidraw/components/live-collaboration/**"
+       ],
+       "split": [
+        {
+         "id": "editor-dialogs-export-export",
+         "name": "Export",
+         "summary": "Image and file export.",
+         "files": [
+          "packages/excalidraw/components/ImageExportDialog.tsx",
+          "packages/excalidraw/components/JSONExportDialog.tsx"
+         ]
+        },
+        {
+         "id": "editor-dialogs-export-share",
+         "name": "Share & overwrite",
+         "summary": "Share link, live button, overwrite warning.",
+         "files": [
+          "packages/excalidraw/components/ShareableLinkDialog.tsx",
+          "packages/excalidraw/components/OverwriteConfirm/**",
+          "packages/excalidraw/components/live-collaboration/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-dialogs-kit",
+       "name": "Buttons & fields",
+       "summary": "Small controls the dialogs and panels are built from.",
+       "children": [
+        {
+         "id": "editor-dialogs-kit-buttons",
+         "name": "Buttons",
+         "summary": "Buttons and checkboxes.",
+         "files": [
+          "packages/excalidraw/components/Button.tsx",
+          "packages/excalidraw/components/IconButton.tsx",
+          "packages/excalidraw/components/CheckboxItem.tsx"
+         ]
+        },
+        {
+         "id": "editor-dialogs-kit-choice",
+         "name": "Choices & fields",
+         "summary": "Radios, range, switch and text field.",
+         "files": [
+          "packages/excalidraw/components/RadioButton.tsx",
+          "packages/excalidraw/components/RadioGroup.tsx",
+          "packages/excalidraw/components/RadioSelection.tsx",
+          "packages/excalidraw/components/Range.tsx",
+          "packages/excalidraw/components/Switch.tsx",
+          "packages/excalidraw/components/TextField.tsx"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "editor-ttd",
+     "name": "Text to diagram",
+     "summary": "Turns a description or Mermaid code into shapes, with an AI chat that streams the diagram back.",
+     "children": [
+      {
+       "id": "editor-ttd-dialog",
+       "name": "Dialog & tabs",
+       "summary": "The text-to-diagram dialog, its tabs and panels.",
+       "children": [
+        {
+         "id": "editor-ttd-dialog-dialog",
+         "name": "Dialog",
+         "summary": "The dialog, its context and welcome.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/TTDDialog.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDDialogTrigger.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDContext.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDWelcomeMessage.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDDialogSubmitShortcut.tsx"
+         ]
+        },
+        {
+         "id": "editor-ttd-dialog-tabs",
+         "name": "Tabs & panels",
+         "summary": "Tabs and panels.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/TTDDialogTab*",
+          "packages/excalidraw/components/TTDDialog/TTDDialogPanel.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDDialogPanels.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-ttd-mermaid",
+       "name": "Mermaid to shapes",
+       "summary": "Edits Mermaid code, previews it and converts it to Excalidraw shapes.",
+       "children": [
+        {
+         "id": "editor-ttd-mermaid-edit",
+         "name": "Code editor",
+         "summary": "Mermaid editing and input.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/CodeMirrorEditor.tsx",
+          "packages/excalidraw/components/TTDDialog/mermaid-lang-lite.ts",
+          "packages/excalidraw/components/TTDDialog/TTDDialogInput.tsx",
+          "packages/excalidraw/components/DiagramToCodePlugin/**"
+         ]
+        },
+        {
+         "id": "editor-ttd-mermaid-convert",
+         "name": "Convert & preview",
+         "summary": "Converting and previewing.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/MermaidToExcalidraw.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDDialogOutput.tsx",
+          "packages/excalidraw/components/TTDDialog/TTDPreviewPanel.tsx",
+          "packages/excalidraw/components/TTDDialog/common.ts",
+          "packages/excalidraw/components/TTDDialog/types.ts",
+          "packages/excalidraw/mermaid.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-ttd-chat",
+       "name": "AI chat",
+       "summary": "The chat with the text-to-diagram AI, its history and the hooks that drive it.",
+       "children": [
+        {
+         "id": "editor-ttd-chat-ui",
+         "name": "Chat UI",
+         "summary": "Chat panel, messages and history.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/Chat/**"
+         ]
+        },
+        {
+         "id": "editor-ttd-chat-logic",
+         "name": "Chat logic",
+         "summary": "Hooks, storage and types behind the chat.",
+         "files": [
+          "packages/excalidraw/components/TTDDialog/hooks/**",
+          "packages/excalidraw/components/TTDDialog/TextToDiagram.tsx",
+          "packages/excalidraw/components/TTDDialog/useTTDChatStorage.ts",
+          "packages/excalidraw/data/ai/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-ttd-stream",
+       "name": "Streaming & fixes",
+       "summary": "Streams the AI's answer and repairs and validates the Mermaid it returns.",
+       "files": [
+        "packages/excalidraw/components/TTDDialog/utils/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "editor-kit",
+     "name": "UI kit & hooks",
+     "summary": "Icons, small labels and status pieces, and the React hooks the editor shares.",
+     "children": [
+      {
+       "id": "editor-kit-icons",
+       "name": "Icons & labels",
+       "summary": "The icon set and small text pieces: tooltips, toasts, translations.",
+       "children": [
+        {
+         "id": "editor-kit-icons-icons",
+         "name": "Icons",
+         "summary": "Icons, avatars and the logo.",
+         "files": [
+          "packages/excalidraw/components/icons.tsx",
+          "packages/excalidraw/components/InlineIcon.tsx",
+          "packages/excalidraw/components/Avatar.tsx",
+          "packages/excalidraw/components/ExcalidrawLogo.tsx"
+         ]
+        },
+        {
+         "id": "editor-kit-icons-text",
+         "name": "Text pieces",
+         "summary": "Tooltips, toasts and translated text.",
+         "files": [
+          "packages/excalidraw/components/Paragraph.tsx",
+          "packages/excalidraw/components/Ellipsify.tsx",
+          "packages/excalidraw/components/Trans.tsx",
+          "packages/excalidraw/components/Tooltip.tsx",
+          "packages/excalidraw/components/Toast.tsx"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-kit-status",
+       "name": "Loading & status",
+       "summary": "Loading states, the user list, project name and the shared UI context.",
+       "children": [
+        {
+         "id": "editor-kit-status-loading",
+         "name": "Loading",
+         "summary": "Spinner, loading message and start-up.",
+         "files": [
+          "packages/excalidraw/components/Spinner.tsx",
+          "packages/excalidraw/components/LoadingMessage.tsx",
+          "packages/excalidraw/components/InitializeApp.tsx",
+          "packages/excalidraw/components/ViewportStatusFrame/**"
+         ]
+        },
+        {
+         "id": "editor-kit-status-people",
+         "name": "Users & context",
+         "summary": "User list, project name and shared context.",
+         "files": [
+          "packages/excalidraw/components/ScrollableList.tsx",
+          "packages/excalidraw/components/UserList.tsx",
+          "packages/excalidraw/components/ProjectName.tsx",
+          "packages/excalidraw/components/hoc/**",
+          "packages/excalidraw/context/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "editor-kit-hooks",
+       "name": "React hooks",
+       "summary": "Small hooks shared across the editor.",
+       "children": [
+        {
+         "id": "editor-kit-hooks-state",
+         "name": "State hooks",
+         "summary": "Stable callbacks and state.",
+         "files": [
+          "packages/excalidraw/hooks/useStable*",
+          "packages/excalidraw/hooks/useAppStateValue.ts",
+          "packages/excalidraw/hooks/useCallbackRefState.ts",
+          "packages/excalidraw/hooks/useEmitter.ts",
+          "packages/excalidraw/hooks/useTransition.ts"
+         ]
+        },
+        {
+         "id": "editor-kit-hooks-dom",
+         "name": "DOM hooks",
+         "summary": "Portals, outside clicks, scroll and focus.",
+         "files": [
+          "packages/excalidraw/hooks/useCreatePortalContainer.ts",
+          "packages/excalidraw/hooks/useOutsideClick.ts",
+          "packages/excalidraw/hooks/useScrollPosition.ts",
+          "packages/excalidraw/hooks/useTextEditorFocus.ts",
+          "packages/excalidraw/hooks/useCopiedIndicator.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "actions",
+   "name": "Editing actions",
+   "summary": "Every command the editor can run (align, group, change color, export, undo) as a registered action with its shortcut and button.",
+   "children": [
+    {
+     "id": "actions-system",
+     "name": "Action system",
+     "summary": "The action manager, registration, shortcuts and types every action plugs into.",
+     "files": [
+      "packages/excalidraw/actions/manager.tsx",
+      "packages/excalidraw/actions/register.ts",
+      "packages/excalidraw/actions/index.ts",
+      "packages/excalidraw/actions/types.ts",
+      "packages/excalidraw/actions/shortcuts.ts"
+     ]
+    },
+    {
+     "id": "actions-arrange",
+     "name": "Arrange & group",
+     "summary": "Align, distribute, group, layer order, flip, frames, duplicate and add to library.",
+     "files": [
+      "packages/excalidraw/actions/actionAlign.tsx",
+      "packages/excalidraw/actions/actionDistribute.tsx",
+      "packages/excalidraw/actions/actionGroup.tsx",
+      "packages/excalidraw/actions/actionZindex.tsx",
+      "packages/excalidraw/actions/actionFlip.ts",
+      "packages/excalidraw/actions/actionFrame.ts",
+      "packages/excalidraw/actions/actionDuplicateSelection.tsx",
+      "packages/excalidraw/actions/actionAddToLibrary.ts"
+     ],
+     "split": [
+      {
+       "id": "actions-arrange-layout",
+       "name": "Align & order",
+       "summary": "Align, distribute, layer order, flip.",
+       "files": [
+        "packages/excalidraw/actions/actionAlign.tsx",
+        "packages/excalidraw/actions/actionDistribute.tsx",
+        "packages/excalidraw/actions/actionZindex.tsx",
+        "packages/excalidraw/actions/actionFlip.ts"
+       ]
+      },
+      {
+       "id": "actions-arrange-group",
+       "name": "Group & copy",
+       "summary": "Groups, frames, duplicate, library.",
+       "files": [
+        "packages/excalidraw/actions/actionGroup.tsx",
+        "packages/excalidraw/actions/actionFrame.ts",
+        "packages/excalidraw/actions/actionDuplicateSelection.tsx",
+        "packages/excalidraw/actions/actionAddToLibrary.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "actions-style",
+     "name": "Styles & text",
+     "summary": "Change colors, stroke and fonts, copy styles, and edit text, lines and crops.",
+     "files": [
+      "packages/excalidraw/actions/actionProperties.tsx",
+      "packages/excalidraw/actions/colorTargets.ts",
+      "packages/excalidraw/actions/actionStyles.ts",
+      "packages/excalidraw/actions/actionBoundText.tsx",
+      "packages/excalidraw/actions/actionTextAutoResize.ts",
+      "packages/excalidraw/actions/actionLinearEditor.tsx",
+      "packages/excalidraw/actions/actionCropEditor.tsx"
+     ],
+     "split": [
+      {
+       "id": "actions-style-colors",
+       "name": "Colors & styles",
+       "summary": "Stroke, fill and font properties, which colors they apply to, and copying styles.",
+       "files": [
+        "packages/excalidraw/actions/actionProperties.tsx",
+        "packages/excalidraw/actions/colorTargets.ts",
+        "packages/excalidraw/actions/actionStyles.ts"
+       ]
+      },
+      {
+       "id": "actions-style-edit",
+       "name": "Text, lines & crops",
+       "summary": "Binding and sizing text, and editing lines and image crops.",
+       "files": [
+        "packages/excalidraw/actions/actionBoundText.tsx",
+        "packages/excalidraw/actions/actionTextAutoResize.ts",
+        "packages/excalidraw/actions/actionLinearEditor.tsx",
+        "packages/excalidraw/actions/actionCropEditor.tsx"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "actions-select",
+     "name": "Selection & clipboard",
+     "summary": "Select, deselect, delete, copy and paste, finish drawing, links and locks.",
+     "children": [
+      {
+       "id": "actions-select-select",
+       "name": "Select & delete",
+       "summary": "Select all, deselect, delete, finish.",
+       "files": [
+        "packages/excalidraw/actions/actionSelectAll.ts",
+        "packages/excalidraw/actions/actionDeselect.ts",
+        "packages/excalidraw/actions/actionDeleteSelected.tsx",
+        "packages/excalidraw/actions/actionFinalize.tsx"
+       ]
+      },
+      {
+       "id": "actions-select-clip",
+       "name": "Clipboard, links & locks",
+       "summary": "Copy and paste, links and locking.",
+       "files": [
+        "packages/excalidraw/actions/actionClipboard.tsx",
+        "packages/excalidraw/actions/actionElementLink.ts",
+        "packages/excalidraw/actions/actionLink.tsx",
+        "packages/excalidraw/actions/actionElementLock.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "actions-canvas",
+     "name": "Canvas, export & history",
+     "summary": "Canvas background and zoom, save and export, the menu, undo and redo, and navigation.",
+     "files": [
+      "packages/excalidraw/actions/actionCanvas.tsx",
+      "packages/excalidraw/actions/actionExport.tsx",
+      "packages/excalidraw/actions/actionMenu.tsx",
+      "packages/excalidraw/actions/actionHistory.tsx",
+      "packages/excalidraw/actions/actionNavigate.tsx"
+     ]
+    },
+    {
+     "id": "actions-toggles",
+     "name": "View toggles",
+     "summary": "Grid, zen, view-only and stats modes, snapping, arrow binding, hints and the search menu.",
+     "children": [
+      {
+       "id": "actions-toggles-view",
+       "name": "View modes",
+       "summary": "Grid, zen, view mode, stats, hints, search.",
+       "files": [
+        "packages/excalidraw/actions/actionToggleGridMode.tsx",
+        "packages/excalidraw/actions/actionToggleZenMode.tsx",
+        "packages/excalidraw/actions/actionToggleViewMode.tsx",
+        "packages/excalidraw/actions/actionToggleStats.tsx",
+        "packages/excalidraw/actions/actionToggleShowHints.tsx",
+        "packages/excalidraw/actions/actionToggleSearchMenu.ts"
+       ]
+      },
+      {
+       "id": "actions-toggles-snap",
+       "name": "Snapping & binding",
+       "summary": "Snapping, arrow binding, shape switch.",
+       "files": [
+        "packages/excalidraw/actions/actionToggleArrowBinding.tsx",
+        "packages/excalidraw/actions/actionToggleMidpointSnapping.tsx",
+        "packages/excalidraw/actions/actionToggleObjectsSnapMode.tsx",
+        "packages/excalidraw/actions/actionToggleShapeSwitch.tsx"
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "render",
+   "name": "Rendering & state",
+   "summary": "Draws the scene to canvas and SVG, holds the editor's state and undo history, saves and loads files and fonts, and is the package's public entry point.",
+   "children": [
+    {
+     "id": "render-renderer",
+     "name": "Renderer",
+     "summary": "Paints the scene: shapes on the static canvas, selection handles on the interactive one, SVG for export.",
+     "files": [
+      "packages/excalidraw/renderer/**"
+     ],
+     "split": [
+      {
+       "id": "render-renderer-canvas",
+       "name": "Canvas painting",
+       "summary": "Static and interactive scenes, new element, snaps.",
+       "files": [
+        "packages/excalidraw/renderer/staticScene.ts",
+        "packages/excalidraw/renderer/interactiveScene.ts",
+        "packages/excalidraw/renderer/renderNewElementScene.ts",
+        "packages/excalidraw/renderer/renderSnaps.ts"
+       ]
+      },
+      {
+       "id": "render-renderer-svg",
+       "name": "SVG & helpers",
+       "summary": "SVG output, animation and drawing helpers.",
+       "files": [
+        "packages/excalidraw/renderer/staticSvgScene.ts",
+        "packages/excalidraw/renderer/animation.ts",
+        "packages/excalidraw/renderer/helpers.ts",
+        "packages/excalidraw/renderer/roundRect.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "render-scene",
+     "name": "Scene & export",
+     "summary": "Decides what to render, exports a scene to PNG or SVG, and draws scrollbars.",
+     "files": [
+      "packages/excalidraw/scene/**"
+     ]
+    },
+    {
+     "id": "render-state",
+     "name": "Editor state & history",
+     "summary": "The editor's state, undo/redo history, viewport, snapping and gestures.",
+     "children": [
+      {
+       "id": "render-state-state",
+       "name": "State & history",
+       "summary": "App state, history and types.",
+       "files": [
+        "packages/excalidraw/appState.ts",
+        "packages/excalidraw/editor-jotai.ts",
+        "packages/excalidraw/history.ts",
+        "packages/excalidraw/types.ts",
+        "packages/excalidraw/clients.ts"
+       ]
+      },
+      {
+       "id": "render-state-view",
+       "name": "Viewport & snapping",
+       "summary": "Viewport, snapping, gestures.",
+       "files": [
+        "packages/excalidraw/viewport.ts",
+        "packages/excalidraw/renderOverrides.ts",
+        "packages/excalidraw/snapping.ts",
+        "packages/excalidraw/gesture.ts",
+        "packages/excalidraw/reactUtils.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "render-trails",
+     "name": "Trails & text editing",
+     "summary": "The laser pointer and eraser trails, lasso selection, and the in-place text editor.",
+     "files": [
+      "packages/excalidraw/animatedTrail.ts",
+      "packages/excalidraw/laserTrails.ts",
+      "packages/excalidraw/drawShapeTrail.ts",
+      "packages/excalidraw/textAutoResizeHandle.ts",
+      "packages/excalidraw/eraser/**",
+      "packages/excalidraw/lasso/**",
+      "packages/excalidraw/wysiwyg/**"
+     ],
+     "split": [
+      {
+       "id": "render-trails-trails",
+       "name": "Trails & lasso",
+       "summary": "Laser, eraser and lasso trails.",
+       "files": [
+        "packages/excalidraw/animatedTrail.ts",
+        "packages/excalidraw/laserTrails.ts",
+        "packages/excalidraw/drawShapeTrail.ts",
+        "packages/excalidraw/eraser/**",
+        "packages/excalidraw/lasso/**"
+       ]
+      },
+      {
+       "id": "render-trails-text",
+       "name": "Text editing",
+       "summary": "The in-place text editor.",
+       "files": [
+        "packages/excalidraw/textAutoResizeHandle.ts",
+        "packages/excalidraw/wysiwyg/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "render-entry",
+     "name": "Package entry & helpers",
+     "summary": "What the npm package exports, its error types and worker pool, translations, analytics and keyboard shortcut labels.",
+     "children": [
+      {
+       "id": "render-entry-entry",
+       "name": "Package entry",
+       "summary": "Exports, environment and polyfills.",
+       "files": [
+        "packages/excalidraw/index.tsx",
+        "packages/excalidraw/index-node.ts",
+        "packages/excalidraw/env.cjs",
+        "packages/excalidraw/polyfill.ts"
+       ]
+      },
+      {
+       "id": "render-entry-runtime",
+       "name": "Errors & workers",
+       "summary": "The package's error types and the pool of web workers it runs heavy jobs in.",
+       "files": [
+        "packages/excalidraw/workers.ts",
+        "packages/excalidraw/errors.ts"
+       ]
+      },
+      {
+       "id": "render-entry-i18n",
+       "name": "Language & shortcuts",
+       "summary": "Translations, analytics and keyboard shortcut labels.",
+       "files": [
+        "packages/excalidraw/i18n.ts",
+        "packages/excalidraw/deburr.ts",
+        "packages/excalidraw/analytics.ts",
+        "packages/excalidraw/shortcut.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "files",
+     "name": "Files, fonts & charts",
+     "summary": "Reading and writing .excalidraw files and images, restoring old scenes, the bundled fonts, and pasting charts.",
+     "children": [
+      {
+       "id": "files-save",
+       "name": "Load & save",
+       "summary": "Saves and opens .excalidraw files and images, copies and pastes through the clipboard, and remembers the editor's settings.",
+       "files": [
+        "packages/excalidraw/clipboard.ts",
+        "packages/excalidraw/data/blob.ts",
+        "packages/excalidraw/data/filesystem.ts",
+        "packages/excalidraw/data/json.ts",
+        "packages/excalidraw/data/index.ts",
+        "packages/excalidraw/data/resave.ts",
+        "packages/excalidraw/data/EditorLocalStorage.ts",
+        "packages/excalidraw/data/types.ts"
+       ],
+       "split": [
+        {
+         "id": "files-save-io",
+         "name": "Files on disk",
+         "summary": "Open, save and re-save files.",
+         "files": [
+          "packages/excalidraw/data/filesystem.ts",
+          "packages/excalidraw/data/json.ts",
+          "packages/excalidraw/data/index.ts",
+          "packages/excalidraw/data/resave.ts"
+         ]
+        },
+        {
+         "id": "files-save-blob",
+         "name": "Blobs & clipboard",
+         "summary": "Blobs, the clipboard, types and local settings.",
+         "files": [
+          "packages/excalidraw/data/blob.ts",
+          "packages/excalidraw/clipboard.ts",
+          "packages/excalidraw/data/types.ts",
+          "packages/excalidraw/data/EditorLocalStorage.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "files-restore",
+       "name": "Restore, encrypt & library",
+       "summary": "Upgrades old scenes, merges remote changes, encodes and encrypts data, and loads libraries.",
+       "files": [
+        "packages/excalidraw/data/restore.ts",
+        "packages/excalidraw/data/reconcile.ts",
+        "packages/excalidraw/data/library.ts",
+        "packages/excalidraw/data/encode.ts",
+        "packages/excalidraw/data/encryption.ts",
+        "packages/excalidraw/data/image.ts"
+       ]
+      },
+      {
+       "id": "files-fontload",
+       "name": "Font loading",
+       "summary": "Loads fonts into the page and subsets them for export with HarfBuzz and WOFF2 in a worker.",
+       "children": [
+        {
+         "id": "files-fontload-fonts",
+         "name": "Font loader",
+         "summary": "Font faces and the font registry.",
+         "files": [
+          "packages/excalidraw/fonts/*.ts"
+         ]
+        },
+        {
+         "id": "files-fontload-subset",
+         "name": "Font subsetting",
+         "summary": "Cuts fonts down to the characters a drawing uses, in a worker when it can.",
+         "files": [
+          "packages/excalidraw/subset/*.ts"
+         ]
+        },
+        {
+         "id": "files-fontload-subset-wasm",
+         "name": "Subsetting WASM",
+         "summary": "Loads the HarfBuzz and WOFF2 WebAssembly modules and wraps their calls.",
+         "files": [
+          "packages/excalidraw/subset/harfbuzz/**",
+          "packages/excalidraw/subset/woff2/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "files-fonts",
+       "name": "Bundled fonts",
+       "summary": "One module per bundled font family, from Virgil to Excalifont.",
+       "children": [
+        {
+         "id": "files-fonts-hand",
+         "name": "Hand-drawn",
+         "summary": "Virgil, Excalifont, Comic Shanns, Xiaolai.",
+         "files": [
+          "packages/excalidraw/fonts/Virgil/**",
+          "packages/excalidraw/fonts/Excalifont/**",
+          "packages/excalidraw/fonts/ComicShanns/**",
+          "packages/excalidraw/fonts/Xiaolai/**"
+         ]
+        },
+        {
+         "id": "files-fonts-plain",
+         "name": "Plain & code",
+         "summary": "Helvetica, Nunito, Lilita, Cascadia, Liberation, Emoji.",
+         "files": [
+          "packages/excalidraw/fonts/Helvetica/**",
+          "packages/excalidraw/fonts/Nunito/**",
+          "packages/excalidraw/fonts/Lilita/**",
+          "packages/excalidraw/fonts/Cascadia/**",
+          "packages/excalidraw/fonts/Liberation/**",
+          "packages/excalidraw/fonts/Emoji/**"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "files-charts",
+       "name": "Charts",
+       "summary": "Turns pasted spreadsheet data into bar, line or radar charts made of shapes.",
+       "children": [
+        {
+         "id": "files-charts-parse",
+         "name": "Parse & dialog",
+         "summary": "Parsing the data and the paste dialog.",
+         "files": [
+          "packages/excalidraw/charts/charts.parse.ts",
+          "packages/excalidraw/charts/charts.types.ts",
+          "packages/excalidraw/charts/charts.constants.ts",
+          "packages/excalidraw/charts/index.ts",
+          "packages/excalidraw/components/PasteChartDialog.tsx"
+         ]
+        },
+        {
+         "id": "files-charts-draw",
+         "name": "Chart kinds",
+         "summary": "Bar, line and radar charts.",
+         "files": [
+          "packages/excalidraw/charts/charts.bar.ts",
+          "packages/excalidraw/charts/charts.line.ts",
+          "packages/excalidraw/charts/charts.radar.ts",
+          "packages/excalidraw/charts/charts.helpers.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "geometry",
+   "name": "Shapes & geometry",
+   "summary": "The shared packages under the editor: the element model and its operations, the math, and common helpers.",
+   "children": [
+    {
+     "id": "element",
+     "name": "Element model",
+     "summary": "What a shape is and everything you can do to one: create, bind arrows, move, resize, order, group and measure text.",
+     "children": [
+      {
+       "id": "element-scene",
+       "name": "Scene & store",
+       "summary": "The scene that holds all elements, the store that records changes, and creating and mutating elements.",
+       "files": [
+        "packages/element/src/Scene.ts",
+        "packages/element/src/store.ts",
+        "packages/element/src/delta.ts",
+        "packages/element/src/index.ts",
+        "packages/element/src/types.ts",
+        "packages/element/src/typeChecks.ts",
+        "packages/element/src/mutateElement.ts",
+        "packages/element/src/newElement.ts"
+       ],
+       "split": [
+        {
+         "id": "element-scene-scene",
+         "name": "Scene & store",
+         "summary": "Scene, store and deltas.",
+         "files": [
+          "packages/element/src/Scene.ts",
+          "packages/element/src/store.ts",
+          "packages/element/src/delta.ts",
+          "packages/element/src/index.ts"
+         ]
+        },
+        {
+         "id": "element-scene-make",
+         "name": "Make & change",
+         "summary": "Types, creating and mutating.",
+         "files": [
+          "packages/element/src/types.ts",
+          "packages/element/src/typeChecks.ts",
+          "packages/element/src/mutateElement.ts",
+          "packages/element/src/newElement.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "element-arrows",
+       "name": "Arrows & binding",
+       "summary": "Arrows that stick to shapes, elbow arrows, arrowheads, the line editor and flowcharts.",
+       "files": [
+        "packages/element/src/binding.ts",
+        "packages/element/src/elbowArrow.ts",
+        "packages/element/src/arrowheads.ts",
+        "packages/element/src/arrowEndpointText.ts",
+        "packages/element/src/linearElementEditor.ts",
+        "packages/element/src/flowchart.ts",
+        "packages/element/src/arrows/**"
+       ],
+       "split": [
+        {
+         "id": "element-arrows-bind",
+         "name": "Binding & elbows",
+         "summary": "Binding and elbow routing.",
+         "files": [
+          "packages/element/src/binding.ts",
+          "packages/element/src/elbowArrow.ts",
+          "packages/element/src/flowchart.ts",
+          "packages/element/src/arrows/**"
+         ]
+        },
+        {
+         "id": "element-arrows-edit",
+         "name": "Line editing",
+         "summary": "Arrowheads, labels and the line editor.",
+         "files": [
+          "packages/element/src/arrowheads.ts",
+          "packages/element/src/arrowEndpointText.ts",
+          "packages/element/src/linearElementEditor.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "element-bounds",
+       "name": "Bounds & hit testing",
+       "summary": "Measures shapes, finds what's under the pointer, and builds their drawn outlines.",
+       "children": [
+        {
+         "id": "element-bounds-hit",
+         "name": "Hit testing",
+         "summary": "Collision, distance and bounds.",
+         "files": [
+          "packages/element/src/bounds.ts",
+          "packages/element/src/collision.ts",
+          "packages/element/src/distance.ts",
+          "packages/element/src/comparisons.ts"
+         ]
+        },
+        {
+         "id": "element-bounds-draw",
+         "name": "Outlines",
+         "summary": "Shapes, rendering and fill.",
+         "files": [
+          "packages/element/src/utils.ts",
+          "packages/element/src/shape.ts",
+          "packages/element/src/renderElement.ts",
+          "packages/element/src/bucketFill.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "element-transform",
+       "name": "Move, resize & transform",
+       "summary": "Dragging, resizing, rotating, cropping and converting shapes.",
+       "files": [
+        "packages/element/src/dragElements.ts",
+        "packages/element/src/resizeElements.ts",
+        "packages/element/src/resizeTest.ts",
+        "packages/element/src/transformHandles.ts",
+        "packages/element/src/transform.ts",
+        "packages/element/src/cropElement.ts",
+        "packages/element/src/sizeHelpers.ts",
+        "packages/element/src/convertToShape.ts"
+       ],
+       "split": [
+        {
+         "id": "element-transform-move",
+         "name": "Drag & resize",
+         "summary": "Dragging, resizing and handles.",
+         "files": [
+          "packages/element/src/dragElements.ts",
+          "packages/element/src/resizeElements.ts",
+          "packages/element/src/resizeTest.ts",
+          "packages/element/src/transformHandles.ts"
+         ]
+        },
+        {
+         "id": "element-transform-change",
+         "name": "Transform & convert",
+         "summary": "Transform, crop, size, convert.",
+         "files": [
+          "packages/element/src/transform.ts",
+          "packages/element/src/cropElement.ts",
+          "packages/element/src/sizeHelpers.ts",
+          "packages/element/src/convertToShape.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "element-order",
+       "name": "Order, groups & frames",
+       "summary": "Layer order, fractional indices for sync, groups, frames, selection, align and duplicate.",
+       "children": [
+        {
+         "id": "element-order-order",
+         "name": "Order",
+         "summary": "Z-order and fractional indices.",
+         "files": [
+          "packages/element/src/zindex.ts",
+          "packages/element/src/sortElements.ts",
+          "packages/element/src/fractionalIndex.ts"
+         ]
+        },
+        {
+         "id": "element-order-groups",
+         "name": "Groups & frames",
+         "summary": "Groups, frames and selection.",
+         "files": [
+          "packages/element/src/groups.ts",
+          "packages/element/src/frame.ts",
+          "packages/element/src/selection.ts"
+         ]
+        },
+        {
+         "id": "element-order-place",
+         "name": "Place & copy",
+         "summary": "Align, distribute, grid, duplicate.",
+         "files": [
+          "packages/element/src/align.ts",
+          "packages/element/src/distribute.ts",
+          "packages/element/src/positionElementsOnGrid.ts",
+          "packages/element/src/duplicate.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "element-text",
+       "name": "Text",
+       "summary": "Text in and on shapes: measuring, wrapping, containers, headings and lists.",
+       "files": [
+        "packages/element/src/textElement.ts",
+        "packages/element/src/textMeasurements.ts",
+        "packages/element/src/textWrapping.ts",
+        "packages/element/src/containerCache.ts",
+        "packages/element/src/heading.ts",
+        "packages/element/src/listMarker.ts"
+       ]
+      },
+      {
+       "id": "element-media",
+       "name": "Images, embeds & links",
+       "summary": "Images, embedded web pages, sticky notes, links between shapes and debug drawing.",
+       "files": [
+        "packages/element/src/embeddable.ts",
+        "packages/element/src/image.ts",
+        "packages/element/src/elementLink.ts",
+        "packages/element/src/stickyNote.ts",
+        "packages/element/src/showSelectedShapeActions.ts",
+        "packages/element/src/visualdebug.ts"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "math",
+     "name": "Math",
+     "summary": "Vector math for the editor: points, vectors, angles, curves and shapes.",
+     "children": [
+      {
+       "id": "math-points",
+       "name": "Points & vectors",
+       "summary": "Points, vectors, angles and ranges.",
+       "children": [
+        {
+         "id": "math-points-pts",
+         "name": "Points & vectors",
+         "summary": "Points, vectors, angles.",
+         "files": [
+          "packages/math/src/point.ts",
+          "packages/math/src/vector.ts",
+          "packages/math/src/angle.ts",
+          "packages/math/src/range.ts"
+         ]
+        },
+        {
+         "id": "math-points-base",
+         "name": "Types & utils",
+         "summary": "Types, constants and helpers.",
+         "files": [
+          "packages/math/src/types.ts",
+          "packages/math/src/constants.ts",
+          "packages/math/src/utils.ts",
+          "packages/math/src/index.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "math-shapes",
+       "name": "Curves & shapes",
+       "summary": "Curves, ellipses, lines, segments, polygons, rectangles and triangles.",
+       "children": [
+        {
+         "id": "math-shapes-curves",
+         "name": "Curves",
+         "summary": "Curves, ellipses and PCA.",
+         "files": [
+          "packages/math/src/curve.ts",
+          "packages/math/src/ellipse.ts",
+          "packages/math/src/pca.ts"
+         ]
+        },
+        {
+         "id": "math-shapes-polys",
+         "name": "Lines & polygons",
+         "summary": "Lines, segments and polygons.",
+         "files": [
+          "packages/math/src/line.ts",
+          "packages/math/src/polygon.ts",
+          "packages/math/src/rectangle.ts",
+          "packages/math/src/segment.ts",
+          "packages/math/src/triangle.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "math-small",
+       "name": "Small packages",
+       "summary": "Laser pointer smoothing, fractional indexing, and the export utilities package.",
+       "children": [
+        {
+         "id": "math-small-laser",
+         "name": "Laser pointer",
+         "summary": "Smoothing the laser pointer path.",
+         "files": [
+          "packages/laser-pointer/src/**"
+         ]
+        },
+        {
+         "id": "math-small-utils",
+         "name": "Utils package",
+         "summary": "Export helpers and fractional indexing.",
+         "files": [
+          "packages/fractional-indexing/src/**",
+          "packages/utils/src/**"
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "id": "common",
+     "name": "Common helpers",
+     "summary": "Constants, colors, keys and small data structures every package uses.",
+     "children": [
+      {
+       "id": "common-utils",
+       "name": "Constants & utilities",
+       "summary": "Constants, colors, keyboard keys, URLs, random ids and font metadata.",
+       "children": [
+        {
+         "id": "common-utils-consts",
+         "name": "Constants & colors",
+         "summary": "Constants, colors, keys, fonts.",
+         "files": [
+          "packages/common/src/constants.ts",
+          "packages/common/src/keys.ts",
+          "packages/common/src/colors.ts",
+          "packages/common/src/font-metadata.ts"
+         ]
+        },
+        {
+         "id": "common-utils-utils",
+         "name": "Utilities",
+         "summary": "Utils, URLs, random ids, types, debug.",
+         "files": [
+          "packages/common/src/utils.ts",
+          "packages/common/src/url.ts",
+          "packages/common/src/random.ts",
+          "packages/common/src/utility-types.ts",
+          "packages/common/src/index.ts",
+          "packages/common/debug.ts"
+         ]
+        }
+       ]
+      },
+      {
+       "id": "common-data",
+       "name": "Events & data structures",
+       "summary": "The event bus and emitter, queues, a binary heap, a promise pool and versioned snapshots.",
+       "children": [
+        {
+         "id": "common-data-events",
+         "name": "Events",
+         "summary": "Event bus, emitter, editor interface.",
+         "files": [
+          "packages/common/src/appEventBus.ts",
+          "packages/common/src/emitter.ts",
+          "packages/common/src/editorInterface.ts",
+          "packages/common/src/versionedSnapshotStore.ts"
+         ]
+        },
+        {
+         "id": "common-data-structs",
+         "name": "Data structures",
+         "summary": "Heap, queue, pool, bounds, points.",
+         "files": [
+          "packages/common/src/binary-heap.ts",
+          "packages/common/src/bounds.ts",
+          "packages/common/src/points.ts",
+          "packages/common/src/promise-pool.ts",
+          "packages/common/src/queue.ts"
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "extras",
+   "name": "Docs, examples & build",
+   "summary": "The developer docs site, two example apps that embed the editor, and the build and release scripts.",
+   "children": [
+    {
+     "id": "extras-docs",
+     "name": "Developer docs",
+     "summary": "The Docusaurus site with live, editable examples.",
+     "files": [
+      "dev-docs/**"
+     ],
+     "split": [
+      {
+       "id": "extras-docs-site",
+       "name": "Docs site",
+       "summary": "Sidebars, homepage and pages.",
+       "files": [
+        "dev-docs/sidebars.js",
+        "dev-docs/src/pages/**",
+        "dev-docs/src/components/**"
+       ]
+      },
+      {
+       "id": "extras-docs-live",
+       "name": "Live examples",
+       "summary": "MDX components and live code scope.",
+       "files": [
+        "dev-docs/src/theme/**",
+        "dev-docs/src/initialData.js"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "extras-next",
+     "name": "Next.js example",
+     "summary": "Embedding the editor in a Next.js app, with the App Router and with pages.",
+     "files": [
+      "examples/with-nextjs/**"
+     ]
+    },
+    {
+     "id": "extras-browser",
+     "name": "Browser example",
+     "summary": "Embedding the editor with a script tag, with a custom footer and sidebar.",
+     "files": [
+      "examples/with-script-in-browser/**"
+     ],
+     "split": [
+      {
+       "id": "extras-browser-app",
+       "name": "Example app",
+       "summary": "The example app and its data.",
+       "files": [
+        "examples/with-script-in-browser/index.tsx",
+        "examples/with-script-in-browser/initialData.tsx",
+        "examples/with-script-in-browser/utils.ts",
+        "examples/with-script-in-browser/components/ExampleApp.tsx"
+       ]
+      },
+      {
+       "id": "extras-browser-ui",
+       "name": "Custom UI",
+       "summary": "Custom footers and sidebar.",
+       "files": [
+        "examples/with-script-in-browser/components/CustomFooter.tsx",
+        "examples/with-script-in-browser/components/MobileFooter.tsx",
+        "examples/with-script-in-browser/components/sidebar/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "extras-build",
+     "name": "Build scripts",
+     "summary": "Builds the packages, the docs, the version file, the WOFF2 and wasm plugins.",
+     "files": [
+      "scripts/build*",
+      "scripts/woff2/**"
+     ],
+     "split": [
+      {
+       "id": "extras-build-pkg",
+       "name": "Package builds",
+       "summary": "Building packages, node and utils.",
+       "files": [
+        "scripts/buildBase.js",
+        "scripts/buildPackage.js",
+        "scripts/buildUtils.js",
+        "scripts/build-node.js"
+       ]
+      },
+      {
+       "id": "extras-build-assets",
+       "name": "Assets & docs",
+       "summary": "Docs, version, wasm and woff2.",
+       "files": [
+        "scripts/buildDocs.js",
+        "scripts/build-version.js",
+        "scripts/buildWasm.js",
+        "scripts/woff2/**"
+       ]
+      }
+     ]
+    },
+    {
+     "id": "extras-release",
+     "name": "Release & locales",
+     "summary": "Publishing releases, the changelog, translation coverage and the test setup.",
+     "files": [
+      "scripts/release.js",
+      "scripts/updateChangelog.js",
+      "scripts/locales-coverage-description.js",
+      "scripts/build-locales-coverage.js",
+      "setupTests.ts"
+     ]
+    }
+   ]
+  }
+ ],
+ "story": {
+  "actors": [
+   {
+    "id": "sketcher",
+    "name": "Person sketching",
+    "summary": "Draws diagrams on excalidraw.com, alone or with others.",
+    "kind": "person"
+   },
+   {
+    "id": "developer",
+    "name": "Developer",
+    "summary": "Embeds the Excalidraw editor in their own app.",
+    "kind": "person"
+   }
+  ],
+  "uses": [
+   {
+    "actor": "sketcher",
+    "part": "app",
+    "says": "draws and shares",
+    "entry": "excalidraw-app/index.tsx"
+   },
+   {
+    "actor": "developer",
+    "part": "extras",
+    "says": "embeds the editor",
+    "entry": "/"
+   }
+  ],
+  "narrative": [
+   "A [[sketcher]] opens [[app|excalidraw.com]], which is a thin wrapper around the [[editor]].",
+   "Every click and drag becomes an [[actions|editing action]] on shapes from the [[geometry]] packages.",
+   "[[render|Rendering]] paints the scene on canvas, and [[files]] saves it or exports it as an image.",
+   "To draw together, the app encrypts every change and sends it to the others live over [[svc-socketio]], and keeps shared scenes in [[store-firestore|Firestore]], with images in [[svc-cloud-storage]].",
+   "A [[developer]] can embed the same editor in their own app, like the [[extras|examples]] do."
+  ]
+ },
+ "tours": [
+  {
+   "id": "first-paint",
+   "title": "From excalidraw.com to pixels",
+   "chain": [
+    "excalidraw-app/App.tsx",
+    "packages/excalidraw/index.tsx",
+    "packages/excalidraw/components/App.tsx",
+    "packages/excalidraw/components/canvases/index.tsx",
+    "packages/excalidraw/components/canvases/StaticCanvas.tsx",
+    "packages/excalidraw/renderer/staticScene.ts"
+   ],
+   "captions": [
+    "The site's app component renders the Excalidraw editor from the package's public entry point.",
+    "The package entry wraps the main editor component with its providers.",
+    "The editor component renders its canvases, stacked on top of each other.",
+    "The canvas layer picks the static canvas for the finished shapes.",
+    "The static canvas asks the renderer to paint every visible shape, with Rough.js for the hand-drawn look."
+   ]
+  },
+  {
+   "id": "export-png",
+   "title": "Exporting a PNG",
+   "chain": [
+    "packages/excalidraw/components/LayerUI.tsx",
+    "packages/excalidraw/components/ImageExportDialog.tsx",
+    "packages/excalidraw/data/index.ts",
+    "packages/excalidraw/scene/export.ts",
+    "packages/excalidraw/renderer/staticScene.ts"
+   ],
+   "captions": [
+    "The menu layer opens the image export dialog.",
+    "The dialog previews the image; when you press save it hands the scene to the data module's export helper.",
+    "The helper asks the scene exporter for a canvas or SVG of the scene, then saves it as a file or copies it.",
+    "Export draws the scene off-screen with the chosen background, padding and scale, reusing the same static renderer the editor paints with, so the image matches the screen."
+   ]
+  },
+  {
+   "id": "style-a-shape",
+   "title": "Changing a shape's style",
+   "chain": [
+    "packages/excalidraw/components/LayerUI.tsx",
+    "packages/excalidraw/components/Actions.tsx",
+    "packages/excalidraw/actions/actionProperties.tsx",
+    "packages/excalidraw/components/ColorPicker/ColorPicker.tsx"
+   ],
+   "captions": [
+    "With a shape selected, the menu layer shows the shape properties panel.",
+    "The panel doesn't draw its own controls: it asks each registered action to render its panel.",
+    "The properties action renders the stroke and background controls and applies a change to every selected shape."
+   ]
+  },
+  {
+   "id": "share-scene",
+   "title": "Saving a shared scene",
+   "chain": [
+    "excalidraw-app/App.tsx",
+    "excalidraw-app/collab/Collab.tsx",
+    "excalidraw-app/data/firebase.ts",
+    "store-firestore"
+   ],
+   "captions": [
+    "The site's app starts the collaboration component when you start a live session or open a shared link.",
+    "Collaboration encrypts the scene in the browser and saves it as people draw, so newcomers can load it.",
+    "The Firebase module writes the encrypted scene to Firestore; the key never leaves the link."
+   ]
+  },
+  {
+   "id": "live-collab",
+   "title": "Drawing together live",
+   "chain": [
+    "excalidraw-app/share/ShareDialog.tsx",
+    "excalidraw-app/collab/Collab.tsx",
+    "svc-socketio"
+   ],
+   "captions": [
+    "The share dialog's start-session button asks the collaboration component to open a live room.",
+    "Collaboration connects to the room server over Socket.IO, encrypts every change in the browser and broadcasts it, so everyone in the room sees each stroke as it happens."
+   ]
+  }
+ ]
+}

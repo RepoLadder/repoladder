@@ -1,0 +1,1 @@
+{ "name": "@mono/web", "dependencies": { "next": "*", "@trpc/server": "*", "@mono/ui": "workspace:*", "@mono/api": "workspace:*", "@mono/config": "workspace:*" } }

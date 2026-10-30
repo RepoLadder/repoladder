@@ -1,0 +1,11 @@
+{
+  "name": "repoladder-plugin-runtime",
+  "private": true,
+  "license": "Apache-2.0",
+  "type": "module",
+  "description": "Runtime dependencies for dist/repoladder.mjs, installed on first use by `repoladder install`.",
+  "dependencies": {
+    "@terrastruct/d2": "0.1.33",
+    "typescript": "5.9.3"
+  }
+}

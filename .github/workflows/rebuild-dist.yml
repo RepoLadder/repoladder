@@ -1,0 +1,73 @@
+name: Rebuild bundle
+
+# Feature PRs never commit plugin/dist/ (see ci.yml). After a release merge, rebuild the bundle
+# on main and commit it if it changed, so the shipped plugin stays current.
+# Stale bundles (an old name) are removed first, so a rename or delete is committed too.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "LICENSE-Geist.txt"
+      - "tsconfig.json"
+      - "scripts/build.ts"
+      - "scripts/bundle.ts"
+      - ".github/workflows/rebuild-dist.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Queue rather than cancel: each run rebuilds from the latest main anyway.
+concurrency:
+  group: rebuild-dist
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    # Loop guard. Pushes made with GITHUB_TOKEN don't trigger workflows, the
+    # bot commit touches only plugin/dist (outside the paths filter) and it
+    # carries [skip ci]; this check is a last line of defense.
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          # documented exception: this job pushes the rebuilt bundle to main with the workflow token;
+          # contents: write is granted to this workflow only
+          persist-credentials: true
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # A leak on main stops the bot from pushing a new bundle.
+      - uses: ./.github/actions/leakguard
+      - name: Build, commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Retry in case another merge lands on main between build and push.
+          for attempt in 1 2 3; do
+            rm -f plugin/dist/*.mjs
+            npm run build
+            git add -A plugin/dist
+            if git diff --cached --quiet -- plugin/dist; then
+              echo "Bundle unchanged."
+              exit 0
+            fi
+            git commit -m "Rebuild plugin/dist [skip ci]"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected (attempt $attempt); rebuilding on latest main."
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci
+          done
+          echo "::error::Could not push the rebuilt bundle after 3 attempts."
+          exit 1

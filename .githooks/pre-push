@@ -1,0 +1,5 @@
+#!/bin/sh
+# Leak guard: blocks a push that adds internal terms, home-directory paths or secrets.
+# Installed by `npm run hooks` (core.hooksPath). Git's own `git push --no-verify` is the only bypass.
+command -v node >/dev/null 2>&1 || { echo "leak guard: node is required to push (install Node 22)" >&2; exit 1; }
+exec node "$(git rev-parse --show-toplevel)/scripts/leakguard.ts" --pre-push "$@" 1>&2
