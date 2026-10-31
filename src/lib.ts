@@ -1,5 +1,5 @@
-// The library entry: files in, diagram out. The hosted site calls this. It never reads the working
-// directory or env, never writes to disk, never pings and never exits the process.
+// The library entry: files in, diagram out (`buildFromFiles`), or files in, facts out (`analyzeFiles`).
+// It never reads the working directory or env, never writes to disk, never pings and never exits the process.
 import { analyzeSource } from "./analyze/index.ts";
 import { resolveMeta, type AnalyzeOptions, type GitMode } from "./analyze/options.ts";
 import { memorySource } from "./analyze/source.ts";
@@ -46,8 +46,10 @@ export type BuildResult =
     }
   | BuildFailure;
 
-/** Files in (repo-relative path → UTF-8 text), diagram out. Never reads the working directory or env, never writes, never pings. Bad input (empty, not TS/JS, too big, unreadable, analyzer failure) comes back as `{ ok: false, code, message }`; bad options and a bad grouping throw. */
-export async function buildFromFiles(files: Record<string, string> | Map<string, string>, opts: BuildFromFilesOptions = {}): Promise<BuildResult> {
+type CommonOptions = Pick<BuildFromFilesOptions, "repo" | "sha" | "github" | "limits" | "onProgress">;
+
+// The setup both entries share; validation order (limits, then meta) is part of the contract.
+function prepare(files: Record<string, string> | Map<string, string>, opts: CommonOptions) {
   const limits = resolveLimits(opts.limits);
   let meta;
   try {
@@ -55,14 +57,33 @@ export async function buildFromFiles(files: Record<string, string> | Map<string,
   } catch (e) {
     throw new BuildError("INVALID_OPTIONS", 2, `INVALID_OPTIONS: ${(e as Error).message}`);
   }
+  const onProgress: OnProgress | undefined = opts.onProgress && ((e) => { try { opts.onProgress!(e); } catch { /* a buggy hook must not fail a build */ } });
+  const src = memorySource(files, { name: meta.repo });
+  return { src, meta, limits, onProgress };
+}
+
+export type AnalyzeResult = { ok: true; facts: Facts; engineVersion: string } | BuildFailure;
+
+/** Files in (repo-relative path → UTF-8 text), facts out: the same analysis as `buildFromFiles`, without grouping, layout or HTML. Same input limits and error codes; bad input comes back as `{ ok: false, code, message }`, bad options throw. Never reads the working directory or env, never writes, never pings. */
+export function analyzeFiles(files: Record<string, string> | Map<string, string>, opts: CommonOptions = {}): AnalyzeResult {
+  const { src, meta, limits, onProgress } = prepare(files, opts);
+  try {
+    const facts = analyzeSource(src, { sha: meta.sha, github: meta.github }, limits, onProgress);
+    return { ok: true, facts, engineVersion: VERSION };
+  } catch (e) {
+    return failureOf(e);
+  }
+}
+
+/** Files in (repo-relative path → UTF-8 text), diagram out. Never reads the working directory or env, never writes, never pings. Bad input (empty, not TS/JS, too big, unreadable, analyzer failure) comes back as `{ ok: false, code, message }`; bad options and a bad grouping throw. */
+export async function buildFromFiles(files: Record<string, string> | Map<string, string>, opts: BuildFromFilesOptions = {}): Promise<BuildResult> {
+  const { src, meta, limits, onProgress } = prepare(files, opts);
   let profile: Profile;
   try {
     profile = resolveProfile(opts.profile);
   } catch (e) {
     throw new BuildError("INVALID_OPTIONS", 2, `INVALID_OPTIONS: ${(e as Error).message}`);
   }
-  const onProgress: OnProgress | undefined = opts.onProgress && ((e) => { try { opts.onProgress!(e); } catch { /* a buggy hook must not fail a build */ } });
-  const src = memorySource(files, { name: meta.repo });
   let facts: Facts;
   try {
     facts = analyzeSource(src, { sha: meta.sha, github: meta.github }, limits, onProgress);
