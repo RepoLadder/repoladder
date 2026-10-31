@@ -32,7 +32,7 @@ test("no command, or an unknown one, prints the usage to stderr and exits 1", ()
 });
 
 // #428: progress lines on stderr for `build`
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -108,4 +108,38 @@ test("build --profile nope exits 2 with INVALID_OPTIONS on stderr", () => {
     assert.equal(r.status, 2, extra.join(" "));
     assert.match(r.stderr, /INVALID_OPTIONS/);
   }
+});
+
+// ---- query (read-only lookups over facts.json) ----
+const fixtureDir = (n: string) => fileURLToPath(new URL(`./fixtures/${n}`, import.meta.url));
+
+test("query: analyze, then 'touches database' prints one JSON line with file:line and nothing on stderr", () => {
+  const out = join(mkdtempSync(join(tmpdir(), "rl-query-")), "facts");
+  assert.equal(run("analyze", fixtureDir("stores"), "--out", out).status, 0);
+  const r = run("query", fixtureDir("stores"), "touches", "database", "--out", out);
+  assert.equal(r.status, 0);
+  assert.equal(r.stderr, "");
+  assert.equal(r.stdout.trimEnd().split("\n").length, 1);
+  const j = JSON.parse(r.stdout);
+  assert.ok(j.total > 0);
+  for (const row of j.results) assert.ok(typeof row.file === "string" && Number.isInteger(row.line));
+});
+
+test("query: missing facts exit 2 with NO_FACTS, analyze nothing and write nothing", () => {
+  const out = join(mkdtempSync(join(tmpdir(), "rl-query-")), "none");
+  const r = run("query", fixtureDir("stores"), "touches", "database", "--out", out);
+  assert.equal(r.status, 2);
+  assert.match(r.stderr, /^NO_FACTS: .*analyze/);
+  assert.equal(r.stdout, "");
+  assert.equal(existsSync(out), false);
+});
+
+test("query: a bad --limit or unknown kind exits 2 with its code; a bare -- passes a value starting with --", () => {
+  const out = join(mkdtempSync(join(tmpdir(), "rl-query-")), "facts");
+  run("analyze", fixtureDir("basic-app"), "--out", out);
+  assert.match(run("query", fixtureDir("basic-app"), "definitions", "x", "--limit", "0", "--out", out).stderr, /^INVALID_OPTIONS: /);
+  assert.match(run("query", fixtureDir("basic-app"), "nope", "x", "--out", out).stderr, /^UNKNOWN_QUERY: /);
+  const r = run("query", fixtureDir("basic-app"), "--out", out, "definitions", "--", "--odd-name");
+  assert.equal(r.status, 0);
+  assert.deepEqual(JSON.parse(r.stdout).query, { kind: "definitions", arg: "--odd-name" });
 });

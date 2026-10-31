@@ -109,7 +109,7 @@ export function analyzeSource(src: FileSource, meta: { sha: string | null; githu
     const directive = directiveOf(texts.get(from)!);
     // Exported names feed the file boxes of a leaf's file board ("default" says nothing on its own).
     const exportNames = [...pf.exports].filter((x) => x !== "default").sort();
-    files.push({ path: from, pkg: owner(from), loc: pf.loc, ...(directive ? { directive } : {}), ...(exportNames.length ? { exports: exportNames } : {}) });
+    files.push({ path: from, pkg: owner(from), loc: pf.loc, ...(directive ? { directive } : {}), ...(exportNames.length ? { exports: exportNames, exportLines: exportNames.map((n) => pf.exportLines.get(n)!) } : {}) });
     const seen = new Set<string>();
     const push = (imp: Import) => {
       const k = `${imp.to}\0${imp.line}\0${imp.kind}`;
