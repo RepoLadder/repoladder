@@ -20,7 +20,7 @@ test("packageJson: the publishable shape", () => {
   assert.deepEqual(p.files, ["bin", "dist", "LICENSE", "NOTICE", "THIRD-PARTY-NOTICES.txt", "LICENSE-Geist.txt"]);
   assert.deepEqual(p.bin, { repoladder: "bin/repoladder.mjs" });
   assert.equal(p.homepage, "https://repoladder.com");
-  assert.equal((p.repository as { url: string }).url, "git+https://github.com/repoladder/repoladder.git");
+  assert.equal((p.repository as { url: string }).url, "git+https://github.com/RepoLadder/repoladder.git");
   assert.equal((p.engines as { node: string }).node, ">=20.6");
   assert.equal(p.license, root.license);
   assert.equal(p.license, "Apache-2.0");
