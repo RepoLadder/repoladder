@@ -29,5 +29,13 @@ Open `.repoladder/diagram.html` in a browser. This groups by folders instead of 
 
 **Requirements:** Node.js 20.6 or newer. The first run downloads about 25MB (the D2 layout engine's ~22MB wasm plus TypeScript). For a permanent install, `npm i -g repoladder`.
 
+### Serve the map locally
+
+```
+npx repoladder serve . --no-open
+```
+
+Hosts the built map (building a folder-grouped one first if there is none) at a link like `http://127.0.0.1:52341/?t=<token>`. The link carries a random access token made fresh on every run; requests without it are refused. `--port 8080` picks the port (default: any free one), `--no-open` skips opening your browser, Ctrl+C stops it. It binds only to your own machine, and there is no option to change that.
+
 The first `build` from an interactive terminal asks once whether to share anonymous usage stats (default no; see [PRIVACY.md](../PRIVACY.md)). It never asks in CI or when piped.
 

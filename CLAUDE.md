@@ -16,7 +16,8 @@ Each file starts with a comment saying what it is for; read it before editing.
 - `src/model/`: grouping and validation (`grouping.ts`, `depth.ts`), the no-AI default grouping (`budgetsplit.ts`), roll-up into boards (`rollup.ts`, `rollrules.ts`; a leaf's file board draws every connection in the `full` profile, `hosted` budgets arrows as before #449: `profile.ts`), the digest Claude reads (`summary.ts`), and tours and flows (`tours.ts`, `compose.ts`, `derivedtours.ts`, `flows.ts`).
 - `src/build/`: D2 layout per board (`layout.ts`, `d2pool.ts`, `layoutsession.ts`, `passes.ts`), the page shell and packing (`html.ts`, `filepack.ts`), the layout lint and the digestibility budget (`lint.ts`, `budget.ts`), and `pipeline.ts`, which ties model, layout and HTML together for `cli.ts` and `lib.ts`.
 - `src/viewer/`: the in-page app, a typed TS module that runs in the browser (board drawing, navigation, panels, the tour player, deep links, the detail dial). It may import types from `src/model` and `src/build`, but nothing that pulls Node code into the page. Keep each module under about 200 lines; add a module rather than growing one. `DESIGN.md` explains the visual identity. `npm run build` bakes the viewer into the plugin bundle, so the shipped plugin never needs esbuild.
-- `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
+- `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export | serve`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
+- `src/serve/`: local server for `repoladder serve`; the only code that listens on a port; engine dirs never import it.
 - `src/lib.ts`: the library entry `buildFromFiles(files, opts)`: files in, `{ ok: true, html, facts, model, engineVersion, coverage, profile }` or `{ ok: false, code, message }` out; no disk, env, ping or exit. `analyzeFiles(files, opts)` returns `{ ok: true, facts, engineVersion }` or `{ ok: false, code, message }` without grouping, layout or HTML. Input limits live in `src/build/limits.ts`.
 - `src/features.ts`: the launch switches (`dial`, `story`), both off by default. `REPOLADDER_DIAL=1` or `--dial` after the repo root builds a page with the detail dial; `REPOLADDER_STORY=1` or `--story` builds the story level (People and systems) and makes `summary` ask for one.
 - npm package `repoladder` (`npm run npm:pack`): the CLI bundle plus the library, published only from a `v*` tag on `main` through npm trusted publishing (`.github/workflows/publish.yml`).
@@ -40,6 +41,7 @@ npm run typecheck  # tsc --noEmit
 npm run build      # bundle to plugin/dist/repoladder.mjs (viewer included)
 node src/cli.ts build /path/to/repo --fresh --default   # diagram without the Claude grouping step
 node src/cli.ts build /path/to/repo --default --title "Name"   # the map's name in place of the folder name
+node src/cli.ts serve /path/to/repo   # host the built map on localhost
 ```
 
 ## Pull requests
