@@ -29,7 +29,11 @@ export function startServer(opts: ServerOpts): Promise<Running> {
   const routes = opts.routes ?? {};
   let port = 0;
   const server = createServer((req, res) => {
-    const url = new URL(req.url ?? "/", "http://127.0.0.1");
+    // never URL-parse the target: `//` or `http://` would throw or rewrite the path. Anything but one leading `/` gets a path no route has.
+    const raw = req.url ?? "/";
+    const target = /^\/(?!\/)/.test(raw) ? raw.split("#")[0] : "/\0invalid";
+    const q = target.indexOf("?");
+    const url = { pathname: q < 0 ? target : target.slice(0, q), searchParams: new URLSearchParams(q < 0 ? "" : target.slice(q + 1)) };
     const verdict = authorize(
       { method: req.method ?? "GET", path: url.pathname, query: url.searchParams, headers: req.headers, remoteAddress: req.socket.remoteAddress },
       { port, token },

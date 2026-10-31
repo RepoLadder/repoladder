@@ -72,6 +72,13 @@ test("serve: token, Host, loopback, headers and rebuild behaviour", async (t) =>
   assert.equal((await get(s, `/?t=${s.token}`, { host: "evil.example" })).status, 403);
   assert.equal((await get(s, `/?t=${s.token}`, { host: `localhost:${s.port}` })).status, 200);
 
+  // odd request targets neither crash the server nor reach a route
+  for (const path of ["//", "//x/y?t=" + s.token, "http://", "*"]) {
+    const r = await get(s, path, { headers: h });
+    assert.ok(r.status === 404 || r.status === 401, `${path} -> ${r.status}`);
+  }
+  assert.equal((await get(s, `/?t=${s.token}`)).status, 200, "still alive");
+
   const external = Object.values(networkInterfaces()).flat().find((a) => a && a.family === "IPv4" && !a.internal);
   if (external) {
     const refused = await new Promise<boolean>((res) => {
