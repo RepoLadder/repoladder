@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// repoladder-build: f62b89d
+// repoladder-build: e4d92c2
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -6760,7 +6760,7 @@ function usedIcons(categories, ids) {
 
 // src/version.ts
 var PACKAGE = "repoladder";
-var VERSION = true ? "0.2.0" : read();
+var VERSION = true ? "0.3.0" : read();
 
 // src/viewer/state.ts
 var STORY = "_story";
@@ -29784,7 +29784,7 @@ function commitId(cwd) {
   }
 }
 function version2() {
-  if (true) return "f62b89d";
+  if (true) return "e4d92c2";
   return commitId(fileURLToPath3(new URL("..", import.meta.url)));
 }
 var pingUrl = (env = process.env) => env.REPOLADDER_PING_URL || PING_URL;
