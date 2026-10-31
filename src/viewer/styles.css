@@ -159,7 +159,7 @@ main {
 .stage{display:contents}
 .stage:fullscreen{display:flex;flex-direction:column;background:var(--paper);gap:12px;padding:0;overflow:hidden}
 .stage:fullscreen .canvas{flex:1;min-height:0;height:auto;border:0;border-radius:0}
-.stage:fullscreen .walk-card{flex:none;margin:0 12px 12px}
+.stage:fullscreen > .walk-card{flex:none;margin:0 12px 12px}
 .canvas {
   position: relative;
   height: min(76vh, 780px);
