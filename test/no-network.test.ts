@@ -182,7 +182,7 @@ test("src/serve may listen on loopback via named node:http imports and nothing e
     ['import { request } from "node:http";', "imports node:http"],
     ['import { get } from "http";', "imports http"],
     ['import https from "node:https";', "imports node:https"],
-    ['import net from "node:net";', "imports net"],
+    ['import net from "node:net";', "imports node:net"],
     ['import { spawn } from "node:child_process";', "uses child_process"],
     ['fetch("x");', "uses fetch"],
   ];
