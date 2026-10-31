@@ -65,13 +65,13 @@ Everything runs on your machine, and the website only ever reads public repos. U
 
 ## Export images
 
-The viewer's Export button saves or copies the current view (SVG, PNG). A published Artifact may block downloads, in which case it shows the image to save by hand. The CLI still exports whole boards for READMEs, docs and slides, after a build:
+The viewer's Export button saves or copies the current view (SVG, PNG); a published Artifact may block downloads, in which case it shows the image to save by hand. After a build, the CLI exports whole boards for READMEs, docs and slides:
 
 ```bash
 npx repoladder export REPO [--board id] [--format svg|png] [--theme light|dark]
 ```
 
-It writes one standalone SVG per board (or just `--board id`) to `REPO/.repoladder/export/<board>-<theme>.svg`, drawn like the viewer and readable as a plain `<img>` (GitHub renders it). `--format png` also writes PNGs at 2x when Playwright with Chromium is installed; otherwise it says so and writes SVG only.
+It writes one standalone SVG per board to `REPO/.repoladder/export/<board>-<theme>.svg`, which renders as a plain `<img>` on GitHub. `--format png` also writes 2x PNGs when Playwright with Chromium is installed.
 
 ## Develop
 
@@ -80,27 +80,16 @@ npm install
 npm test               # analyzer, grouping and rollup tests against test/fixtures
 npm run typecheck      # tsc --noEmit
 npm run build          # bundle src/ into plugin/dist/repoladder.mjs
-npm run npm:pack       # generate the npm package into .npm-package/
-node src/cli.ts build ../some-repo --default   # folder-based diagram, no Claude step
-node src/cli.ts build ../some-repo --default --title "My App"   # --title names the map (page title, header, overview) instead of the folder
+node src/cli.ts build ../some-repo --default   # folder-based diagram, no Claude step (--title "My App" names the map)
 ```
 
-**Launch switches** (`src/features.ts`): the detail dial is off for launch, so every map shows only the Default stop. `REPOLADDER_DIAL=1` or `--dial` after the repo root (`build ../some-repo --dial`) builds a page with the dial; `REPOLADDER_STORY=1` / `--story` builds the page with the story level (People and systems) and makes `summary` ask for one; with it off, `buildDiagram` ignores any `story` in the grouping and every map opens on the overview.
+Source layout: `src/analyze` (facts), `src/model` (grouping, validation, rollup, tours), `src/build` (D2 layout, HTML), `src/viewer` (the in-page app). Branches, releases and what a PR needs are in [CONTRIBUTING.md](CONTRIBUTING.md). Don't commit `plugin/dist/`; a bot rebuilds it after each release.
 
-CI runs the tests, typecheck and build on pull requests into `main` and on every push to `main`; feature work lands on `develop` first and is tested locally. Don't commit `plugin/dist/` (a CI check rejects it; `git checkout plugin/dist` after a local build). After each release to `main`, a workflow rebuilds the bundle and commits it, so the installed plugin always matches `src/`. A `Verify bundle` workflow rebuilds it and fails if it differs from the committed file.
-
-Source layout: `src/analyze` (facts), `src/model` (grouping, validation, rollup, summary, tours), `src/build` (D2 layout, HTML), `src/viewer` (the in-page app).
-
-To re-record the GIF above after a viewer change:
+To re-record the GIF above after a viewer change, build the map from `gallery/groupings/repoladder.json` and record it:
 
 ```bash
-REPOLADDER_BRAND_NAME=RepoLadder npm run gallery -- --only repoladder --title RepoLadder   # builds the map from gallery/groupings/repoladder.json
-npm run readme-media   # 15 fps, dark → docs/media/tour.gif
-npm run readme-media -- --poster /tmp/poster.png   # also saves the poster still (--poster-step N picks the frame)
-npm run readme-media -- --list       # the map's tours, one per line
-npm run readme-media -- --all-tours --max-seconds 20   # one clip per tour → .gallery/media/<repo>-<tour>.gif
-npm run readme-media -- --tours open-a-box --format webm --out /tmp/open-a-box.webm
-npm run readme-media -- --video /tmp/tour-video   # also the 1280×800 frames for the website's 30 fps video
+REPOLADDER_BRAND_NAME=RepoLadder npm run gallery -- --only repoladder --title RepoLadder
+npm run readme-media   # dark, 15 fps → docs/media/tour.gif (options are listed at the top of scripts/readme-media.ts)
 ```
 
 ## Community
