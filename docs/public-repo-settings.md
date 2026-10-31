@@ -25,9 +25,10 @@ The expected values live in `scripts/public-repo-settings.json`. Every item belo
 
 - Fork pull request workflows from outside collaborators: "Require approval for all outside collaborators"
   (`fork-pr-approval`).
-- Workflow permissions: "Read repository contents and packages permissions" (`read-only-token`), and untick
-  "Allow GitHub Actions to create and approve pull requests" (`no-actions-approve-prs`). The
-  `rebuild-dist.yml` and `publish.yml` workflows ask for `contents: write` and OIDC themselves.
+- Workflow permissions: "Read repository contents and packages permissions" (`read-only-token`), and tick
+  "Allow GitHub Actions to create and approve pull requests" (`actions-create-prs`): `release.yml` needs it
+  to open the Version Packages PR (a ruleset still requires CI on every PR into `main`, and the PR needs
+  no approvals). The `rebuild-dist.yml`, `release.yml` and `publish.yml` workflows ask for `contents: write` and OIDC themselves.
 - Forks never receive secrets on a public repo, so there is no toggle for that. The real guard is never
   using `pull_request_target` together with a checkout of the pull request's code.
 
@@ -51,11 +52,13 @@ JSON
 
 **Settings, General**
 
-- Allow squash merging only (`squash-only`), automatically delete head branches
+- Allow squash merging and merge commits, not rebase (`merge-methods`): feature PRs are squashed, the
+  `develop` -> `main` release PR (and back-merges) use a merge commit so the two branches keep a shared
+  history. Automatically delete head branches
   (`delete-branch-on-merge`), Discussions on (`discussions`).
 
 ```sh
-gh api -X PATCH repos/OWNER/REPO -F allow_squash_merge=true -F allow_merge_commit=false \
+gh api -X PATCH repos/OWNER/REPO -F allow_squash_merge=true -F allow_merge_commit=true \
   -F allow_rebase_merge=false -F delete_branch_on_merge=true -F has_discussions=true
 ```
 

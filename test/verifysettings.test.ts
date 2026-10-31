@@ -25,12 +25,12 @@ const rs = (over: Record<string, unknown> = {}) => ({
 function green(): Record<string, Read> {
   return {
     [`repos/${R}`]: { status: 200, body: {
-      allow_squash_merge: true, allow_merge_commit: false, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true,
+      allow_squash_merge: true, allow_merge_commit: true, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true,
       security_and_analysis: {
         secret_scanning: { status: "enabled" }, secret_scanning_push_protection: { status: "enabled" }, dependabot_security_updates: { status: "enabled" },
       },
     } },
-    [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: false } },
+    [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: true } },
     [`repos/${R}/actions/permissions/fork-pr-contributor-approval`]: { status: 200, body: { approval_policy: "all_external_contributors" } },
     [`repos/${R}/vulnerability-alerts`]: { status: 204, body: null },
     [`repos/${R}/private-vulnerability-reporting`]: { status: 200, body: { enabled: true } },
@@ -60,11 +60,11 @@ test("a fully green repo is all OK and exits 0", () => {
 test("each OFF condition is reported OFF", () => {
   const g = green();
   const repo = (o: Record<string, unknown>) => ({ ...g, [`repos/${R}`]: { status: 200, body: { ...(g[`repos/${R}`].body as object), ...o } } });
-  assert.equal(by(run(repo({ allow_merge_commit: true })).results, "squash-only").status, "OFF");
+  assert.equal(by(run(repo({ allow_rebase_merge: true })).results, "merge-methods").status, "OFF");
   assert.equal(by(run(repo({ delete_branch_on_merge: false })).results, "delete-branch-on-merge").status, "OFF");
   assert.equal(by(run(repo({ security_and_analysis: { secret_scanning: { status: "enabled" }, secret_scanning_push_protection: { status: "disabled" }, dependabot_security_updates: { status: "enabled" } } })).results, "push-protection").status, "OFF");
   assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "write", can_approve_pull_request_reviews: true } } }).results, "read-only-token").status, "OFF");
-  assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: true } } }).results, "no-actions-approve-prs").status, "OFF");
+  assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: false } } }).results, "actions-create-prs").status, "OFF");
   assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/fork-pr-contributor-approval`]: { status: 200, body: { approval_policy: "first_time_contributors" } } }).results, "fork-pr-approval").status, "OFF");
   const noFf = rs(); (noFf.rules as unknown[]).splice(2, 1);
   const r1 = run(withRuleset(noFf)).results;
@@ -101,8 +101,8 @@ test("code-owner review is only a requirement when the data flag is on", () => {
 
 test("what the token cannot read is CANNOT-VERIFY, never OFF", () => {
   const m: Record<string, Read> = {
-    [`repos/${R}`]: { status: 200, body: { allow_squash_merge: true, allow_merge_commit: false, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true } },
-    [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: false } },
+    [`repos/${R}`]: { status: 200, body: { allow_squash_merge: true, allow_merge_commit: true, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true } },
+    [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: true } },
     [`repos/${R}/actions/permissions/fork-pr-contributor-approval`]: { status: 422, body: {} },
     [`repos/${R}/vulnerability-alerts`]: { status: 403, body: {} },
     [`repos/${R}/private-vulnerability-reporting`]: { status: 404, body: {} },

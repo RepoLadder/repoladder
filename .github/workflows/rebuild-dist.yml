@@ -27,8 +27,7 @@ concurrency:
 
 jobs:
   rebuild:
-    # Loop guard. Pushes made with GITHUB_TOKEN don't trigger workflows, the
-    # bot commit touches only plugin/dist (outside the paths filter) and it
+    # Loop guard. The bot commit touches only plugin/dist (outside the paths filter) and it
     # carries [skip ci]; this check is a last line of defense.
     if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
@@ -37,8 +36,10 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
-          # documented exception: this job pushes the rebuilt bundle to main with the workflow token;
-          # contents: write is granted to this workflow only
+          # documented exception: this job pushes the rebuilt bundle to main with a write deploy key,
+          # which the main ruleset lists as its only bypass (GitHub Actions itself can't be a bypass
+          # actor); the key is a repo secret and lives in the checkout's git config for this job only
+          ssh-key: ${{ secrets.DIST_DEPLOY_KEY }}
           persist-credentials: true
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:

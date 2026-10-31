@@ -79,7 +79,7 @@ function repoChecks(read: Runner, repo: string): Result[] {
   const out: Result[] = [];
   if (r.status !== 200) {
     for (const [id, label] of [
-      ["squash-only", "Squash merging is the only merge method"],
+      ["merge-methods", "Squash and merge commits are allowed (no rebase)"],
       ["delete-branch-on-merge", "Head branches are deleted after merge"],
       ["discussions", "Discussions are on"],
       ["secret-scanning", "Secret scanning is enabled"],
@@ -89,10 +89,10 @@ function repoChecks(read: Runner, repo: string): Result[] {
     return out;
   }
   const squash = dig(r.body, "allow_squash_merge"), merge = dig(r.body, "allow_merge_commit"), rebase = dig(r.body, "allow_rebase_merge");
-  const label = "Squash merging is the only merge method";
-  if (squash === undefined || merge === undefined || rebase === undefined) out.push(cant("squash-only", label, "merge settings not returned"));
-  else if (squash === true && merge === false && rebase === false) out.push(ok("squash-only", label));
-  else out.push(off("squash-only", label, `squash=${squash} merge-commit=${merge} rebase=${rebase}`));
+  const label = "Squash and merge commits are allowed (no rebase)";
+  if (squash === undefined || merge === undefined || rebase === undefined) out.push(cant("merge-methods", label, "merge settings not returned"));
+  else if (squash === true && merge === true && rebase === false) out.push(ok("merge-methods", label));
+  else out.push(off("merge-methods", label, `squash=${squash} merge-commit=${merge} rebase=${rebase}`));
   out.push(field(r, "delete-branch-on-merge", "Head branches are deleted after merge", ["delete_branch_on_merge"], true));
   out.push(field(r, "discussions", "Discussions are on", ["has_discussions"], true));
   out.push(field(r, "secret-scanning", "Secret scanning is enabled", ["security_and_analysis", "secret_scanning", "status"], "enabled"));
@@ -106,7 +106,7 @@ function actionsChecks(read: Runner, repo: string): Result[] {
   const f = read(`repos/${repo}/actions/permissions/fork-pr-contributor-approval`);
   return [
     field(w, "read-only-token", "Default workflow token is read-only", ["default_workflow_permissions"], "read"),
-    field(w, "no-actions-approve-prs", "Actions cannot approve pull requests", ["can_approve_pull_request_reviews"], false),
+    field(w, "actions-create-prs", "Actions can open pull requests (the Version Packages PR)", ["can_approve_pull_request_reviews"], true),
     field(f, "fork-pr-approval", "Fork PR workflows need approval for all outside collaborators", ["approval_policy"], "all_external_contributors"),
   ];
 }
@@ -218,8 +218,8 @@ export function evaluate(read: Runner, repo: string, cfg: Config, opts: { launch
 }
 
 export const CHECK_IDS: string[] = [
-  "squash-only", "delete-branch-on-merge", "discussions", "secret-scanning", "push-protection", "dependabot-updates",
-  "read-only-token", "no-actions-approve-prs", "fork-pr-approval", "dependabot-alerts", "private-vuln-reporting",
+  "merge-methods", "delete-branch-on-merge", "discussions", "secret-scanning", "push-protection", "dependabot-updates",
+  "read-only-token", "actions-create-prs", "fork-pr-approval", "dependabot-alerts", "private-vuln-reporting",
   ...RULESET_IDS.map(([id]) => id), "interaction-limit",
 ];
 
