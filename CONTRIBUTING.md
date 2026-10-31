@@ -36,6 +36,12 @@ Any change to what a diagram looks like includes before/after screenshots. On th
 
 Use the bug or feedback forms. Questions and ideas go to [Discussions](https://github.com/repoladder/repoladder/discussions). The maintainer reads every issue and labels it; not every idea gets built. Opening an issue before a large PR is welcome.
 
+## Changelog and credit
+
+A PR that changes anything shipped in the npm package adds a changeset with `npm run changeset`. The changeset text is the changelog line, so write it for users: what changed and why they care, in one or two sentences. Release notes are generated from the changesets when the release PR merges (see `.changeset/README.md`), so there is nothing else to edit by hand.
+
+To credit someone, end the changeset text with a thanks line that uses their GitHub login, for example `Thanks @octocat for the report and the fix.` Credit applies to reports and reviews as well as code. A maintainer adds the line when merging an outside PR that did not include one. Docs-only and test-only PRs need no changeset.
+
 ## Conduct
 
 This project follows the [Code of Conduct](CODE_OF_CONDUCT.md).

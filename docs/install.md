@@ -27,6 +27,18 @@ npx repoladder build . --default
 
 Open `.repoladder/diagram.html` in a browser. This groups by folders instead of asking Claude, and still draws every arrow from your code. `npx repoladder export . --format svg` writes images.
 
+**Looking up facts (experimental; the output shape may change before 1.0).** `repoladder query` answers structural questions from `.repoladder/facts.json` as one line of JSON, every row with a `file` and `line`. It reads only what `analyze` (or `build`) already wrote and tells you to run `analyze` when that is missing; it never writes files.
+
+```
+npx repoladder query . definitions fetchUser       # where a name is exported, or an endpoint is defined
+npx repoladder query . importers src/lib/user.ts   # what imports a file
+npx repoladder query . callers checkIn             # who calls an endpoint
+npx repoladder query . touches database            # what reads or writes a database (or name a service or store)
+npx repoladder query . files <group id>            # the files a group of grouping.json owns
+```
+
+`--limit n` (1 to 500, default 50) bounds the rows; `total` and `truncated` say what was left out. `--fresh` re-analyzes first. A bare `--` lets an argument start with `--`.
+
 **Requirements:** Node.js 20.6 or newer. The first run downloads about 25MB (the D2 layout engine's ~22MB wasm plus TypeScript). For a permanent install, `npm i -g repoladder`.
 
 ### Serve the map locally
