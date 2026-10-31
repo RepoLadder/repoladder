@@ -46,7 +46,7 @@ function ownersOf(rules: Rule[], path: string): string[] {
 
 const text = readFileSync(new URL("../.github/CODEOWNERS", import.meta.url), "utf8");
 const rules = parse(text);
-const OWNER = "@repoladder/maintainers";
+const OWNER = "@qtwehby";
 
 // Sibling tickets append their new guardrail paths here.
 const GUARDRAILS = [
