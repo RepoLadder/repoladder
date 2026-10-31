@@ -54,6 +54,8 @@ export type StringSite =
 export interface ParsedFile {
   imports: RawImport[];
   exports: Set<string>;
+  /** 1-based line of the first place each exported name is exported ("default" has none). */
+  exportLines: Map<string, number>;
   reexports: ReExport[];
   /** Only re-exports (and imports used to re-export): a pass-through barrel. */
   isBarrel: boolean;
@@ -101,6 +103,11 @@ export function parseFile(path: string, text: string): ParsedFile {
   const lineOf = (n: TS.Node) => sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
   const imports: RawImport[] = [];
   const exports = new Set<string>();
+  const exportLines = new Map<string, number>();
+  const addExport = (name: string, at: TS.Node) => {
+    exports.add(name);
+    if (!exportLines.has(name)) exportLines.set(name, lineOf(at));
+  };
   const reexports: ReExport[] = [];
   let barrelish = true;
   const endpoints: EndpointDef[] = [];
@@ -125,16 +132,16 @@ export function parseFile(path: string, text: string): ParsedFile {
         let names: [string, string][] | null = null;
         if (st.exportClause && ts.isNamedExports(st.exportClause)) {
           names = st.exportClause.elements.map((e) => [e.name.text, (e.propertyName ?? e.name).text]);
-          for (const e of st.exportClause.elements) exports.add(e.name.text);
+          for (const e of st.exportClause.elements) addExport(e.name.text, e.name);
         } else if (st.exportClause && ts.isNamespaceExport(st.exportClause)) {
           names = [[st.exportClause.name.text, "*"]];
-          exports.add(st.exportClause.name.text);
+          addExport(st.exportClause.name.text, st.exportClause.name);
         }
         reexports.push({ spec, names });
         imports.push({ spec, line: lineOf(st), kind: st.isTypeOnly ? "type" : "reexport", names: names?.map((n) => n[1]) ?? ["*"] });
       } else {
         barrelish = false;
-        if (st.exportClause && ts.isNamedExports(st.exportClause)) for (const e of st.exportClause.elements) exports.add(e.name.text);
+        if (st.exportClause && ts.isNamedExports(st.exportClause)) for (const e of st.exportClause.elements) addExport(e.name.text, e.name);
       }
       continue;
     }
@@ -144,9 +151,9 @@ export function parseFile(path: string, text: string): ParsedFile {
     if (mods?.some((m) => m.kind === ts.SyntaxKind.ExportKeyword)) {
       if (mods.some((m) => m.kind === ts.SyntaxKind.DefaultKeyword)) exports.add("default");
       else if (ts.isVariableStatement(st)) {
-        for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name)) exports.add(d.name.text);
+        for (const d of st.declarationList.declarations) if (ts.isIdentifier(d.name)) addExport(d.name.text, d.name);
       } else if ((ts.isFunctionDeclaration(st) || ts.isClassDeclaration(st) || ts.isEnumDeclaration(st) || ts.isInterfaceDeclaration(st) || ts.isTypeAliasDeclaration(st)) && st.name) {
-        exports.add(st.name.text);
+        addExport(st.name.text, st.name);
       }
     }
   }
@@ -199,7 +206,7 @@ export function parseFile(path: string, text: string): ParsedFile {
   imports.sort((a, b) => a.line - b.line || a.spec.localeCompare(b.spec));
   const loc = text.split("\n").filter((l) => l.trim()).length;
   const routes = scanRoutes(ts, sf, lineOf);
-  return { imports, exports, reexports, isBarrel: barrelish && reexports.length > 0, loc, endpoints, strings, routes };
+  return { imports, exports, exportLines, reexports, isBarrel: barrelish && reexports.length > 0, loc, endpoints, strings, routes };
 }
 
 function stringRef(n: TS.StringLiteral | TS.NoSubstitutionTemplateLiteral | TS.TemplateExpression, lineOf: (n: TS.Node) => number, submitters: ReadonlySet<string>): StringRef | null {
