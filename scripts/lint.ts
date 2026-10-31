@@ -11,6 +11,7 @@ import { layoutBoards } from "../src/build/layout.ts";
 import { worstBoards, type BoardLint, type LintSummary } from "../src/build/lint.ts";
 import { lintReport, type LintReport } from "../src/build/budget.ts";
 import { coverageFails, coverageLines } from "../src/model/coverage.ts";
+import type { Profile } from "../src/model/profile.ts";
 import type { Facts } from "../src/model/schema.ts";
 
 /** Lints a build output dir. Layouts come from its layout cache, so this is quick after a build. */
@@ -46,11 +47,12 @@ async function main() {
   for (const d of dirs.map((x) => resolve(x))) {
     if (!existsSync(join(d, "model.json"))) { console.error(`${d}: no model.json (build first)`); process.exit(2); }
     const { boards, summary, budget, coverage } = await lintOut(d, !argv.includes("--no-lane"));
-    bad += summary.defectBoards + (coverageFails(coverage) ? 1 : 0);
+    const profile: Profile | undefined = (JSON.parse(readFileSync(join(d, "model.json"), "utf8")) as Model).profile;
+    bad += summary.defectBoards + (coverageFails(coverage, profile) ? 1 : 0);
     const shown = argv.includes("--all") ? boards : worstBoards(boards).slice(0, top);
     const over = budget.over.length ? `  ${budget.over.length}/${budget.boards} boards over the digestibility budget:\n${budget.over.map((s) => `    ${s}`).join("\n")}\n` : "";
     // every connection should be an arrow on some rung (#452): undrawn ones and off-board tour steps fail
-    const cov = coverageLines(coverage).map((l) => `  ${l}`).join("\n") + (coverage.usesChecked ? "" : "\n  (file connections only: no facts.json next to model.json)");
+    const cov = coverageLines(coverage).map((l) => `  ${l}`).join("\n") + (coverage.usesChecked ? "" : "\n  (file connections only: no facts.json next to model.json)") + (profile === "hosted" ? "\n  (hosted profile: undrawn connections are listed, not drawn)" : "");
     console.log(`${d}\n  ${describeSummary(summary)}\n${cov}\n${over}${shown.map((l) => describeBoard(l)).join("\n")}\n`);
   }
   process.exit(bad ? 1 : 0);

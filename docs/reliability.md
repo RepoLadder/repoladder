@@ -145,6 +145,12 @@ Reading it on excalidraw (`build --default`, pass 0: 157 boards, 1,690 compiles,
 | wall time | 1.7-1.8s | 1.7s |
 | gallery `zustand`, `taxonomy`, `excalidraw` `diagram.html` | | byte-identical |
 
+#### Fidelity profiles (#521)
+
+Since #449 a leaf's file board draws every connection, which roughly doubles layout cost on big repos. `--profile hosted` (CLI) or `buildFromFiles(files, { profile: "hosted" })` restores the budgeted file board: at most `max(8, 1.5 * boxes)` file-to-file arrows plus every runtime call, hubs (a file imported by 60% of a 5+ box board's siblings) and services used by more than 3 files listed instead of drawn, and splitting that ignores the file-arrow count. Coverage becomes informational: `coverageFails` is always false, so `lint:layout` exits 0 on a hosted build whose only findings are undrawn connections or off-board tour steps (layout defects still fail). `full` is the default everywhere and unchanged; the profile is written to `model.json` and the page only when it is `hosted`, and `buildFromFiles` always returns `profile`. Use `hosted` only for builds under a time limit.
+
+THINKRAIL_NUMBERS
+
 ### `/map` dry run (two passes)
 
 An agent followed SKILL.md sections 2-4 by hand on documenso, from the digests alone, and stopped before publishing.

@@ -1,5 +1,6 @@
 // Page data, the current board and selection, and small helpers every module shares.
 import type { Features } from "../features.ts";
+import type { Profile } from "../model/profile.ts";
 import type { Board, ModelEdge, ModelNode } from "../model/rollup.ts";
 import type { BoardLayout } from "../build/layout.ts";
 import type { ModelTour } from "../model/tours.ts";
@@ -29,6 +30,8 @@ export type PageNode = Omit<ModelNode, "files"> & {
 export interface ViewerData {
   /** Launch switches that differ from the defaults (features.ts); absent means launch defaults. */
   features?: Partial<Features>;
+  /** The fidelity profile (model/profile.ts); absent means `full`. */
+  profile?: Profile;
   repo: string;
   sha: string | null;
   paths: string[];

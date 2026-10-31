@@ -5,6 +5,7 @@
 import type { Board, ModelEdge } from "./rollup.ts";
 import { connectOrphans } from "./orphans.ts";
 import { roomForStores } from "./storeroom.ts";
+import { DEFAULT_PROFILE, type Profile } from "./profile.ts";
 
 export type RollEdge = Omit<ModelEdge, "ev">;
 
@@ -76,18 +77,59 @@ export function finishGroupBoard<E extends RollEdge>(id: string, children: strin
 
 /**
  * The same for a leaf's file board: `boxes` are its file boxes (and `more`, the "+N more" box, when it
- * has one). The file rung is where every connection is guaranteed an arrow (#449): each edge between
- * files, to an "elsewhere" box, and to a service or store is drawn, with no budget and no hub or
- * "used throughout" listing. Too dense a board is split into more rungs, never thinned.
+ * has one). In the `full` profile (the default) this is where every connection is guaranteed an arrow
+ * (#449): each edge between files, to an "elsewhere" box, and to a service or store is drawn, with no
+ * budget and no hub or "used throughout" listing. Too dense a board is split into more rungs, never
+ * thinned. The `hosted` profile (profile.ts) budgets arrows as before #449, to keep layout cost
+ * within a time limit: hubs and busy services are listed, minor arrows are not drawn.
  */
-export function finishFileBoard<E extends RollEdge>(boxes: string[], more: string, isFile: (id: string) => boolean, all: Iterable<E>, ctxEdges: Set<E>, used: Set<string>, may: (id: string) => boolean): Omit<Board, "edges" | "collections"> & { edges: E[] } {
+export function finishFileBoard<E extends RollEdge>(boxes: string[], more: string, isFile: (id: string) => boolean, all: Iterable<E>, ctxEdges: Set<E>, used: Set<string>, may: (id: string) => boolean, profile: Profile = DEFAULT_PROFILE): Omit<Board, "edges" | "collections"> & { edges: E[] } {
   const list = [...all].sort(byEnds);
+  if (profile === "hosted") return finishHostedFileBoard(boxes, isFile, list, ctxEdges, used, may);
   for (const e of list) e.major = true;
   // safety net only: every edge is already drawn, so this promotes nothing
   const drawn = [...used].sort();
   connectOrphans(list, boxes, [...boxes, ...drawn], may);
   const context = [...new Set([...ctxEdges].flatMap((e) => [e.a, e.b]).filter((x) => !isFile(x)))].sort();
   return { nodes: [...boxes, ...context, ...drawn], context, hubs: [], edges: list, throughout: [] };
+}
+
+/** Parts from elsewhere a file board draws arrows to (the most leaned-on ones). */
+const MAX_CONTEXT = 4;
+
+/** The hosted file board: the budgeted rung that `full` replaced in #449. */
+function finishHostedFileBoard<E extends RollEdge>(boxes: string[], isFile: (id: string) => boolean, list: E[], ctxEdges: Set<E>, used: Set<string>, may: (id: string) => boolean): Omit<Board, "edges" | "collections"> & { edges: E[] } {
+  const hubs = markFileMajor(list, ctxEdges, boxes, isFile);
+  // a service used by more than 3 files is infrastructure: listed, not drawn
+  const drawn = [...used].sort().filter((svc) => list.filter((e) => e.b === svc).length <= 3);
+  for (const e of list) if (e.uses) e.major = drawn.includes(e.b);
+  connectOrphans(list.filter((e) => !e.uses || drawn.includes(e.b)), boxes, [...boxes, ...drawn], may);
+  const context = [...new Set([...ctxEdges].filter((e) => e.major).flatMap((e) => [e.a, e.b]).filter((x) => !isFile(x)))].sort();
+  return { nodes: [...boxes, ...context, ...drawn], context, hubs, edges: list, throughout: [...used].sort().filter((svc) => !drawn.includes(svc)) };
+}
+
+/**
+ * Which edges a hosted file board draws: every runtime call, the heaviest imports between files up
+ * to `max(8, 1.5 * boxes)`, and the edges to the MAX_CONTEXT parts from elsewhere the board leans on
+ * most. A file imported by most of its siblings (5+ boxes) is a hub: its arrows are listed, not drawn.
+ * Returns the hubs.
+ */
+function markFileMajor(list: RollEdge[], ctxEdges: Set<RollEdge>, boxes: string[], isFile: (id: string) => boolean): string[] {
+  const own = list.filter((e) => !ctxEdges.has(e) && !e.uses);
+  const n = boxes.length;
+  const need = Math.max(4, Math.ceil((n - 1) * 0.6));
+  const hubs = n < 5 ? [] : boxes.filter((id) => isFile(id) && own.filter((e) => e.b === id && e.imports > 0).length >= need);
+  for (const e of own) if (hubs.includes(e.b) && !e.calls) e.hub = true;
+  for (const e of list) e.major = e.calls > 0;
+  const budget = Math.max(8, Math.round(n * 1.5));
+  let drawn = 0;
+  for (const e of [...own].filter((x) => !x.major && !x.hub).sort(heaviest)) { if (drawn >= budget) break; e.major = true; drawn++; }
+  // edges to the parts from elsewhere that the board leans on most
+  const lean = new Map<string, number>();
+  for (const e of ctxEdges) { const part = isFile(e.a) ? e.b : e.a; lean.set(part, (lean.get(part) ?? 0) + weight(e)); }
+  const top = new Set([...lean].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0])).slice(0, MAX_CONTEXT).map(([id]) => id));
+  for (const e of ctxEdges) if (top.has(isFile(e.a) ? e.b : e.a)) e.major = true;
+  return hubs;
 }
 
 /**

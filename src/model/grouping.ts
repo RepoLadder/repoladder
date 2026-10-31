@@ -5,6 +5,7 @@ import { splitCatchAlls } from "./communities.ts";
 import { guardLevels, levelWarnings, otherBoxes } from "./depth.ts";
 import { checkSplits } from "./splits.ts";
 import { splitOverBudget } from "./budgetsplit.ts";
+import { DEFAULT_PROFILE, type Profile } from "./profile.ts";
 import { boxHint, describeBoxes, humanize } from "./boxnames.ts";
 
 // A folder this small isn't worth opening. There is no depth limit (#103): a folder keeps opening
@@ -23,7 +24,7 @@ const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(
  * Folder-based grouping. Deterministic, so it gives the same boxes on an unchanged repo;
  * it's the fallback diagram and Claude's starting point.
  */
-export function defaultGrouping(facts: Facts): Grouping {
+export function defaultGrouping(facts: Facts, profile: Profile = DEFAULT_PROFILE): Grouping {
   // "root" is the top board's id: a package named "root" (trpc's) must not take it
   const used = new Set<string>(["root"]);
   const uid = (base: string) => {
@@ -71,7 +72,7 @@ export function defaultGrouping(facts: Facts): Grouping {
     const n = kinds.filter((x) => x === k).length;
     return `${n} ${n === 1 || k === "scripts" ? k : k === "library" ? "libraries" : `${k}s`}`;
   }).join(", ");
-  return refine({ version: 1, summary: `${facts.repo}: ${pkgs.length} package${pkgs.length === 1 ? "" : "s"} (${kindList}).`, children }, facts);
+  return refine({ version: 1, summary: `${facts.repo}: ${pkgs.length} package${pkgs.length === 1 ? "" : "s"} (${kindList}).`, children }, facts, profile);
 }
 
 /**
@@ -170,14 +171,14 @@ function sharedGroup(shared: Package[], filesOf: (p: Package) => string[], pkgNo
 }
 
 /** Folder grouping leaves catch-alls behind ("Other", a flat 60-file folder); split those by imports. */
-function refine(g: Grouping, facts: Facts): Grouping {
+function refine(g: Grouping, facts: Facts, profile: Profile): Grouping {
   const { leafOf, errors } = assign(g, facts);
   // one folder level at a time: its subfolders become leaves, which are opened again if still big
   if (errors.length) return g;
   const split = splitCatchAlls(g, facts, leafOf, (paths, dir, id, uid) => folderGroup(paths, dir, id, uid));
   const guarded = guardLevels(split, otherBoxes(split, facts, assign(split, facts).leafOf));
   // no AI to split the crowded boards later: split them here, mechanically (#155)
-  const done = splitOversized(splitOverBudget(guarded, facts), facts);
+  const done = splitOversized(splitOverBudget(guarded, facts, [], { profile }), facts, profile);
   const last = assign(done, facts);
   return last.errors.length ? done : describeBoxes(done, facts, last.leafOf);
 }
@@ -186,14 +187,14 @@ function refine(g: Grouping, facts: Facts): Grouping {
 export const OVERSIZE_SHARE = 0.4;
 
 /** Splits the biggest leaf while it holds over OVERSIZE_SHARE of the files, as long as each split helps (#358). */
-export function splitOversized(g: Grouping, facts: Facts): Grouping {
+export function splitOversized(g: Grouping, facts: Facts, profile: Profile = DEFAULT_PROFILE): Grouping {
   for (let i = 0; i < 3; i++) {
     const a = assign(g, facts);
     if (a.errors.length) return g;
     const s = groupingScore(a.leafOf);
     const n = [...a.leafOf.values()].filter((id) => id === s.largest).length;
     if (!s.largest || s.largestShare <= OVERSIZE_SHARE || n <= LEAF_MAX) return g;
-    const next = splitOverBudget(g, facts, [], { force: [s.largest] });
+    const next = splitOverBudget(g, facts, [], { force: [s.largest], profile });
     const b = assign(next, facts);
     if (b.errors.length || groupingScore(b.leafOf).largestShare >= s.largestShare) return g;
     g = next;
