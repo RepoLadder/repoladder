@@ -72,7 +72,7 @@ test("ci.yml triggers: PRs into main and develop, ready_for_review, push to main
 });
 
 test("ci.yml: only `changes` and `leak-guard` carry the draft condition, every other job needs `changes`", () => {
-  assert.equal(jobs.length, 6);
+  assert.equal(jobs.length, 7);
   for (const j of jobs) {
     const name = j.slice(0, j.indexOf(":"));
     assert.match(j, /timeout-minutes: \d+/, name);

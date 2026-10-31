@@ -1,0 +1,52 @@
+# Opens (and keeps current) the "Version Packages" PR on main while changesets are pending. Merging that PR
+# bumps package.json and writes CHANGELOG.md; the push to main then runs publish.yml, which publishes to npm.
+# This workflow never publishes.
+name: Release
+
+on:
+  push:
+    branches: [main]
+    paths: [".changeset/**", ".github/workflows/release.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: release-version-pr
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  version-pr:
+    if: github.repository == 'RepoLadder/repoladder' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - id: changesets
+        uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
+        with:
+          version: npm run version-packages
+          title: "Version Packages (repoladder)"
+          commit: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # GITHUB_TOKEN pushes and PRs start no workflows; a workflow_dispatch does. Run CI on the release
+      # branch so the Version Packages PR gets the required checks.
+      - name: Run CI on the Version Packages PR
+        if: steps.changesets.outputs.pullRequestNumber != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_BRANCH: changeset-release/${{ github.ref_name }}
+        run: gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$RELEASE_BRANCH"
