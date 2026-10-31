@@ -91,8 +91,10 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   <span class="meta" id="meta"></span>
 </header>
 <main>
+  <div class="stage" id="stage">
   <div class="canvas" id="canvas">
     <div class="zoom"><button id="zfs" hidden aria-label="Full screen" aria-pressed="false">${FS_ICON}</button><button id="zfit" hidden aria-label="Reframe" title="Reframe">${REFRAME_ICON}</button><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zexp" aria-label="Export this view" title="Export this view" aria-haspopup="menu" aria-expanded="false">⤓</button></div>
+  </div>
   </div>
   <aside><section id="details" aria-live="polite"></section>${madeWith()}</aside>
 </main>

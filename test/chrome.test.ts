@@ -63,6 +63,16 @@ test("the zoom row holds five buttons, the last one the export menu", () => {
   assert.ok(exp.includes('aria-label="Export this view"') && exp.includes('aria-haspopup="menu"'));
 });
 
+test("full screen takes the stage (canvas and tour card), not the page", () => {
+  const html = page();
+  assert.equal(count(html, /<div class="stage" id="stage">/g), 1);
+  const stage = html.match(/<div class="stage" id="stage">([\s\S]*?)<aside>/)![1];
+  assert.ok(stage.includes('id="canvas"') && stage.includes('class="zoom"'));
+  assert.ok(!stage.includes("<header") && !stage.includes("<aside"));
+  const css = viewerAssets().css;
+  assert.ok(css.includes(".stage:fullscreen") && css.includes(".stage{display:contents}"));
+});
+
 test("the export menu stacks above the detail dial", () => {
   const css = viewerAssets().css;
   const z = (sel: string) => Number(css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?z-index:(\\d+)`))?.[1]);

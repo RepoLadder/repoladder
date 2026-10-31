@@ -65,7 +65,7 @@ main {
 main > aside {
   grid-area: 1 / 2 / 4;
 }
-main > .walk-card {
+.stage > .walk-card {
   grid-column: 1;
 }
 .walk-card.panel {

@@ -111,6 +111,7 @@ export function installSearch(): void {
     ev.preventDefault();
   };
   document.addEventListener("keydown", (ev) => {
+    if (document.fullscreenElement) return; // the dialog lives in body, which isn't shown in full screen
     if ((ev.key === "/" && !(ev.target as Element).closest("input,textarea")) || (ev.key === "k" && (ev.metaKey || ev.ctrlKey))) { ev.preventDefault(); open(); }
   });
 }
