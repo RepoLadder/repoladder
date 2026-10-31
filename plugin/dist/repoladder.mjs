@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// repoladder-build: 1efddcb
+// repoladder-build: bb32bb2
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -6760,7 +6760,7 @@ function usedIcons(categories, ids) {
 
 // src/version.ts
 var PACKAGE = "repoladder";
-var VERSION = true ? "0.3.0" : read();
+var VERSION = true ? "0.4.0" : read();
 
 // src/viewer/state.ts
 var STORY = "_story";
@@ -29784,7 +29784,7 @@ function commitId(cwd) {
   }
 }
 function version2() {
-  if (true) return "1efddcb";
+  if (true) return "bb32bb2";
   return commitId(fileURLToPath3(new URL("..", import.meta.url)));
 }
 var pingUrl = (env = process.env) => env.REPOLADDER_PING_URL || PING_URL;
