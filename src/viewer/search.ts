@@ -65,7 +65,7 @@ export function find(index: Hit[], q: string): Hit[] {
   return q ? index.map((h) => [sc(h), h] as const).filter(([s]) => s >= 0).sort((a, b) => b[0] - a[0]).slice(0, 40).map(([, h]) => h) : [];
 }
 
-function go([kind, label, , node, board]: Hit): void {
+export function go([kind, label, , node, board]: Hit): void {
   if (board) show(board, undefined, `n:${node}`); else goTo(node);
   if (kind === "part" || kind === "service") return;
   // point at the file, endpoint, page or collection in the side panel

@@ -21,6 +21,7 @@ import { installTours, playTour } from "./tour.ts";
 import { installTourLinks } from "./tourlink.ts";
 import { installTourTrail } from "./tourtrail.ts";
 import { groupTours, installTourList, walkHook } from "./walk.ts";
+import { locate } from "./locate.ts";
 import { st, type ViewerData } from "./state.ts";
 import { installStops, viewStop } from "./stopview.ts";
 import { installFullscreen } from "./fullscreen.ts";
@@ -31,7 +32,7 @@ import { unpack } from "./unpack.ts";
 import type { decode91 } from "./base91.ts";
 
 declare global {
-  interface Window { __repoladder?: { boards: string[]; show: (id: string) => void; tour: (id: string, step?: number) => void; walk: typeof walkHook; stop: typeof viewStop; cut: typeof viewCut; travel: typeof travel; travelTiming: typeof travelTiming; exportView: (kind: ExportKind) => Promise<Blob>; tours: typeof groupTours; features: Features } }
+  interface Window { __repoladder?: { boards: string[]; show: (id: string) => void; tour: (id: string, step?: number) => void; walk: typeof walkHook; stop: typeof viewStop; cut: typeof viewCut; travel: typeof travel; travelTiming: typeof travelTiming; exportView: (kind: ExportKind) => Promise<Blob>; tours: typeof groupTours; features: Features; locate: (ref: Parameters<typeof locate>[0]) => boolean } }
 }
 
 /** `decode` is the boot script's basE91 decoder (boot.ts), for packed data. */
@@ -67,9 +68,12 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
     // up, across, down between any two boards (travel.ts), and its timings for scripts
     travel, travelTiming,
     // the Export button's three outputs (exportui.ts) and the grouping's tours (scripts/readme-media.ts)
-    exportView, tours: groupTours, features: featuresOf(data) };
+    exportView, tours: groupTours, features: featuresOf(data),
+    // a served Ask answer's citations open their part with this (locate.ts); inert otherwise
+    locate: (ref) => locate(ref, data) };
   openHash(show, true);
   // the dial's DOM, keys, double-click, remembered stop and elkjs warm-up all live in installDial
   if (featuresOf(data).dial) installDial();
   window.addEventListener("hashchange", () => openHash(show));
+  window.dispatchEvent(new Event("repoladder:ready"));
 }

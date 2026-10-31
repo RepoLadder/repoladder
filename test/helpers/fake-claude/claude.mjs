@@ -21,6 +21,11 @@ else if (mode === "manytools") {
   emit({ type: "system", subtype: "init" });
   for (let i = 0; i < 40; i++) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } });
   setInterval(() => {}, 1000);
+} else if (mode === "cites") {
+  const text = "It lives in src/lib/cart.ts:1 but not in src/invented/ghost.ts.";
+  emit({ type: "system", subtype: "init" });
+  delta(text);
+  emit({ type: "result", subtype: "success", is_error: false, result: text });
 } else {
   emit({ type: "system", subtype: "init" });
   delta("The database is ");
