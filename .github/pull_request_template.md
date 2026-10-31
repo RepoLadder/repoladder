@@ -1,3 +1,5 @@
+<!-- Open this PR against `develop`, not `main`. `main` only moves through the maintainer's release PR. -->
+
 ## Summary
 
 What changed and why. `Fixes #...`
