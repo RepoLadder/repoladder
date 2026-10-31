@@ -13,7 +13,8 @@ const text = (f: string) => strip(raw(f));
 
 const WRITE_ALLOWED: Record<string, string[]> = {
   "rebuild-dist.yml": ["contents"],
-  "publish.yml": ["id-token"],
+  "publish.yml": ["id-token", "contents"],
+  "release.yml": ["contents", "pull-requests", "actions"],
 };
 
 test("there are workflows to check", () => {

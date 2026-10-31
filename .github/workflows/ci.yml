@@ -139,6 +139,43 @@ jobs:
       - if: runner.os == 'Linux'
         run: node scripts/npm-package.ts --out .npm-package && npm publish --dry-run .npm-package
 
+  version-bump:
+    # Release PRs (into main) that change what ships to npm must carry a changeset or a version bump, so the
+    # release workflow can version and publish them. Docs, tests and workflow-only releases pass untouched.
+    name: PR carries a changeset or version bump
+    needs: changes
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check for a changeset or a version bump
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # what ships in the npm package: the source and the packaging scripts
+          shipped=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- src scripts/npm-package.ts scripts/npm-readme.md)
+          if [ -z "$shipped" ]; then
+            echo "OK: nothing that ships to npm changed."; exit 0
+          fi
+          changesets=$(git diff --name-only --diff-filter=A "$BASE_SHA...$HEAD_SHA" -- '.changeset/*.md' ':!.changeset/README.md')
+          old=$(git show "$BASE_SHA:package.json" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          new=$(git show "$HEAD_SHA:package.json" | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version")
+          if [ -n "$changesets" ]; then
+            echo "OK: changeset(s) added:"; echo "$changesets"; exit 0
+          fi
+          if [ "$old" != "$new" ]; then
+            echo "OK: version bumped $old -> $new."; exit 0
+          fi
+          echo "::error title=No changeset::This PR changes what ships to npm but adds no changeset and does not bump the version:"
+          echo "$shipped"
+          echo "Run 'npm run changeset' and commit the file it writes under .changeset/ (on develop, with the change)."
+          exit 1
+
   no-dist:
     name: PR does not touch plugin/dist
     needs: changes

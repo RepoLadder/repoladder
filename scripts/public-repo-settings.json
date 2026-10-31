@@ -5,7 +5,8 @@
     "leak guard",
     "test, typecheck, build",
     "plugin install (ubuntu-latest)",
-    "PR does not touch plugin/dist"
+    "PR does not touch plugin/dist",
+    "PR carries a changeset or version bump"
   ],
   "requireCodeOwnerReview": false,
   "allowedBypassActorTypes": ["Integration", "DeployKey"],

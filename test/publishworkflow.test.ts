@@ -7,12 +7,13 @@ import { fileURLToPath } from "node:url";
 const wf = readFileSync(fileURLToPath(new URL("../.github/workflows/publish.yml", import.meta.url)), "utf8");
 const code = wf.split("\n").filter((l) => !l.trimStart().startsWith("#")).join("\n");
 const block = (re: RegExp) => { const m = re.exec(code); assert.ok(m, `no match for ${re}`); return m[0]; };
-const publishJob = block(/^ {2}publish:[\s\S]*$/m);
+const publishJob = block(/^ {2}publish:[\s\S]*?(?=^ {2}release:)/m);
+const releaseJob = block(/^ {2}release:[\s\S]*$/m);
 const checkJob = block(/^ {2}check:[\s\S]*?(?=^ {2}publish:)/m);
 
-test("publish.yml: triggers are only v* tags and workflow_dispatch", () => {
+test("publish.yml: triggers are only main (package.json changes), v* tags and workflow_dispatch", () => {
   const on = block(/^on:[\s\S]*?(?=^permissions:)/m);
-  assert.match(on, /^ {2}push:\n {4}tags: \["v\*"\]/m);
+  assert.match(on, /^ {2}push:\n {4}branches: \[main\]\n {4}paths: \[package\.json\]\n {4}tags: \["v\*"\]/m);
   assert.match(on, /^ {2}workflow_dispatch:/m);
   assert.deepEqual([...on.matchAll(/^ {2}(\w+):/gm)].map((m) => m[1]), ["push", "workflow_dispatch"]);
   for (const bad of ["pull_request", "pull_request_target", "workflow_run"]) assert.ok(!code.includes(bad), bad);
@@ -54,6 +55,19 @@ test("publish.yml: actions are SHA-pinned and checkout keeps no credentials", ()
   assert.ok(uses.length > 0);
   for (const u of uses) assert.match(u, /@[0-9a-f]{40}$/, u);
   const checkouts = [...code.matchAll(/uses: actions\/checkout@[^\n]*\n {8}with:\n((?: {10}.+\n)+)/g)];
-  assert.equal(checkouts.length, 2);
+  assert.equal(checkouts.length, 3);
   for (const c of checkouts) assert.match(c[1], /persist-credentials: false/);
+});
+
+test("publish.yml: only the release job writes contents; it runs after publish and starts no publish", () => {
+  assert.match(releaseJob, /needs: \[check, publish\]/);
+  assert.match(releaseJob, /contents: write/);
+  assert.equal(code.match(/contents: write/g)?.length, 1);
+  assert.ok(!publishJob.includes("contents: write") && !checkJob.includes("contents: write"));
+  assert.ok(!releaseJob.includes("id-token"));
+});
+
+test("publish.yml: a version already on npm is skipped, not republished", () => {
+  assert.match(code, /npm view "repoladder@\$VERSION" version/);
+  assert.match(publishJob.split("steps:")[0], /needs\.check\.outputs\.exists == 'false'/);
 });
