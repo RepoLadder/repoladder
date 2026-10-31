@@ -1,9 +1,11 @@
 # Publishes the `repoladder` npm package (the CLI and the library) with provenance.
 #
-# Triggers: a pushed `v*` tag (a real publish), or a manual run (dry run by default).
-# Never runs for pull requests. A real publish needs a `v*` tag (or a dispatch on the tag v<version>)
-# on a commit reachable from origin/main, in the public repoladder/repoladder repo, approved at the
-# `npm-publish` environment. A tag pushed anywhere else publishes nothing.
+# Triggers: a push to main that changes package.json (a real publish of the version in package.json,
+# unless npm already has it), a pushed `v*` tag (a real publish of that version), or a manual run (dry
+# run by default). Never runs for pull requests. A real publish runs on a commit reachable from
+# origin/main, in the public RepoLadder/repoladder repo, approved at the `npm-publish` environment.
+# A tag pushed anywhere else publishes nothing. After a publish, `release` tags v<version> and creates
+# the GitHub Release from CHANGELOG.md. The version bump itself comes from release.yml (Changesets).
 #
 # Auth: npm trusted publishing only (OIDC, needs npm >= 11.5.1). There is no token or secret.
 # `id-token: write` is granted to the `publish` job alone; `check` (build, installcheck, dry run) needs
@@ -12,6 +14,9 @@ name: Publish to npm
 
 on:
   push:
+    branches: [main]
+    # the version lands in package.json (release.yml's Version Packages PR); other main pushes publish nothing
+    paths: [package.json]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
@@ -44,6 +49,7 @@ jobs:
       version: ${{ steps.decide.outputs.version }}
       dry: ${{ steps.decide.outputs.dry }}
       tag: ${{ steps.decide.outputs.tag }}
+      exists: ${{ steps.decide.outputs.exists }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -67,8 +73,10 @@ jobs:
           REPO: ${{ github.repository }}
           REPO_PRIVATE: ${{ github.event.repository.private }}
         run: |
-          if [ "$EVENT" = "push" ]; then
+          if [ "$EVENT" = "push" ] && [ "$REF_TYPE" = "tag" ]; then
             VERSION="${REF_NAME#v}"; DRY=false
+          elif [ "$EVENT" = "push" ]; then
+            VERSION="$(node -p "require('./package.json').version")"; DRY=false
           else
             VERSION="$INPUT_VERSION"; DRY="$INPUT_DRY"
             if [ "$DRY" = "false" ] && { [ "$REF_TYPE" != "tag" ] || [ "$REF_NAME" != "v$VERSION" ]; }; then
@@ -76,30 +84,40 @@ jobs:
             fi
           fi
           if [ "$DRY" = "false" ]; then
-            [ "$REPO" = "repoladder/repoladder" ] || { echo "::error::publishing runs only from repoladder/repoladder, after the public cut"; exit 1; }
+            [ "${REPO,,}" = "repoladder/repoladder" ] || { echo "::error::publishing runs only from repoladder/repoladder, after the public cut"; exit 1; }
             [ "$REPO_PRIVATE" = "false" ] || { echo "::error::npm provenance needs a public repo"; exit 1; }
             git fetch --no-tags origin main
             git merge-base --is-ancestor "$GITHUB_SHA" origin/main || { echo "::error::tag commit is not on main"; exit 1; }
           fi
           echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$' || { echo "::error::$VERSION is not a semver version"; exit 1; }
           case "$VERSION" in *-*) TAG=next ;; *) TAG=latest ;; esac
+          # a package.json change that is not a version bump (a dependency bump) finds the version already published
+          EXISTS=false
+          if [ "$DRY" = "false" ] && npm view "repoladder@$VERSION" version >/dev/null 2>&1; then
+            EXISTS=true; echo "repoladder@$VERSION is already on npm; nothing to publish"
+          fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "dry=$DRY" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-      - run: npm ci
+          echo "exists=$EXISTS" >> "$GITHUB_OUTPUT"
+      - if: steps.decide.outputs.exists != 'true'
+        run: npm ci
       # a fresh build from source, never the bot-committed plugin/dist
-      - run: node scripts/npm-package.ts --version "$VERSION" --out .npm-package
+      - if: steps.decide.outputs.exists != 'true'
+        run: node scripts/npm-package.ts --version "$VERSION" --out .npm-package
         env:
           VERSION: ${{ steps.decide.outputs.version }}
-      - run: node scripts/installcheck.ts --pack .npm-package
+      - if: steps.decide.outputs.exists != 'true'
+        run: node scripts/installcheck.ts --pack .npm-package
       - name: Dry run (the proof before a real publish)
+        if: steps.decide.outputs.exists != 'true'
         env:
           NPM_TAG: ${{ steps.decide.outputs.tag }}
         run: npm publish --dry-run --tag "$NPM_TAG" .npm-package
 
   publish:
     needs: check
-    if: needs.check.outputs.dry == 'false'
+    if: needs.check.outputs.dry == 'false' && needs.check.outputs.exists == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: npm-publish
@@ -129,3 +147,30 @@ jobs:
         env:
           NPM_TAG: ${{ needs.check.outputs.tag }}
         run: npm publish --provenance --access public --tag "$NPM_TAG" .npm-package
+
+  release:
+    # Tag v<version> on the published commit and create the GitHub Release from CHANGELOG.md. A tag made with
+    # GITHUB_TOKEN starts no workflow, so this cannot re-trigger a publish.
+    needs: [check, publish]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Create the GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+        run: |
+          # this version's section of CHANGELOG.md, else a one-line note
+          awk -v v="$VERSION" '$0 ~ "^## " v "$" {on=1; next} /^## / {on=0} on' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "repoladder $VERSION" > notes.md
+          case "$VERSION" in *-*) PRE=--prerelease ;; *) PRE= ;; esac
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "Release v$VERSION already exists"
+          else
+            gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --notes-file notes.md $PRE
+          fi

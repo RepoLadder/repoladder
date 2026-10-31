@@ -75,6 +75,7 @@ branch (`ruleset-exists`). Rules:
   - `test, typecheck, build`
   - `plugin install (ubuntu-latest)`
   - `PR does not touch plugin/dist`
+  - `PR carries a changeset or version bump`
 - Block force pushes (`ruleset-no-force-push`) and deletion (`ruleset-no-delete`).
 - Bypass list (`ruleset-bot-only-bypass`): the GitHub Actions integration only, no admins, teams or users.
 
@@ -113,7 +114,8 @@ GitHub Actions integration id from your own org; do not guess it.
       { "context": "leak guard" },
       { "context": "test, typecheck, build" },
       { "context": "plugin install (ubuntu-latest)" },
-      { "context": "PR does not touch plugin/dist" }
+      { "context": "PR does not touch plugin/dist" },
+      { "context": "PR carries a changeset or version bump" }
     ] } },
     { "type": "non_fast_forward" },
     { "type": "deletion" }
