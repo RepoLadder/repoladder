@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// repoladder-build: e4d92c2
+// repoladder-build: 1efddcb
 var __defProp = Object.defineProperty;
 var __export = (target, all) => {
   for (var name in all)
@@ -29784,7 +29784,7 @@ function commitId(cwd) {
   }
 }
 function version2() {
-  if (true) return "e4d92c2";
+  if (true) return "1efddcb";
   return commitId(fileURLToPath3(new URL("..", import.meta.url)));
 }
 var pingUrl = (env = process.env) => env.REPOLADDER_PING_URL || PING_URL;
