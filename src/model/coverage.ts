@@ -5,6 +5,7 @@
 import { drawingRungs } from "./drawn.ts";
 import type { Model } from "./rollup.ts";
 import type { Facts } from "./schema.ts";
+import type { Profile } from "./profile.ts";
 
 export interface UndrawnEntry {
   from: string;
@@ -84,5 +85,5 @@ export function coverageLines(c: Coverage): string[] {
   return out;
 }
 
-/** Whether the build should be flagged: any undrawn connection or tour step. */
-export const coverageFails = (c: Pick<Coverage, "undrawn" | "tourSteps">) => c.undrawn.length > 0 || c.tourSteps.length > 0;
+/** Whether the build should be flagged: any undrawn connection or tour step. Never in the hosted profile, where minor arrows are listed, not drawn. */
+export const coverageFails = (c: Pick<Coverage, "undrawn" | "tourSteps">, profile: Profile = "full") => profile !== "hosted" && (c.undrawn.length > 0 || c.tourSteps.length > 0);

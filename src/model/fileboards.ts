@@ -3,6 +3,7 @@
 import { passesThrough } from "./fgraph.ts";
 import type { Facts } from "./schema.ts";
 import { FILE_EVIDENCE, finishFileBoard } from "./rollrules.ts";
+import { DEFAULT_PROFILE, type Profile } from "./profile.ts";
 import { mergedServices, storeId, svcId, type Board, type Evidence, type ModelEdge, type ModelNode } from "./rollup.ts";
 
 /** A file box's id on a file board is its path behind this prefix. */
@@ -21,7 +22,7 @@ export const baseName = (p: string) => p.slice(p.lastIndexOf("/") + 1);
 
 
 /** One board per leaf group (keyed by the leaf's id), and the file details its boxes show. */
-export function buildFileBoards(facts: Facts, nodes: Record<string, ModelNode>, leafOf: Map<string, string>): { boards: Record<string, Board>; files: Record<string, ModelFile> } {
+export function buildFileBoards(facts: Facts, nodes: Record<string, ModelNode>, leafOf: Map<string, string>, profile: Profile = DEFAULT_PROFILE): { boards: Record<string, Board>; files: Record<string, ModelFile> } {
   const ownCache = new Map<string, string[]>();
   const own = (leaf: string) => {
     let c = ownCache.get(leaf);
@@ -134,7 +135,7 @@ export function buildFileBoards(facts: Facts, nodes: Record<string, ModelNode>, 
       used.add(e.b);
     }
     const boxes = [...[...shown].sort().map((f) => FILE + f), ...(shown.size < leaf.files.length ? [MORE] : [])];
-    boards[leaf.id] = finishFileBoard(boxes, MORE, isFileId, edges.values(), ctxEdges, used, (id) => !!nodes[id]);
+    boards[leaf.id] = finishFileBoard(boxes, MORE, isFileId, edges.values(), ctxEdges, used, (id) => !!nodes[id], profile);
     for (const f of shown) {
       const sf = info.get(f);
       files[f] = { loc: sf?.loc ?? 0, exports: topExports(f, sf?.exports ?? []) };

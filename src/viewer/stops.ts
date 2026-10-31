@@ -131,6 +131,6 @@ function fileBoard(data: ViewerData, t: StopTree, leaf: string, force: boolean):
   const { edges, ctx } = roll(data, ends, FILE_EVIDENCE, true);
   const used = new Set<string>();
   for (const e of def.edges) if (e.uses) { edges.set(`${toF(e.a)}>${e.b}`, { ...e, a: toF(e.a), major: false, ev: [...e.ev] }); used.add(e.b); }
-  const b = finishFileBoard(boxes, MORE, isF, edges.values(), ctx, used, (id) => !!t.nodes[id]);
+  const b = finishFileBoard(boxes, MORE, isF, edges.values(), ctx, used, (id) => !!t.nodes[id], data.profile);
   return { ...b, nodes: b.nodes.map(toAt), hubs: b.hubs.map(toAt), edges: b.edges.map((e) => ({ ...e, a: toAt(e.a), b: toAt(e.b) })) };
 }

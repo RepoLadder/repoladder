@@ -19,6 +19,7 @@ import { worstBoards, type LintSummary } from "../src/build/lint.ts";
 import { describeSummary, lintOut } from "./lint.ts";
 import { shellTokens } from "./shellstyle.ts";
 import { BUDGET } from "../src/build/budget.ts";
+import type { Profile } from "../src/model/profile.ts";
 import { connectionCoverage, describeCoverage, type Coverage } from "../src/model/coverage.ts";
 import { modelOf } from "../src/build/pipeline.ts";
 import type { Facts } from "../src/model/schema.ts";
@@ -37,6 +38,8 @@ export interface RepoEntry {
 }
 
 export interface Result {
+  /** Set only for a hosted build, where undrawn connections are expected (src/model/profile.ts). */
+  profile?: Profile;
   name: string;
   shape: string;
   source: string;
@@ -224,8 +227,8 @@ export function galleryTitle(argv: string[], only: string[] | undefined): string
   return v.trim();
 }
 
-export function buildArgs(o: { cli: string; repoDir: string; outDir: string; groupingFile: string | null; lane?: boolean; title?: string }): string[] {
-  return [o.cli, "build", o.repoDir, "--out", o.outDir, ...(o.groupingFile ? ["--grouping", o.groupingFile] : ["--default"]), ...(o.lane === false ? ["--no-lane"] : []), ...(o.title ? ["--title", o.title] : [])];
+export function buildArgs(o: { cli: string; repoDir: string; outDir: string; groupingFile: string | null; lane?: boolean; title?: string; profile?: Profile }): string[] {
+  return [o.cli, "build", o.repoDir, "--out", o.outDir, ...(o.groupingFile ? ["--grouping", o.groupingFile] : ["--default"]), ...(o.lane === false ? ["--no-lane"] : []), ...(o.title ? ["--title", o.title] : []), ...(o.profile === "hosted" ? ["--profile", "hosted"] : [])];
 }
 
 export const coverageResult = (c: Coverage): NonNullable<Result["coverage"]> => ({
@@ -233,12 +236,13 @@ export const coverageResult = (c: Coverage): NonNullable<Result["coverage"]> => 
   sample: [...c.undrawn.map((u) => `${u.from} -> ${u.to}`), ...c.tourSteps.map((s) => `tour ${s.tour}/${s.step} -> ${s.board}`)].slice(0, 10),
 });
 /** Whether a built map fails the coverage gate: an undrawn connection or a tour step off its board. */
-export const coverageBad = (r: Pick<Result, "coverage">) => !!r.coverage && (r.coverage.undrawn > 0 || r.coverage.tourSteps > 0);
+export const coverageBad = (r: Pick<Result, "coverage" | "profile">) => r.profile !== "hosted" && !!r.coverage && (r.coverage.undrawn > 0 || r.coverage.tourSteps > 0);
 
-export async function buildOne(opts: { title?: string; cli: string; galleryDir: string; repoDir: string; outDir: string; entry: RepoEntry; groupingFile: string | null; local: boolean; lane?: boolean }): Promise<Result> {
+export async function buildOne(opts: { title?: string; cli: string; galleryDir: string; repoDir: string; outDir: string; entry: RepoEntry; groupingFile: string | null; local: boolean; lane?: boolean; profile?: Profile }): Promise<Result> {
   const { entry, outDir, repoDir, groupingFile } = opts;
   const r: Result = {
     name: entry.name, shape: entry.shape ?? "", source: entry.url ?? "local", sha: entry.sha ?? null, local: opts.local,
+    ...(opts.profile === "hosted" ? { profile: opts.profile } : {}),
     status: "failed", grouping: groupingFile ? relative(opts.galleryDir, groupingFile) : "default", warnings: [],
   };
   mkdirSync(outDir, { recursive: true });
@@ -248,7 +252,7 @@ export async function buildOne(opts: { title?: string; cli: string; galleryDir: 
   writeFileSync(join(outDir, "analyze.log"), a.out);
   if (a.code) return { ...r, error: `analyze exited ${a.code}: ${lastLine(a.out)}` };
   t = performance.now();
-  const b = await run(process.execPath, buildArgs({ cli: opts.cli, repoDir, outDir, groupingFile, lane: opts.lane, title: opts.title }));
+  const b = await run(process.execPath, buildArgs({ cli: opts.cli, repoDir, outDir, groupingFile, lane: opts.lane, title: opts.title, profile: opts.profile }));
   r.buildMs = Math.round(performance.now() - t);
   writeFileSync(join(outDir, "build.log"), b.out);
   r.warnings = b.out.split("\n").filter((l) => l.startsWith("warning: ")).map((l) => l.slice(9));
