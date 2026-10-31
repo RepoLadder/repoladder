@@ -177,6 +177,7 @@ test("input validation: content type, JSON, question, size, conversation", { ski
     assert.equal(r.status, 400, b);
     assert.equal(JSON.parse(r.body).error.code, "BAD_QUESTION");
   }
+  assert.equal((await post(JSON.stringify({ question: "a\u0000b" }))).status, 400);
   const big = await post(JSON.stringify({ question: "x".repeat(70 * 1024) }));
   assert.equal(big.status, 413);
   const unk = await post(JSON.stringify({ question: "hi", conversation: "deadbeefdeadbeef" }));

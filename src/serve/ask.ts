@@ -24,6 +24,7 @@ const MAX_TOOLS = 25;
 const MAX_CONVERSATIONS = 20;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const STATUS_TTL_MS = 10_000;
+const UNSAFE_MESSAGE = "Ask can't run from a folder whose path has spaces or special characters. Move RepoLadder to a plain path and try again.";
 const HEAD = { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
 const json = (res: ServerResponse, status: number, body: unknown) => {
@@ -54,7 +55,7 @@ export function createAsk(cfg: AskConfig): Ask {
   let status: { at: number; body: Record<string, unknown> } | undefined;
 
   const probe = (): Promise<Record<string, unknown>> => new Promise((resolve) => {
-    if (!staged) return resolve({ available: false, code: "UNSAFE_PATH", message: "Ask can't run from a folder whose path has spaces or special characters. Move RepoLadder to a plain path and try again." });
+    if (!staged) return resolve({ available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE });
     let out = "", done = false;
     const finish = (b: Record<string, unknown>) => { if (!done) { done = true; clearTimeout(timer); resolve(b); } };
     const c = spawn(bin(), ["--version"], { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "ignore"], shell: false });
@@ -91,7 +92,7 @@ export function createAsk(cfg: AskConfig): Ask {
       let body: any;
       try { body = JSON.parse(raw); } catch { return bad(res, 400, "BAD_QUESTION", "The request body is not valid JSON."); }
       const question = typeof body?.question === "string" ? body.question.trim() : "";
-      if (!question) return bad(res, 400, "BAD_QUESTION", "Ask a question as a non-empty string.");
+      if (!question || question.includes("\0")) return bad(res, 400, "BAD_QUESTION", "Ask a question as a non-empty string.");
       if (body.conversation !== undefined && typeof body.conversation !== "string") return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
       let id: string, convo: Convo, resume: boolean;
       if (body.conversation !== undefined) {
@@ -109,7 +110,10 @@ export function createAsk(cfg: AskConfig): Ask {
           convos.delete(oldest);
         }
       }
-      if (!staged) { if (!resume) convos.delete(id); return json(res, 200, { available: false, code: "UNSAFE_PATH" }); }
+      if (!staged) {
+        if (!resume) convos.delete(id);
+        return json(res, 200, { available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE });
+      }
       stream(res, question, id, convo, resume);
     });
   };
@@ -118,24 +122,25 @@ export function createAsk(cfg: AskConfig): Ask {
     res.writeHead(200, { ...HEAD, "Content-Type": "application/x-ndjson; charset=utf-8" });
     const send = (o: unknown) => { if (!res.writableEnded) res.write(JSON.stringify(o) + "\n"); };
     send({ type: "start", conversation: id });
-    let finished = false, timedOut = false, tooMany = false, sawOutput = false, tools = 0;
+    let finished = false, timedOut = false, tooMany = false, sessionStarted = false, tools = 0;
     let stderr = "", buf = "", deltas = "";
     let result: { ok: boolean; text: string; error?: string } | undefined;
     let child: ChildProcess;
+    let timer: NodeJS.Timeout | undefined;
     const end = (last: unknown) => { if (finished) return; finished = true; clearTimeout(timer); send(last); res.end(); };
     const fail = (f: Failure) => {
-      if (!resume && !sawOutput) convos.delete(id);
+      if (!resume && !sessionStarted) convos.delete(id);
       end({ type: "error", code: f.code, message: f.message });
     };
     try {
       child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false });
     } catch (e) { return fail(explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); }
     live.add(child);
-    const timer = setTimeout(() => { timedOut = true; killChild(child); }, timeoutMs());
+    timer = setTimeout(() => { timedOut = true; killChild(child); }, timeoutMs());
     res.on("close", () => { if (!finished) { finished = true; clearTimeout(timer); killChild(child); } });
     const line = (l: string) => {
       for (const ev of parseStreamLine(l)) {
-        sawOutput = true;
+        if (ev.type !== "result") sessionStarted = true;
         if (ev.type === "text") { deltas += ev.text; send({ type: "text", text: ev.text }); }
         else if (ev.type === "tool") {
           send({ type: "tool", name: ev.name });

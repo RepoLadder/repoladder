@@ -18,10 +18,10 @@ The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never
 
 While `repoladder serve` runs, it can answer a question about your repo with your own Claude Code. The flow: your browser, then the local server on your machine, then your own `claude` command, then Anthropic under your own Claude account and plan. RepoLadder never sees or stores a key or a sign-in.
 
-- **What Claude can do here:** read files, search them, and run `repoladder query` in your repo. It cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar).
+- **What Claude can do here:** read files, search them, and run `repoladder query` in your repo. With its default settings it cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar).
 - **What leaves your machine:** what Claude Code itself sends when it reads the files it needs to answer. RepoLadder sends nothing of its own.
 - **Where it shows up:** the conversation appears in Claude Code's own session history for that folder.
-- **Your repo's own Claude settings are not loaded** for these questions; your personal Claude Code settings still apply.
+- **Your repo's own Claude settings are not loaded** for these questions; your personal Claude Code settings still apply, so any extra permissions you have granted there (a shell command or tool you always allow) apply to these questions too.
 - **When it exists:** only while `repoladder serve` runs, and only on your machine behind the same token. `--no-ask` turns it off.
 - **How the limits are enforced, honestly:** by Claude Code's own permission system. Our tests pin the exact arguments we pass, and the maintainers check the behavior by hand against a real install; a test cannot prove Claude Code enforces them.
 

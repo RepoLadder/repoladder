@@ -52,7 +52,7 @@ export function startServer(opts: ServerOpts): Promise<Running> {
     send(res, 404, "Not found");
   });
   return new Promise((resolve, reject) => {
-    server.once("error", reject);
+    server.once("error", (e) => { ask?.close(); reject(e); });
     server.listen(opts.port ?? 0, "127.0.0.1", () => {
       port = (server.address() as { port: number }).port;
       resolve({
