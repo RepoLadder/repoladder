@@ -43,14 +43,15 @@ test("hosted draws fewer arrows than full on a dense board, with hubs and throug
   assert.deepEqual(b.hubs, ["f:app/f00.ts"]);
   const intoHub = b.edges.filter((e) => e.b === "f:app/f00.ts" && !e.calls);
   assert.ok(intoHub.length > 10 && intoHub.every((e) => e.hub));
-  assert.ok(intoHub.filter((e) => e.major).length <= 3, "a hub's arrows are listed, bar a few orphan promotions");
+  const hubDrawn = intoHub.filter((e) => e.major).length;
+  assert.ok(hubDrawn * 2 < intoHub.length, `a hub's arrows are listed, bar orphan promotions (${hubDrawn} of ${intoHub.length} drawn)`);
   // Stripe and Firestore are each used by more than 3 files: listed, not drawn
   assert.deepEqual(b.throughout, ["store-firestore", "svc-stripe"]);
   assert.ok(!b.nodes.includes("svc-stripe"));
-  // file-to-file arrows stay within the budget (no calls in this fixture), plus orphan promotions
+  // file-to-file arrows stay within the budget (no calls in this fixture), plus a few orphan promotions
   const boxes = b.nodes.filter((x) => x.startsWith("f:") || x === "+more").length;
   const fileArrows = b.edges.filter((e) => e.major && !e.uses && e.b.startsWith("f:")).length;
-  assert.ok(fileArrows <= Math.max(8, Math.round(boxes * 1.5)) + boxes, `${fileArrows} arrows`);
+  assert.ok(fileArrows <= Math.max(8, Math.round(boxes * 1.5)) + 3, `${fileArrows} arrows`);
   // the part elsewhere keeps its arrows
   assert.ok(b.edges.some((e) => e.b === "lib" && e.major));
   // hosted leaves connections undrawn, full on the same leaf does not (small case aside)

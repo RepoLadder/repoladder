@@ -147,17 +147,17 @@ Reading it on excalidraw (`build --default`, pass 0: 157 boards, 1,690 compiles,
 
 #### Fidelity profiles (#521)
 
-Since #449 a leaf's file board draws every connection, which roughly doubles layout cost on big repos. `--profile hosted` (CLI) or `buildFromFiles(files, { profile: "hosted" })` restores the budgeted file board: at most `max(8, 1.5 * boxes)` file-to-file arrows plus every runtime call, hubs (a file imported by 60% of a 5+ box board's siblings) and services used by more than 3 files listed instead of drawn, and splitting that ignores the file-arrow count. Coverage becomes informational: `coverageFails` is always false, so `lint:layout` exits 0 on a hosted build whose only findings are undrawn connections or off-board tour steps (layout defects still fail). `full` is the default everywhere and unchanged; the profile is written to `model.json` and the page only when it is `hosted`, and `buildFromFiles` always returns `profile`. Use `hosted` only for builds under a time limit.
+Since #449 a leaf's file board draws every connection, which roughly doubles layout cost on big repos. `--profile hosted` (CLI) or `buildFromFiles(files, { profile: "hosted" })` restores the budgeted file board: at most `max(8, 1.5 * boxes)` arrows in all (runtime calls first, then file-to-file, then those to the four parts from elsewhere the board leans on most, bar a few orphan promotions), hubs (a file imported by 60% of a 5+ box board's siblings) and services used by more than 3 files listed instead of drawn, and splitting that ignores the file-arrow count. Coverage becomes informational: `coverageFails` is always false, so `lint:layout` exits 0 on a hosted build whose only findings are undrawn connections or off-board tour steps (layout defects still fail). `full` is the default everywhere and unchanged; the profile is written to `model.json` and the page only when it is `hosted`, and `buildFromFiles` always returns `profile`. Use `hosted` only for builds under a time limit.
 
-Measured on thinkrail (`build --default --fresh`, layout pass 0, 4 cores):
+Measured on thinkrail (`build --default --fresh`, layout pass 0):
 
 | | `full` | `hosted` |
 |---|---|---|
-| boards | 460 | 352 |
-| D2 compiles | 6,522 | 4,204 |
-| whole build (final boards) | 37s wall, 220 CPU-s (484 boards) | 24s wall, 135 CPU-s (384 boards) |
+| boards | 460 | 281 |
+| D2 compiles | 6,522 | 2,954 |
+| boards after splitting | 484 | 326 |
 
-That is about 23% fewer boards, 36% fewer compiles and 39% less CPU. The hosted rung is a hand port of the pre-#449 rules, so it will not match the old numbers exactly.
+That is about 39% fewer boards and 55% fewer compiles in pass 0. The hosted rung is a port of the pre-#449 rules (repoladder 0.1.0).
 
 ### `/map` dry run (two passes)
 
