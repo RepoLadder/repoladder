@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "key": "engine",
+  "name": "RepoLadder",
+  "what": "The RepoLadder engine and Claude Code plugin: analyzer, diagram viewer, /map plugin, CLI and npm package",
+  "base": "develop",
+  "releaseBranch": "main",
+  "landing": "pr",
+  "visibility": "public",
+  "textGuard": "node scripts/leakguard.ts --text",
+  "autonomy": "autonomous",
+  "deploys": [
+    {
+      "branch": "main",
+      "env": "npm",
+      "workflow": "publish.yml",
+      "production": true,
+      "what": "publishes the npm package when a v* tag is pushed on main; needs environment approval"
+    }
+  ],
+  "checks": [
+    { "name": "leakguard", "run": "npm run leakguard", "setup": "npm ci", "note": "internal terms, home-directory paths and secret shapes; this repo is public" },
+    { "name": "test", "run": "npm test", "setup": "npm ci" },
+    { "name": "typecheck", "run": "npm run typecheck", "setup": "npm ci" }
+  ],
+  "tiers": [
+    { "name": "typecheck", "what": "npm run typecheck" },
+    { "name": "unit", "what": "npm test: node:test over test/*.test.ts with fixtures" }
+  ],
+  "testing": ".qw/testing.md",
+  "tools": [
+    { "name": "node", "check": "node -v | grep -E '^v(2[2-9]|[3-9][0-9])'", "fix": "install Node 22 or newer from nodejs.org or with nvm", "what": "Node 22+: runs the .ts sources directly" },
+    { "name": "gh", "check": "gh auth status", "fix": "gh auth login", "what": "GitHub CLI for PRs and issues" }
+  ],
+  "policy": [
+    "Never edit, rebuild or commit plugin/dist: the bot rebuilds it after releases, and a PR that touches it fails the no-dist check. After `npm run build`, run `git checkout -- plugin/dist`.",
+    "Never merge into main or push a v* tag: releases are a develop to main merge-commit PR, and the tag publishes to npm.",
+    "Issue and PR text must pass `npm run leakguard -- --text`: no internal notes, local paths or ticket jargon."
+  ],
+  "riskAreas": [
+    { "label": "workflows", "globs": [".github/workflows/**", ".github/actions/**"] },
+    { "label": "leak guard", "globs": ["scripts/leakguard*", ".leakguard*"] },
+    { "label": "package scripts", "globs": ["package.json", "package-lock.json", "plugin/package.json", "plugin/package-lock.json"] },
+    { "label": "plugin bundle", "globs": ["plugin/dist/**"] }
+  ],
+  "routing": {
+    "summary": "RepoLadder engine and Claude Code plugin: analyzer, diagram viewer, /map plugin, CLI, npm package, docs and CI",
+    "owns": [
+      "repo analysis: facts, imports, endpoints, stores",
+      "diagram viewer, layout and the detail dial",
+      "the /map plugin and its skill",
+      "repoladder CLI and npm package",
+      "public docs and README",
+      "plugin CI, install check and release workflows",
+      "gallery and lab"
+    ],
+    "note": "public repo: write issues, plans and PR text as if public, with no internal notes. Launch operations, accounts, secrets, infra, legal, strategy and monetization go to the site tracker."
+  }
+}
