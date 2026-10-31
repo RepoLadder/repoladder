@@ -95,3 +95,9 @@ test("ci.yml keeps no-dist and does not run the verifier on push or PR", () => {
   assert.match(ci, /\n  no-dist:/);
   assert.ok(!/verifydist|verify-dist/.test(ci));
 });
+
+test("no-dist skips the main -> develop back-merge PR (same repo only)", () => {
+  const job = ci.slice(ci.indexOf("\n  no-dist:"), ci.indexOf("steps:", ci.indexOf("\n  no-dist:")));
+  assert.match(job, /head\.ref == 'main'/);
+  assert.match(job, /head\.repo\.full_name == github\.repository/);
+});

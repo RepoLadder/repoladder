@@ -20,7 +20,7 @@ The `no-dist` check fails a PR when `plugin/dist/` changed. For maintainers: aft
 
 ## Branches and releases
 
-Feature PRs go into `develop`. A `develop` -> `main` release PR (ready for review, not draft; merged with a merge commit) is the full CI run, including the Windows install check; feature PRs get the same checks, with Windows only when install/packaging files change. For maintainers: after a release, merge `main` back into `develop` so the bot's `plugin/dist` commit does not drift: `git fetch origin && git checkout develop && git merge origin/main && git push`.
+Feature PRs go into `develop`. A `develop` -> `main` release PR (ready for review, not draft; merged with a merge commit) is the full CI run, including the Windows install check; feature PRs get the same checks, with Windows only when install/packaging files change. For maintainers: after a release, merge `main` back into `develop` so the bot's `plugin/dist` commit does not drift: open a PR from `main` into `develop` (`gh pr create --base develop --head main`) and merge it with a merge commit, never squashed. `develop` requires a PR, and the `no-dist` check skips a PR whose head is `main`.
 
 For maintainers: `.github/CODEOWNERS` lists the guardrail paths (workflows, leak guard, hooks, manifests, package scripts, `plugin/dist/`, pipeline config, instructions). It takes effect only when the public repo's ruleset enables "Require review from Code Owners". A PR author cannot approve their own PR, so the owner's own PRs to those paths need a ruleset bypass or a second reviewer, and `rebuild-dist.yml`, which pushes straight to `main`, needs a ruleset bypass for the bot.
 

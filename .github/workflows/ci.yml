@@ -179,7 +179,9 @@ jobs:
   no-dist:
     name: PR does not touch plugin/dist
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    # The back-merge of main into develop (head branch main, same repo) legitimately carries the bot's rebuilt
+    # bundle, so it skips this check; a skipped required check counts as passed.
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true' && !(github.event.pull_request.head.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -193,7 +195,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           # Three-dot diff: only what this PR changed since it branched, so bot
-          # rebuilds landing on main in the meantime don't count against it (nor does a back-merge).
+          # rebuilds landing on main in the meantime don't count against it. The back-merge PR (head main) skips the job.
           changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- plugin/dist)
           if [ -n "$changed" ]; then
             echo "::error title=plugin/dist is built on main::This PR changes the committed bundle:"
