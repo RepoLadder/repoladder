@@ -17,11 +17,11 @@ import { aimNext, finishTransition, pace, settled } from "./transition.ts";
 export interface Spot { board: string; stop: string }
 
 /**
- * The phases in ms, tuned by feel (a full up, across and down is ~1.5s); `__repoladder.travelTiming`
+ * The phases in ms, tuned by feel (a full up, across and down through two levels is ~1.7s); `__repoladder.travelTiming`
  * for scripts. `look` holds on both ends lit before the dot runs, `hold` on the box you're about to enter,
  * `dive` is shared by the levels on the way down (each at least `level`), `pass` the dot across a level on the way. `fade` is reduced motion's.
  */
-export const travelTiming = { climb: 380, look: 80, cross: 380, hold: 60, dive: 440, level: 240, pass: 280, fade: 150 };
+export const travelTiming = { climb: 380, look: 80, cross: 380, hold: 60, dive: 560, level: 300, pass: 280, fade: 150 };
 
 /**
  * The path between two boards in a tree given by `parent`: `top` the lowest common ancestor, `up`
