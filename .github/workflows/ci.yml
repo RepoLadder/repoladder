@@ -45,6 +45,46 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: node scripts/cichanges.ts
 
+  unit:
+    # The unit suite split across a matrix; `check` below is the single gate over these legs.
+    name: unit tests (${{ matrix.shard }}/${{ strategy.job-total }})
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: node --test --test-shard=${{ matrix.shard }}/${{ strategy.job-total }} "test/*.test.ts"
+
+  typecheck-build:
+    name: typecheck and build
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+
   leak-guard:
     # Internal terms, home-directory paths and secrets (scripts/leakguard.ts + gitleaks). Not gated by
     # changes.outputs.code: docs-only PRs are where leaks land, and cichanges.ts skips them for `check`.
@@ -62,23 +102,18 @@ jobs:
       - uses: ./.github/actions/leakguard
 
   check:
+    # The required status check. Runs even when a leg fails, so a failed or cancelled leg fails this job instead of leaving it
+    # skipped (a skipped required check counts as passing).
     name: test, typecheck, build
-    needs: changes
-    if: needs.changes.outputs.code == 'true'
+    needs: [changes, unit, typecheck-build]
+    if: ${{ always() && needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run typecheck
-      - run: npm run build
+      - env:
+          UNIT: ${{ needs.unit.result }}
+          BUILD: ${{ needs.typecheck-build.result }}
+        run: '[ "$UNIT" = success ] && [ "$BUILD" = success ] || { echo "unit=$UNIT typecheck-build=$BUILD"; exit 1; }'
 
   gallery-default:
     # Default-grouping gate (#361): clones the pinned gallery repos and runs analyze + score only (no layout),
@@ -179,7 +214,9 @@ jobs:
   no-dist:
     name: PR does not touch plugin/dist
     needs: changes
-    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true'
+    # The back-merge of main into develop (head branch main, same repo) legitimately carries the bot's rebuilt
+    # bundle, so it skips this check; a skipped required check counts as passed.
+    if: github.event_name == 'pull_request' && needs.changes.outputs.code == 'true' && !(github.event.pull_request.head.ref == 'main' && github.event.pull_request.head.repo.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
@@ -193,7 +230,7 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           # Three-dot diff: only what this PR changed since it branched, so bot
-          # rebuilds landing on main in the meantime don't count against it (nor does a back-merge).
+          # rebuilds landing on main in the meantime don't count against it. The back-merge PR (head main) skips the job.
           changed=$(git diff --name-only "$BASE_SHA...$HEAD_SHA" -- plugin/dist)
           if [ -n "$changed" ]; then
             echo "::error title=plugin/dist is built on main::This PR changes the committed bundle:"

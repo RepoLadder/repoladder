@@ -88,3 +88,24 @@ test("build prints a CONNECTIONS line before BUILD_OK and still succeeds (#452)"
   assert.ok(r.stdout.indexOf("CONNECTIONS") < r.stdout.indexOf("BUILD_OK"));
   assert.ok(JSON.parse(readFileSync(join(out, "lint.json"), "utf8")).coverage.total > 0);
 });
+
+// #521: --profile
+test("build --profile hosted records the profile and prints no file-arrow warnings; --profile full equals the default", () => {
+  const def = build([]), full = build(["--profile", "full"]), hosted = build(["--profile", "hosted"]);
+  assert.equal(hosted.r.status, 0);
+  assert.equal(full.model, def.model);
+  assert.equal(full.html, def.html);
+  assert.equal(JSON.parse(hosted.model).profile, "hosted");
+  assert.ok(!/WARN/.test(hosted.r.stdout));
+  assert.ok(!("profile" in JSON.parse(def.model)));
+});
+
+test("build --profile nope exits 2 with INVALID_OPTIONS on stderr", () => {
+  for (const extra of [["--profile", "nope"], ["--profile"]]) {
+    const dir = mkdtempSync(join(tmpdir(), "rl-profile-"));
+    const r = spawnSync(process.execPath, [cli, "build", basic, "--out", dir, "--default", ...extra], { encoding: "utf8", env: { ...process.env, REPOLADDER_NO_USAGE: "1" } });
+    rmSync(dir, { recursive: true, force: true });
+    assert.equal(r.status, 2, extra.join(" "));
+    assert.match(r.stderr, /INVALID_OPTIONS/);
+  }
+});

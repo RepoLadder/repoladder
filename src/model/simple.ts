@@ -25,7 +25,7 @@ const differs = <T>(a: T | undefined, b: T) => !a || JSON.stringify(a) !== JSON.
  * boxes all exist in Default, with only their "elsewhere" boxes changed, are rolled up in the page.
  */
 export function simpleStop(facts: Facts, model: Model, tree: SimpleTree): ModelSimple {
-  const m = buildModel(facts, tree.grouping, tree.leafOf);
+  const m = buildModel(facts, tree.grouping, tree.leafOf, model.profile ?? "full");
   const isNew = (id: string) => !!m.nodes[id] && !model.nodes[id];
   const nodes: ModelSimple["nodes"] = {}, boards: ModelSimple["boards"] = {};
   // a group's children get their parent from it in the page, so a node whose only change is its parent isn't shipped

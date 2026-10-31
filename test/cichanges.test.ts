@@ -72,19 +72,39 @@ test("ci.yml triggers: PRs into main and develop, ready_for_review, push to main
 });
 
 test("ci.yml: only `changes` and `leak-guard` carry the draft condition, every other job needs `changes`", () => {
-  assert.equal(jobs.length, 7);
+  assert.equal(jobs.length, 9);
   for (const j of jobs) {
     const name = j.slice(0, j.indexOf(":"));
     assert.match(j, /timeout-minutes: \d+/, name);
     if (name === "changes" || name === "leak-guard") assert.match(j, /draft == false/);
     else {
-      assert.match(j, /needs: changes/, name);
+      assert.match(j, /needs: (changes|\[changes\b)/, name);
       assert.ok(!/draft/.test(j), name);
     }
   }
 });
 
-test("ci.yml: no job uses always() or cancelled(), and every action is SHA-pinned or local", () => {
-  assert.ok(!/always\(\)|cancelled\(\)/.test(ci));
+test("ci.yml: only the `check` gate uses always(), nothing uses cancelled(), and every action is SHA-pinned or local", () => {
+  assert.ok(!/cancelled\(\)/.test(ci));
+  assert.equal(ci.match(/always\(\)/g)?.length, 1);
+  const check = jobs.find((j) => j.startsWith("check:"))!;
+  assert.match(check, /if: \$\{\{ always\(\) && needs\.changes\.outputs\.code == 'true' \}\}/);
   for (const m of ci.matchAll(/uses: (\S+)/g)) assert.match(m[1], /^\.\/|@[0-9a-f]{40}$/, m[1]);
+});
+
+test("ci.yml: sharded unit job and aggregating gate", () => {
+  const job = (n: string) => jobs.find((j) => j.startsWith(`${n}:`))!;
+  const unit = job("unit");
+  assert.match(unit, /matrix:\n\s+shard: \[1, 2, 3\]/);
+  assert.ok(unit.includes('--test-shard=${{ matrix.shard }}/${{ strategy.job-total }} "test/*.test.ts"'));
+  assert.ok(!/npm run (typecheck|build)/.test(unit));
+  const tb = job("typecheck-build");
+  assert.equal(tb.match(/npm run typecheck/g)?.length, 1);
+  assert.equal(tb.match(/npm run build/g)?.length, 1);
+  const check = job("check");
+  assert.match(check, /name: test, typecheck, build\n/);
+  assert.match(check, /needs: \[changes, unit, typecheck-build\]/);
+  assert.ok(check.includes("needs.unit.result") && check.includes("needs.typecheck-build.result"));
+  const pkg = JSON.parse(readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"));
+  assert.ok(!pkg.scripts.test.includes("--test-shard"));
 });

@@ -19,7 +19,7 @@ Output lives in `.gallery/` (gitignored): `repos/<name>` holds the shallow clone
 
 The `gallery-default` CI job runs the check on ready PRs into `main` (the release PR) and on every push to `main`, and writes the score table with each repo's headroom to the step summary. `npm test` also gates the default grouping of a few checked-in fixtures offline.
 
-File boards draw every connection of their files (#449), so a default build splits a leaf whose file board would be over budget; the default-grouping score may move for that reason. `drawingRungs` (`src/model/drawn.ts`) reports per build which connections no board draws (0 on a default build).
+File boards draw every connection of their files in the default `full` profile (#449; the `hosted` profile budgets arrows, so the gallery stays on `full`), so a default build splits a leaf whose file board would be over budget; the default-grouping score may move for that reason. `drawingRungs` (`src/model/drawn.ts`) reports per build which connections no board draws (0 on a default build).
 
 Ratchet: when a change improves a score, tighten that row with `npm run gallery -- --check --update-thresholds` (rewrites the checked repos' rows with a margin of +5 points, +2 or 25% one-file groups, and 80% of the groups; `--only` limits it, `--thresholds <file>` reads another file) and commit it. A PR that loosens a row says why in its body. A new repo in `repos.json` gets its row the same way.
 

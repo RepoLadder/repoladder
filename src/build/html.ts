@@ -69,6 +69,7 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   const data: ViewerData & CodeData = { repo: model.repo, sha: model.sha, paths, nodes, services: model.services, ...(model.categories ? { categories: model.categories, icons: usedIcons(model.categories) } : {}), boards, layout: pageLayout, files, tours, ...(flows ? { flows } : {}), ...(stores ? { stores } : {}), ...(model.story ? { story: { actors: model.story.actors, narrative: model.story.narrative } } : {}), ...(gh ? { gh } : {}), ...(Object.keys(snips).length ? { snips } : {}) };
   const baked = bakedFeatures(features);
   if (Object.keys(baked).length) data.features = baked;
+  if (model.profile) data.profile = model.profile;
   if (model.does) data.does = model.does;
   if (model.names) data.names = Object.fromEntries(Object.entries(model.names).map(([p, n]) => [`@${ref(p)}`, n]));
   if (model.derivedTours) data.derivedTours = model.derivedTours.map((t) => ({ ...t, steps: t.steps.map((s) => ({ ...s, lit: { boxes: s.lit.boxes.map(pid), edges: s.lit.edges.map(([a, b]): [string, string] => [pid(a), pid(b)]) } })) }));
@@ -91,8 +92,10 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   <span class="meta" id="meta"></span>
 </header>
 <main>
+  <div class="stage" id="stage">
   <div class="canvas" id="canvas">
     <div class="zoom"><button id="zfs" hidden aria-label="Full screen" aria-pressed="false">${FS_ICON}</button><button id="zfit" hidden aria-label="Reframe" title="Reframe">${REFRAME_ICON}</button><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zexp" aria-label="Export this view" title="Export this view" aria-haspopup="menu" aria-expanded="false">⤓</button></div>
+  </div>
   </div>
   <aside><section id="details" aria-live="polite"></section>${madeWith()}</aside>
 </main>

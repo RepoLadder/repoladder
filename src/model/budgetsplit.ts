@@ -4,6 +4,7 @@
 // draws exactly the boxes and arrows the layout does, so no layout is needed here.
 import type { Facts, GroupNode, Grouping } from "./schema.ts";
 import { buildModel } from "./rollup.ts";
+import type { Profile } from "./profile.ts";
 import { FILE, MAX_FILE_BOXES, MORE } from "./fileboards.ts";
 import { communities, linksAmong } from "./communities.ts";
 import { compileGlob } from "./glob.ts";
@@ -143,7 +144,7 @@ export function partition(
  * `opts.force` leaves are split in the first round even when their board fits, falling back to alphabetical
  * ranges across subfolders (the oversize pass in grouping.ts).
  */
-export function splitOverBudget(g: Grouping, facts: Facts, crowded: string[] = [], opts: { boxes?: number; rounds?: number; force?: string[] } = {}): Grouping {
+export function splitOverBudget(g: Grouping, facts: Facts, crowded: string[] = [], opts: { boxes?: number; rounds?: number; force?: string[]; profile?: Profile } = {}): Grouping {
   const cap = opts.boxes ?? BOX_BUDGET;
   // the root's name only feeds "More parts" below; its summary is a sentence
   const root: GroupNode = { id: "root", name: "Parts", summary: "", children: structuredClone(g.children) };
@@ -178,7 +179,7 @@ export function splitOverBudget(g: Grouping, facts: Facts, crowded: string[] = [
     if (a.errors.length) break;
     const filesOf = new Map<string, string[]>();
     for (const [f, id] of [...a.leafOf].sort((x, y) => x[0].localeCompare(y[0]))) pushTo(filesOf, id, f);
-    const model = buildModel(facts, current(), a.leafOf);
+    const model = buildModel(facts, current(), a.leafOf, opts.profile);
     let changed = false;
     for (const id of Object.keys(model.boards).sort()) {
       const n = byId.get(id), b = model.boards[id];
@@ -195,7 +196,7 @@ export function splitOverBudget(g: Grouping, facts: Facts, crowded: string[] = [
       const room = Math.min(MAX_CHILDREN, Math.max(Math.min(budget - others, edges > EDGE_BUDGET ? own - 1 : own), 2, 3 - others));
       // the new level must still earn its click (depth.ts): 3 boxes, counting the ones from elsewhere
       const fewest = Math.max(2, MIN_LEVEL_BOXES - others);
-      if (n.files) changed = splitLeaf(n, filesOf.get(id) ?? [], room, budget - others, fewest, others, force, edges > EDGE_BUDGET && own * 2 > others) || changed;
+      if (n.files) changed = splitLeaf(n, filesOf.get(id) ?? [], room, budget - others, fewest, others, force, opts.profile !== "hosted" && edges > EDGE_BUDGET && own * 2 > others) || changed;
       else changed = bundle(n, room, filesOf, fewest) || changed;
     }
     if (!changed) break;

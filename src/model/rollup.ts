@@ -4,6 +4,7 @@ import type { Category, Facts, GroupNode, Grouping, PackageKind, StoryActor } fr
 import type { Snippet } from "./snippets.ts";
 import { STORY_REF, resolveEntry, topLevelOf } from "./story.ts";
 import { buildFileBoards, type ModelFile } from "./fileboards.ts";
+import { DEFAULT_PROFILE, type Profile } from "./profile.ts";
 import { fileNames } from "./filenames.ts";
 import { buildStoreBoards, type ModelCollection } from "./storeboards.ts";
 import type { ModelTour } from "./tours.ts";
@@ -95,6 +96,8 @@ export interface Model {
   /** For links to the code: see Facts.github. */
   github: Facts["github"];
   summary: string;
+  /** The fidelity profile (profile.ts); absent for `full`, so a default model is unchanged. */
+  profile?: Profile;
   nodes: Record<string, ModelNode>;
   services: Record<string, string>;
   /** Service and store id -> its category, which picks its icon. Absent in models built before categories. */
@@ -146,7 +149,7 @@ export function mergedServices(facts: Facts): Map<string, string> {
 }
 
 /** Builds the N-level model. Edges always come from the facts, rolled up to each level. */
-export function buildModel(facts: Facts, grouping: Grouping, leafOf: Map<string, string>): Model {
+export function buildModel(facts: Facts, grouping: Grouping, leafOf: Map<string, string>, profile: Profile = DEFAULT_PROFILE): Model {
   const nodes: Record<string, ModelNode> = {
     root: { id: "root", name: facts.repo, summary: grouping.summary, parent: null, children: [], files: [], count: 0, loc: 0 },
   };
@@ -279,9 +282,10 @@ export function buildModel(facts: Facts, grouping: Grouping, leafOf: Map<string,
   }
   const model: Model = { version: 1, repo: facts.repo, sha: facts.sha, github: facts.github, summary: grouping.summary, nodes, services, categories, ...(Object.keys(does).length ? { does } : {}), boards };
   // Leaf groups open into file boards.
-  const fileBoards = buildFileBoards(facts, nodes, leafOf);
+  const fileBoards = buildFileBoards(facts, nodes, leafOf, profile);
   Object.assign(boards, fileBoards.boards);
   model.files = fileBoards.files;
+  if (profile !== DEFAULT_PROFILE) model.profile = profile;
   const names = fileNames(Object.values(nodes));
   if (Object.keys(names).length) model.names = names;
   // Stores open into their collections.

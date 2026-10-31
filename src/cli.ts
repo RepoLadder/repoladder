@@ -13,6 +13,7 @@ import { progressPrinter, stepSync, type OnProgress } from "./build/progress.ts"
 import { timedSync, timing } from "./build/timings.ts";
 import { budgetLines, fileArrowWarnings } from "./build/budget.ts";
 import { coverageLines } from "./model/coverage.ts";
+import { resolveProfile, type Profile } from "./model/profile.ts";
 import type { Model } from "./model/rollup.ts";
 import { Facts, Grouping } from "./model/schema.ts";
 import { PartError, summarize, summarizePart } from "./model/summary.ts";
@@ -94,8 +95,18 @@ const titleFlag = (): string | undefined => {
   return t.trim();
 };
 
+// The fidelity profile (model/profile.ts); anything but "full" or "hosted" exits 2.
+const profileFlag = (): Profile => {
+  const p = flags.get("profile");
+  try { return resolveProfile(p === true ? "" : p); } catch (e) {
+    console.error(`INVALID_OPTIONS: ${(e as Error).message}`);
+    throw new Exit("INVALID_OPTIONS", 2);
+  }
+};
+
 async function runBuild(seen: { files: number }) {
   const title = titleFlag();
+  const profile = profileFlag();
   const started = performance.now();
   const factsPath = join(out, "facts.json");
   const progress = flags.has("quiet") ? undefined : progressPrinter({ write: (l) => console.error(l) });
@@ -126,7 +137,9 @@ async function runBuild(seen: { files: number }) {
       r = await buildDiagram({
         facts, grouping,
         // the default grouping runAnalyze just wrote; --title changes facts.repo, which its summary text embeds
-        defaultGrouping: title ? undefined : analyzed?.grouping,
+        // (and it was split with the full profile's arrow counts)
+        defaultGrouping: title || profile !== "full" ? undefined : analyzed?.grouping,
+        profile,
         read: (f) => { try { return readFileSync(join(root, f), "utf8"); } catch { return null; } },
         cacheDir: out, lane: !flags.has("no-lane"), log: (s) => console.log(s), onProgress: progress,
         features: resolveFeatures(process.env, { dial: flags.has("dial") || undefined, story: flags.has("story") || undefined }),
@@ -146,7 +159,7 @@ async function runBuild(seen: { files: number }) {
     const over = budgetLines(report);
     if (over.length) console.log(`${over.length}/${report.budget.boards} boards over the digestibility budget (lint.json has every board):\n${over.join("\n")}`);
     // a grouping Claude wrote is never split mechanically, so its dense file boards are warned about instead
-    if (grouping) for (const w of fileArrowWarnings(model, report, facts)) console.log(`WARN ${w}`);
+    if (grouping && profile === "full") for (const w of fileArrowWarnings(model, report, facts)) console.log(`WARN ${w}`);
     // every connection should be an arrow on some rung (#452): a warning, never a failure
     for (const l of coverageLines(report.coverage)) console.log(l);
     console.log(`BUILD_OK ${file} (${Math.round(html.length / 1024)}KB, ${Object.keys(model.boards).length} boards)`);
@@ -192,7 +205,7 @@ async function runExport() {
   console.log(`EXPORT_OK ${dir} (${files.length} board${files.length === 1 ? "" : "s"}, ${theme})`);
 }
 
-const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|build|export> [root] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--dial] [--story] [--quiet] [--help] [--version]`;
+const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|build|export> [root] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--help] [--version]`;
 if (cmd === "--help" || cmd === "-h" || cmd === "help") { console.log(USAGE); process.exit(0); }
 if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version()); process.exit(0); }
 

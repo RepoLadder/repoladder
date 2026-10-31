@@ -4,6 +4,7 @@
 import type { Model } from "../model/rollup.ts";
 import type { Facts, Grouping } from "../model/schema.ts";
 import { splitOverBudget } from "../model/budgetsplit.ts";
+import type { Profile } from "../model/profile.ts";
 import { lintReport, type LintReport } from "./budget.ts";
 import { newStats, formatStats, addStats, type LayoutStats } from "./layoutstats.ts";
 import { layoutBoards, type BoardLayout } from "./layout.ts";
@@ -19,6 +20,7 @@ export async function layoutPasses(o: {
   facts: Facts; grouping: Grouping;
   /** true for `--default`: crowded boards are split and laid out again */
   splitting: boolean;
+  profile?: Profile;
   modelOf: (g: Grouping, first: boolean) => Model;
   cacheDir?: string; lane: boolean;
   onProgress?: OnProgress;
@@ -50,7 +52,7 @@ export async function layoutPasses(o: {
     let report = stepSync(on, { stage: "lint", ...at(p) }, () => timedSync(`lint#${p}`, () => lintReport(model, layout, o.facts)));
     for (; o.splitting && p < MAX_SPLITS; p++) {
       const crowded = report.budget.byBoard.filter((b) => (b.kind === "files" || b.kind === "group") && b.over.some((r) => r.kind === "names")).map((b) => b.board);
-      const next = crowded.length ? stepSync(on, { stage: "split", ...at(p) }, () => timedSync(`split#${p}`, () => splitOverBudget(grouping, o.facts, crowded))) : grouping;
+      const next = crowded.length ? stepSync(on, { stage: "split", ...at(p) }, () => timedSync(`split#${p}`, () => splitOverBudget(grouping, o.facts, crowded, { profile: o.profile }))) : grouping;
       if (JSON.stringify(next) === JSON.stringify(grouping)) break;
       grouping = next;
       model = stepSync(on, { stage: "model", ...at(p + 1) }, () => timedSync(`model#${p + 1}`, () => o.modelOf(grouping, false)));

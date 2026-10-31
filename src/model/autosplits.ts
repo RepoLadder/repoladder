@@ -5,6 +5,7 @@
 // Claude wrote is never touched here: its splits stay Claude's to name.
 import type { Facts, GroupNode, Grouping, SplitPart } from "./schema.ts";
 import { splitOverBudget } from "./budgetsplit.ts";
+import { DEFAULT_PROFILE, type Profile } from "./profile.ts";
 import { assign } from "./grouping.ts";
 
 /** Less's box budget per board, the parts from elsewhere included: about 6 of a board's own boxes plus its lane. */
@@ -13,8 +14,8 @@ export const LESS_BOXES = 8;
 const walk = (ns: GroupNode[], f: (n: GroupNode) => void) => { for (const n of ns) { f(n); if (n.children) walk(n.children, f); } };
 
 /** `g` with a `split` on every leaf that one more round at LESS_BOXES splits; `g` itself when none. */
-export function withAutoSplits(g: Grouping, facts: Facts): Grouping {
-  const fine = splitOverBudget(g, facts, [], { boxes: LESS_BOXES, rounds: 1 });
+export function withAutoSplits(g: Grouping, facts: Facts, profile: Profile = DEFAULT_PROFILE): Grouping {
+  const fine = splitOverBudget(g, facts, [], { boxes: LESS_BOXES, rounds: 1, profile });
   const { leafOf, errors } = assign(fine, facts);
   if (errors.length) return g;
   const filesOf = new Map<string, string[]>();

@@ -8,6 +8,7 @@ import { basename, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { analyze, analyzeSource } from "../src/analyze/index.ts";
 import { githubSource, gitSha, listAllPaths } from "../src/analyze/files.ts";
+import { pageData } from "../src/build/filepack.ts";
 import { memorySource } from "../src/analyze/source.ts";
 import { workspaceGlobs } from "../src/analyze/packages.ts";
 import { buildFromFiles, BuildError, VERSION, type BuildFromFilesOptions, type ProgressEvent } from "../src/lib.ts";
@@ -170,4 +171,23 @@ test("the result carries the engine version, which the page's generator tag repe
   assert.ok(r.ok);
   assert.equal(r.engineVersion, VERSION);
   assert.ok(r.html.includes(`<meta name="generator" content="repoladder@${VERSION}">`));
+});
+
+test("profile (#521): default and full are identical and say full; hosted is recorded in the result, model and page", async () => {
+  const files = filesOf(fixture("multi"));
+  const def = await built(files, metaOf(fixture("multi"))), full = await built(files, { ...metaOf(fixture("multi")), profile: "full" });
+  assert.equal(def.profile, "full");
+  assert.equal(full.profile, "full");
+  assert.ok(!("profile" in def.model));
+  assert.equal(full.html, def.html);
+  assert.deepEqual(full.model, def.model);
+  const hosted = await built(files, { ...metaOf(fixture("multi")), profile: "hosted" });
+  assert.equal(hosted.profile, "hosted");
+  assert.equal(hosted.model.profile, "hosted");
+  assert.equal((pageData(hosted.html) as { profile?: string }).profile, "hosted");
+  assert.ok(!("profile" in pageData(def.html)));
+});
+
+test("profile (#521): an unknown profile throws INVALID_OPTIONS", async () => {
+  await assert.rejects(buildFromFiles(filesOf(fixture("basic-app")), { profile: "x" as never }), (e: unknown) => e instanceof BuildError && e.code === "INVALID_OPTIONS" && e.status === 2 && /profile must be "full" or "hosted"/.test(e.message));
 });

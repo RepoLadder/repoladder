@@ -10,6 +10,7 @@ import type { Model } from "./model/rollup.ts";
 import type { Coverage } from "./model/coverage.ts";
 import { VERSION } from "./version.ts";
 import { resolveFeatures, type Features } from "./features.ts";
+import { resolveProfile, type Profile } from "./model/profile.ts";
 import type { OnProgress } from "./build/progress.ts";
 
 export interface BuildFromFilesOptions {
@@ -23,6 +24,8 @@ export interface BuildFromFilesOptions {
   grouping?: Grouping;
   /** Launch switches (src/features.ts), explicit only: the library reads no env. Default: launch state (no detail dial). */
   features?: Partial<Features>;
+  /** Fidelity profile: "full" (default) draws every connection on a file board; "hosted" budgets file-board arrows so a large repo builds within a time limit. Anything else throws INVALID_OPTIONS. */
+  profile?: Profile;
   /** "elsewhere" lane at the board's edge; default true (`--no-lane` is false). */
   lane?: boolean;
   /** Size and shape limits, per field over DEFAULT_LIMITS. A bad value throws RangeError. */
@@ -38,6 +41,8 @@ export type BuildResult =
       engineVersion: string;
       /** Connections with no arrow at the Default dial and tour steps on a board that doesn't draw them (#452); a warning to show, never a failure. */
       coverage: Coverage;
+      /** The profile the build used: "full" unless `profile: "hosted"` was passed. */
+      profile: Profile;
     }
   | BuildFailure;
 
@@ -47,6 +52,12 @@ export async function buildFromFiles(files: Record<string, string> | Map<string,
   let meta;
   try {
     meta = resolveMeta({ repo: opts.repo, sha: opts.sha, github: opts.github }, opts.github?.repo.split("/")[1] ?? "repo", null);
+  } catch (e) {
+    throw new BuildError("INVALID_OPTIONS", 2, `INVALID_OPTIONS: ${(e as Error).message}`);
+  }
+  let profile: Profile;
+  try {
+    profile = resolveProfile(opts.profile);
   } catch (e) {
     throw new BuildError("INVALID_OPTIONS", 2, `INVALID_OPTIONS: ${(e as Error).message}`);
   }
@@ -66,8 +77,8 @@ export async function buildFromFiles(files: Record<string, string> | Map<string,
     }
     grouping = parsed.data;
   }
-  const r = await buildDiagram({ facts, grouping, read: (f) => (src.exists(f) ? src.read(f) : null), lane: opts.lane ?? true, onProgress, features: resolveFeatures({}, opts.features) });
-  return { ok: true, html: r.html, facts, model: r.model, engineVersion: VERSION, coverage: r.report.coverage };
+  const r = await buildDiagram({ facts, grouping, read: (f) => (src.exists(f) ? src.read(f) : null), lane: opts.lane ?? true, onProgress, profile, features: resolveFeatures({}, opts.features) });
+  return { ok: true, html: r.html, facts, model: r.model, engineVersion: VERSION, coverage: r.report.coverage, profile };
 }
 
 export { VERSION } from "./version.ts";
@@ -75,6 +86,7 @@ export type { AnalyzeOptions, GitMode };
 export { BuildError } from "./build/pipeline.ts";
 export type { Facts, Grouping } from "./model/schema.ts";
 export type { Model } from "./model/rollup.ts";
+export { PROFILES, type Profile } from "./model/profile.ts";
 export { DEFAULT_LIMITS, INPUT_CODES, LIMIT_MESSAGES } from "./build/limits.ts";
 export type { OnProgress, ProgressEvent, Stage } from "./build/progress.ts";
 export type { BuildFailure, InputCode, Limits } from "./build/limits.ts";
