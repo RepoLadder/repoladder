@@ -37,15 +37,17 @@ jobs:
       - id: changesets
         uses: changesets/action@ae32849d5ba541f9ae29e40e22a623bc13562f51 # v2.1.2
         with:
-          version: npm run version-packages
-          title: "Version Packages (repoladder)"
-          commit: "chore: version packages"
+          version-script: npm run version-packages
+          pr-title: "Version Packages (repoladder)"
+          commit-message: "chore: version packages"
+          create-github-releases: false
+          push-git-tags: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       # GITHUB_TOKEN pushes and PRs start no workflows; a workflow_dispatch does. Run CI on the release
       # branch so the Version Packages PR gets the required checks.
       - name: Run CI on the Version Packages PR
-        if: steps.changesets.outputs.pullRequestNumber != ''
+        if: steps.changesets.outputs.pr-number != ''
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_BRANCH: changeset-release/${{ github.ref_name }}
