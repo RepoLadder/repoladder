@@ -11,7 +11,7 @@ import { githubSource, gitSha, listAllPaths } from "../src/analyze/files.ts";
 import { pageData } from "../src/build/filepack.ts";
 import { memorySource } from "../src/analyze/source.ts";
 import { workspaceGlobs } from "../src/analyze/packages.ts";
-import { buildFromFiles, BuildError, VERSION, type BuildFromFilesOptions, type ProgressEvent } from "../src/lib.ts";
+import { analyzeFiles, buildFromFiles, BuildError, VERSION, type BuildFromFilesOptions, type ProgressEvent } from "../src/lib.ts";
 
 /** buildFromFiles on input that must build: narrows the result on `ok`. */
 async function built(...a: Parameters<typeof buildFromFiles>) {
@@ -70,6 +70,7 @@ test("pure: no cwd writes, no fetch, no exit", async () => {
     process.exit = ((c?: number) => { throw new Error(`exit ${c}`); }) as typeof process.exit;
     await built(filesOf(fixture("basic-app")));
     await built(filesOf(fixture("basic-app")), { onProgress: () => {} });
+    assert.ok(analyzeFiles(filesOf(fixture("basic-app")), { onProgress: () => {} }).ok);
   } finally {
     process.chdir(cwd); globalThis.fetch = fetch0; process.exit = exit0;
   }
@@ -190,4 +191,71 @@ test("profile (#521): default and full are identical and say full; hosted is rec
 
 test("profile (#521): an unknown profile throws INVALID_OPTIONS", async () => {
   await assert.rejects(buildFromFiles(filesOf(fixture("basic-app")), { profile: "x" as never }), (e: unknown) => e instanceof BuildError && e.code === "INVALID_OPTIONS" && e.status === 2 && /profile must be "full" or "hosted"/.test(e.message));
+});
+
+const analyzed = (...a: Parameters<typeof analyzeFiles>) => {
+  const r = analyzeFiles(...a);
+  assert.ok(r.ok, r.ok ? "" : r.message);
+  return r;
+};
+
+test("analyzeFiles: facts equal the analyzer's on every fixture", () => {
+  for (const name of readdirSync(fixture(""))) {
+    const dir = fixture(name);
+    if (!existsSync(join(dir, "package.json")) && listAllPaths(dir).length === 0) continue;
+    const got = analyzeFiles(filesOf(dir), metaOf(dir));
+    if (!got.ok) continue; // a fixture that is not a valid build input has nothing to compare
+    assert.deepEqual(JSON.parse(JSON.stringify(got.facts)), JSON.parse(JSON.stringify(analyze(dir))), name);
+    assert.equal(got.engineVersion, VERSION);
+  }
+});
+
+test("analyzeFiles: facts equal a full build's, and a full build does not change them", async () => {
+  for (const name of ["basic-app", "deep", "mono", "next-app", "stores"]) {
+    const dir = fixture(name);
+    const before = JSON.stringify(analyzed(filesOf(dir), metaOf(dir)).facts);
+    const full = await built(filesOf(dir), metaOf(dir));
+    assert.equal(before, JSON.stringify(full.facts), name);
+  }
+  const opts = { ...metaOf(fixture("basic-app")), limits: { maxFiles: 500 }, github: { repo: "o/r", sha: "0123456789abcdef0123456789abcdef01234567", dir: "" } };
+  const full = await built(filesOf(fixture("basic-app")), opts);
+  assert.equal(JSON.stringify(analyzed(filesOf(fixture("basic-app")), opts).facts), JSON.stringify(full.facts));
+});
+
+test("analyzeFiles: file order does not change the facts", () => {
+  const files = filesOf(fixture("basic-app"));
+  const want = JSON.stringify(analyzed(files).facts);
+  const reversed = new Map([...files].reverse());
+  assert.equal(JSON.stringify(analyzed(reversed).facts), want);
+  assert.equal(JSON.stringify(analyzed(Object.fromEntries(reversed)).facts), want);
+});
+
+test("analyzeFiles: bad input returns the same typed failure as buildFromFiles", async () => {
+  const two = { "a.ts": "export const a = 1;\n", "b.ts": "export const b = 2;\n" };
+  const cases: [Record<string, string>, BuildFromFilesOptions][] = [
+    [{}, {}],
+    [{ "README.md": "hi" }, {}],
+    [two, { limits: { maxFiles: 1 } }],
+    [two, { limits: { maxFileBytes: 10 } }],
+    [two, { limits: { maxBytes: 30 } }],
+  ];
+  for (const [files, opts] of cases) {
+    const want = await buildFromFiles(files, opts);
+    const got = analyzeFiles(files, opts);
+    assert.equal(got.ok, false);
+    assert.ok(!want.ok && !got.ok);
+    assert.deepEqual({ code: got.code, message: got.message }, { code: want.code, message: want.message });
+  }
+});
+
+test("analyzeFiles: bad options throw", () => {
+  assert.throws(() => analyzeFiles({ "a.ts": "export {};\n" }, { limits: { maxFiles: 0 } }), RangeError);
+  assert.throws(() => analyzeFiles({ "a.ts": "export {};\n" }, { github: { repo: "nope", sha: "x", dir: "" } }), (e) => e instanceof BuildError && e.code === "INVALID_OPTIONS");
+});
+
+test("analyzeFiles: progress stops after resolve, and a throwing callback is ignored", () => {
+  const stages = new Set<string>();
+  analyzed(filesOf(fixture("basic-app")), { onProgress: (e: ProgressEvent) => { stages.add(e.stage); } });
+  assert.deepEqual([...stages].filter((s) => !["read", "parse", "resolve"].includes(s)), []);
+  assert.ok(analyzeFiles(filesOf(fixture("basic-app")), { onProgress: () => { throw new Error("boom"); } }).ok);
 });
