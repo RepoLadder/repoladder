@@ -34,11 +34,14 @@ Nothing uses these tokens yet beyond the design check's "Floating surfaces" spec
 - Shadows: `--shadow-1` for resting controls, `--shadow-2` for panels, `--shadow-3` for popovers and sheets.
 - No blur unless `--float-blur` is raised: a surface that wants it writes `backdrop-filter: blur(var(--float-blur))` (a no-op at `0px`).
 
+### Popovers
+The tour card, crumb menu, export menu and note, filter bar and search box share one rule in `popover.css` (`--float`, `--radius`, a 1px `--line` border, `--shadow-2`) and one open motion, `pop-in` (150ms, opacity and transform; none under reduced motion). Their own rules keep only layout; a new popover joins the grouped selector. Closing is instant. The tour card keeps an accent border, round progress dots, and Skip, Back and Next. Tooltips stay the browser's native `title`.
+
 ### Stylesheets
 `styles.css` is only the entry (its comment and the ordered `@import`s, which `build/viewer.ts` bundles). Rule order across the imports is the cascade (the narrow-screen rules deliberately override earlier ones), so new CSS goes in the file for its area, new files are added in the right place in the list, and every file stays under 200 lines (`board.css`, 300, may not grow; `test/cssfiles.test.ts`). Tests read the whole stack through `test/helpers/viewercss.ts`.
 - `board.css`, `walk.css`, `stops.css`, `dial.css`: the diagram's own styling, the walkthrough, tour stops and the detail dial.
 - `chrome.css`: page shell and header. `buttons.css`: the shared button skin and coarse-pointer sizes. `panel.css`: side panel rhythm and boxes.
-- `store.css`: data store panel. `tourcard.css`: the tour card. `story.css`: the story level.
+- `store.css`: data store panel. `tourcard.css`: the tour card. `popover.css`: the shared popover look. `story.css`: the story level.
 - `focus.css`: focus, selection and search. `filters.css`: filter chips and file boxes.
 - `narrow.css`: narrow screens (the phone sheet) and touch targets. `cards.css`: collection panel, actor cards, connection counts, history buttons.
 - `trail.css`: breadcrumbs, depth badge, service panel, the everything board, tour trail and copy link. `footer.css`: footer links and embedded mode.

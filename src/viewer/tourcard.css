@@ -9,19 +9,16 @@
   user-select: none;
 }
 /* The tour card (tour.ts) */
-.tour-card {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--soft);
-}
 .tour-dots {
   display: flex;
-  gap: 4px;
+  gap: 6px;
   margin-bottom: 8px;
 }
 .tour-dots i {
-  flex: 1;
-  height: 3px;
-  border-radius: 2px;
+  flex: 0 1 6px;
+  min-width: 2px;
+  height: 6px;
+  border-radius: var(--pill);
   background: var(--line);
 }
 .tour-dots i.done {
@@ -44,8 +41,11 @@
   border-radius: var(--radius);
   padding: 5px 12px;
 }
+/* Skip: the ghost button, first in the row, with Back and Next pushed to the right */
 .tour-nav button[data-tour-exit] {
-  margin-left: auto;
+  margin-right: auto;
+  border-color: transparent;
+  color: var(--muted);
 }
 .tour-nav button:focus-visible {
   outline: 2px solid var(--accent);
