@@ -13,10 +13,11 @@ A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architec
 ## Layout
 Each file starts with a comment saying what it is for; read it before editing.
 - `src/analyze/`: the facts. Parses with the TS compiler API (syntax only), resolves imports, detects packages, external services, runtime call edges, HTTP endpoints, pages and routes (Next.js, React Router/Remix), and database reads and writes. `source.ts` lets the analyzer read from disk or an in-memory file set.
-- `src/model/`: `query.ts` (the pure lookups behind `repoladder query`: file:line rows from the facts, bounded and sorted; experimental), grouping and validation (`grouping.ts`, `depth.ts`), the no-AI default grouping (`budgetsplit.ts`), roll-up into boards (`rollup.ts`, `rollrules.ts`; a leaf's file board draws every connection in the `full` profile, `hosted` budgets arrows as before #449: `profile.ts`), the digest Claude reads (`summary.ts`), and tours and flows (`tours.ts`, `compose.ts`, `derivedtours.ts`, `flows.ts`).
+- `src/model/`: `query.ts` (the pure lookups behind `repoladder query`: file:line rows from the facts, bounded and sorted; experimental), `cite.ts` (checks the files, lines, names and boxes an Ask answer cites against the facts; pure), `starters.ts` (the Ask bar's starter questions from the facts), grouping and validation (`grouping.ts`, `depth.ts`), the no-AI default grouping (`budgetsplit.ts`), roll-up into boards (`rollup.ts`, `rollrules.ts`; a leaf's file board draws every connection in the `full` profile, `hosted` budgets arrows as before #449: `profile.ts`), the digest Claude reads (`summary.ts`), and tours and flows (`tours.ts`, `compose.ts`, `derivedtours.ts`, `flows.ts`).
 - `src/build/`: D2 layout per board (`layout.ts`, `d2pool.ts`, `layoutsession.ts`, `passes.ts`), the page shell and packing (`html.ts`, `filepack.ts`), the layout lint and the digestibility budget (`lint.ts`, `budget.ts`), and `pipeline.ts`, which ties model, layout and HTML together for `cli.ts` and `lib.ts`.
-- `src/viewer/`: the in-page app, a typed TS module that runs in the browser (board drawing, navigation, panels, the tour player, deep links, the detail dial). It may import types from `src/model` and `src/build`, but nothing that pulls Node code into the page. Keep each module under about 200 lines; add a module rather than growing one. `DESIGN.md` explains the visual identity. `npm run build` bakes the viewer into the plugin bundle, so the shipped plugin never needs esbuild.
-- `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
+- `src/viewer/`: the in-page app, a typed TS module that runs in the browser (board drawing, navigation, panels, the tour player, deep links, the detail dial; `ask/` holds the served Ask bar (state machine, stream client, safe answer renderer, view; with `ask.css`), built as a separate bundle that `repoladder serve` appends to the page it serves, never part of the page file). It may import types from `src/model` and `src/build`, but nothing that pulls Node code into the page. Keep each module under about 200 lines; add a module rather than growing one. `DESIGN.md` explains the visual identity. `npm run build` bakes the viewer into the plugin bundle, so the shipped plugin never needs esbuild.
+- `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export | serve`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
+- `src/serve/`: local server for `repoladder serve` (`ask.ts` runs the user's own `claude` CLI read-only for the Ask endpoint; `claude.ts` pins its arguments); the only code that listens on a port; engine dirs never import it.
 - `src/lib.ts`: the library entry `buildFromFiles(files, opts)`: files in, `{ ok: true, html, facts, model, engineVersion, coverage, profile }` or `{ ok: false, code, message }` out; no disk, env, ping or exit. `analyzeFiles(files, opts)` returns `{ ok: true, facts, engineVersion }` or `{ ok: false, code, message }` without grouping, layout or HTML. Input limits live in `src/build/limits.ts`.
 - `src/features.ts`: the launch switches (`dial`, `story`), both off by default. `REPOLADDER_DIAL=1` or `--dial` after the repo root builds a page with the detail dial; `REPOLADDER_STORY=1` or `--story` builds the story level (People and systems) and makes `summary` ask for one.
 - npm package `repoladder` (`npm run npm:pack`): the CLI bundle plus the library, published only from a `v*` tag on `main` through npm trusted publishing (`.github/workflows/publish.yml`).
@@ -30,7 +31,7 @@ Each file starts with a comment saying what it is for; read it before editing.
   - The only external scripts allowed are from cdnjs, jsdelivr or unpkg, pinned to an exact version.
   - Light and dark themes are defined through color tokens (`test/colors.test.ts` keeps colors out of other files).
   - It works at phone width.
-  - The only downloads from inside the page are the Export button's, best-effort, each falling back to showing the image to save by hand.
+  - The only downloads from inside the page are the Export button's, best-effort, each falling back to showing the image to save by hand, and, only on a map served by `repoladder serve`, the Ask calls to the local server.
 - Comments are sparse and explain *why*.
 
 ## Commands
@@ -41,6 +42,7 @@ node src/cli.ts query /path/to/repo touches database   # experimental: file:line
 npm run build      # bundle to plugin/dist/repoladder.mjs (viewer included)
 node src/cli.ts build /path/to/repo --fresh --default   # diagram without the Claude grouping step
 node src/cli.ts build /path/to/repo --default --title "Name"   # the map's name in place of the folder name
+node src/cli.ts serve /path/to/repo   # host the built map on localhost
 ```
 
 ## Viewer guard

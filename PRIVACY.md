@@ -1,6 +1,6 @@
 # Privacy
 
-RepoLadder runs on your machine. It reads your repo locally, writes its output to `.repoladder/` in the repo, and publishes the diagram only where you ask it to (a private Claude Artifact).
+RepoLadder runs on your machine. It reads your repo locally, writes its output to `.repoladder/` in the repo, and publishes the diagram only where you ask it to (a private Claude Artifact). `repoladder serve` can also host the map on your own machine; [see below](#serving-the-map-on-your-machine).
 
 The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never touch the network: they only read the repo they are given, and run `git` locally to list its files. A test ([test/no-network.test.ts](test/no-network.test.ts)) runs in CI on every change and fails if network code is added to them.
 
@@ -9,6 +9,25 @@ The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never
 - **The plugin and the engine run on your machine.** `/map` and the CLI behind it read your repo from disk and write their output only to `.repoladder/` inside it. The one file they write elsewhere is your usage-stats answer, in `~/.config/repoladder/`. They make no network requests of their own, except the usage ping below, which is off unless you say yes. The one other download is the plugin's own runtime dependencies from npm on first run, and that carries nothing about your repo. As with anything you do in Claude Code, Claude sees the repo summary `/map` gives it and publishes the diagram as a private Artifact, both through your own Claude account. RepoLadder adds no other destination.
 - **The website only ever reads public repos.** [repoladder.com](https://repoladder.com) and any maps hosted there are built only from public GitHub repos. The site never asks for a GitHub token, access to a private repo, or an upload of your code, and never accepts any of them. Its own [privacy page](https://repoladder.com/privacy) covers the waitlist and site analytics.
 - **Sharing from the plugin, if we ever add it, will be explicit and opt-in.** Today nothing you map is uploaded anywhere. A future way to send a map from the plugin to the website would be off by default and ask you every time, and this page would list exactly what it sends before it ships.
+
+## Serving the map on your machine
+
+`repoladder serve` is off unless you run it. It hosts your built map on `127.0.0.1` (your own machine only) behind a random per-run token that lives in the link it prints and nowhere on disk. It refuses connections from other machines and requests for other host names, serves only the built page, and sends nothing anywhere.
+
+## Asking questions about your repo (repoladder serve)
+
+While `repoladder serve` runs, it can answer a question about your repo with your own Claude Code. The flow: your browser, then the local server on your machine, then your own `claude` command, then Anthropic under your own Claude account and plan. RepoLadder never sees or stores a key or a sign-in.
+
+- **What Claude can do here:** read files, search them, and run `repoladder query` in your repo. With its default settings it cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar).
+- **What leaves your machine:** only what your own Claude Code already sends when it answers: your question and the file excerpts it reads, to Anthropic, under your own account. RepoLadder sends nothing of its own and stores nothing.
+- **Where it runs:** the page, the server and the agent all run on your machine. The Ask path exists only while `repoladder serve` runs, and `--no-ask` turns it off.
+- **Who can reach it:** only your own machine, with a random token made for each run. The token is printed only in your terminal. Pages on other websites cannot use it, and requests that carry a foreign origin are refused.
+- **The browser opener:** the link (token included) is also handed to your browser opener, so for a moment it is visible in the process list. On a shared machine, use `--no-open` and open the link yourself.
+- **Logs:** your question text and the token are never logged.
+- **Limits:** one question at a time, up to 2,000 characters; a stopped or timed-out question also stops everything Claude started for it.
+- **Where it shows up:** the conversation appears in Claude Code's own session history for that folder.
+- **Your repo's own Claude settings are not loaded** for these questions; your personal Claude Code settings still apply, so any extra permissions you have granted there (a shell command or tool you always allow) apply to these questions too.
+- **How the limits are enforced, honestly:** by Claude Code's own permission system. RepoLadder's tests prove the exact settings it passes (see [docs/serve-security.md](docs/serve-security.md)), and the maintainers check real enforcement by hand against a real install; a test cannot prove Claude Code enforces them. The Claude Code version and date of that check are recorded in that file once it is done.
 
 ## Usage stats: off unless you say yes
 

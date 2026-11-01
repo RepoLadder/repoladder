@@ -11,6 +11,7 @@
     "analyze": "node src/cli.ts analyze",
     "gallery": "node scripts/gallery.ts",
     "design": "node scripts/design.ts",
+    "askshots": "node scripts/askshots.ts",
     "titlecheck": "node scripts/titlecheck.ts",
     "bench:layout": "node scripts/layoutbench.ts",
     "shots": "node scripts/shots.ts",

@@ -1,0 +1,181 @@
+/* The Ask bar and answer panel (src/viewer/ask/), injected only into a map served by `repoladder serve`; never part of the page file.
+   Tokens and the type scale only (theme.ts); see DESIGN.md, "Ask (served maps only)". */
+#ask {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  width: min(40rem, calc(100% - 2 * 150px));
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 8px;
+  font: var(--text-small)/var(--lh-small) var(--font-ui);
+  color: var(--ink);
+}
+#ask .ask-bar {
+  display: flex;
+  gap: 8px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 24px var(--shadow);
+}
+#ask .ask-input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: var(--text-body)/var(--lh-body) var(--font-ui);
+}
+#ask .ask-input::placeholder {
+  color: var(--muted);
+}
+#ask .ask-input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--pill);
+}
+#ask .ask-input:disabled {
+  opacity: .5;
+}
+#ask button {
+  font: 500 var(--text-small)/1.25 var(--font-ui);
+  color: var(--ink);
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+#ask .ask-act {
+  padding: 0 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: transparent;
+}
+#ask .ask-ghost {
+  padding: 6px 10px;
+  border: 0;
+  border-radius: var(--radius);
+  background: none;
+}
+#ask .ask-starter {
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  background: transparent;
+  text-align: left;
+}
+#ask button:hover:not(:disabled) {
+  background: var(--soft);
+}
+#ask button:disabled {
+  opacity: .5;
+  pointer-events: none;
+}
+#ask button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+#ask .ask-panel {
+  max-height: calc(50vh - 60px);
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: 0 6px 24px var(--shadow);
+  overflow-wrap: anywhere;
+}
+#ask .ask-panel[hidden],
+#ask .ask-note[hidden] {
+  display: none;
+}
+#ask .ask-turn + .ask-turn {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+#ask .ask-q {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+#ask .ask-a {
+  white-space: pre-wrap;
+  font-size: var(--text-body);
+  line-height: var(--lh-body);
+}
+#ask .cite {
+  font: var(--text-small) var(--font-mono);
+}
+#ask .cite-wait,
+#ask .cite-no,
+#ask .ask-muted,
+#ask .ask-note,
+#ask .cite-note {
+  color: var(--muted);
+}
+#ask .cite-no {
+  text-decoration: line-through;
+}
+#ask .cite-ok {
+  text-align: left;
+  overflow-wrap: anywhere;
+  padding: 0 4px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--accent);
+}
+#ask .ask-note,
+#ask .cite-note {
+  margin: 8px 0 0;
+  font-size: var(--text-micro);
+  line-height: var(--lh-micro);
+}
+#ask .ask-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+#ask .ask-tray:empty,
+#ask .ask-row:empty {
+  display: none;
+}
+#ask .ask-err {
+  margin: 0;
+  width: 100%;
+}
+#ask .ask-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+@media (pointer: coarse) {
+  #ask button {
+    min-height: 44px;
+  }
+}
+@media (max-width: 760px) {
+  #ask {
+    top: 58px;
+    bottom: auto;
+    left: 10px;
+    right: 10px;
+    width: auto;
+    transform: none;
+    flex-direction: column;
+  }
+  #ask .ask-panel {
+    max-height: calc(60vh - 60px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  #ask button {
+    transition: none;
+  }
+}

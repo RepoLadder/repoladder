@@ -207,7 +207,7 @@ async function runExport() {
   console.log(`EXPORT_OK ${dir} (${files.length} board${files.length === 1 ? "" : "s"}, ${theme})`);
 }
 
-const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--help] [--version]`;
+const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export|serve> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--port n] [--no-open] [--no-ask] [--help] [--version]`;
 if (cmd === "--help" || cmd === "-h" || cmd === "help") { console.log(USAGE); process.exit(0); }
 if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version()); process.exit(0); }
 
@@ -269,6 +269,7 @@ switch (cmd) {
   case "query": {
     // read-only: never analyzes unless --fresh, never writes, and keeps stdout pure JSON
     const fail = (code: string, message: string): never => { console.error(`${code}: ${message}`); process.exit(2); };
+    if (flags.has("fresh") && process.env.REPOLADDER_READONLY === "1") fail("READ_ONLY", "query is read-only in this mode");
     const factsPath = join(out, "facts.json");
     let limit: number | undefined;
     if (flags.has("limit")) {
@@ -288,6 +289,14 @@ switch (cmd) {
     catch (e) { if (e instanceof QueryError) fail(e.code, e.message); throw e; }
     break;
   }
+  case "readguard": {
+    // the Ask agent's PreToolUse hook (src/serve/readguard.ts): the tool call on stdin, a deny on stdout
+    const { runGuard } = await import("./serve/readguard.ts");
+    const chunks: Buffer[] = [];
+    for await (const c of process.stdin) chunks.push(c as Buffer);
+    process.stdout.write(runGuard(Buffer.concat(chunks).toString("utf8"), root));
+    process.exit(0);
+  }
   case "analyze":
     exitOnFail(() => runAnalyze());
     break;
@@ -306,6 +315,35 @@ switch (cmd) {
   case "export":
     await runExport();
     process.exit(0);
+  case "serve": {
+    const portFlag = flags.get("port");
+    let port = 0;
+    if (portFlag !== undefined) {
+      port = portFlag === true || !/^\d+$/.test(portFlag) ? -1 : Number(portFlag);
+      if (port < 0 || port > 65535) { console.error("INVALID_OPTIONS: --port needs a number from 0 to 65535"); process.exit(2); }
+    }
+    const page = join(out, "diagram.html");
+    if (!existsSync(page)) {
+      console.error(`NO_MAP: no map at ${page}; building one with the folder-based grouping (run /map for a named one)`);
+      flags.set("default", true);
+      try { await runBuild({ files: 0 }); } catch (e) { if (e instanceof Exit) process.exit(e.status); throw e; }
+    }
+    const { startServer, pageFromFile } = await import("./serve/index.ts");
+    let running;
+    try { running = await startServer({ page: pageFromFile(page), port, ask: flags.has("no-ask") ? false : { root, out } }); }
+    catch (e) {
+      if ((e as NodeJS.ErrnoException).code === "EADDRINUSE") { console.error(`PORT_IN_USE: port ${port} is in use; pick another or omit --port`); process.exit(1); }
+      throw e;
+    }
+    console.log(`SERVE_OK ${running.url}`);
+    console.error("Press Ctrl+C to stop.");
+    if (!flags.has("no-open")) (await import("./serve/open.ts")).openBrowser(running.url);
+    const stop = async () => { await running.close(); console.log("SERVE_STOPPED"); process.exit(0); };
+    process.on("SIGINT", stop);
+    process.on("SIGTERM", stop);
+    process.on("SIGHUP", stop); // the agent runs in its own process group, so a closed terminal must stop it here
+    break;
+  }
   default:
     console.error(USAGE);
     process.exit(1);

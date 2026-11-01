@@ -6,7 +6,7 @@
 //   <board>~<sel>     that board with <node> or <a>.<b> selected, for things that live on several
 //                     boards (services, "elsewhere" boxes) or are selected away from their home board
 //   tour.<id>.<n>     step n (from 1) of a tour, while it plays (tourlink.ts)
-import { stripEmbed } from "./embed.ts";
+import { dropToken, stripEmbed } from "./embed.ts";
 import { STORY, st, type ViewerData } from "./state.ts";
 
 export interface Target { board: string; hit: string | null }
@@ -112,12 +112,13 @@ export function openHash(show: (id: string, back?: undefined, hit?: string | nul
 
 /** A shareable URL for the current view. Inside an artifact frame the top page is the one to share. */
 export function shareLink(): string {
-  let base = stripEmbed(location.href);
+  const clean = (u: string) => dropToken(stripEmbed(u));
+  let base = clean(location.href);
   try {
-    if (window.top && window.top !== window) base = stripEmbed(window.top.location.href);
+    if (window.top && window.top !== window) base = clean(window.top.location.href);
   } catch {
     // Cross-origin parent: the referrer is the artifact page unless it was cut to a bare origin.
-    try { if (document.referrer && new URL(document.referrer).pathname.length > 1) base = stripEmbed(document.referrer); } catch { /* keep ours */ }
+    try { if (document.referrer && new URL(document.referrer).pathname.length > 1) base = clean(document.referrer); } catch { /* keep ours */ }
   }
   const h = viewHash();
   return base.split("#")[0] + (h ? `#${h}` : "");

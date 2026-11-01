@@ -9,7 +9,7 @@ Please report vulnerabilities privately. Do not open a public issue, PR or Discu
 
 ## What to include
 
-- What is affected (the CLI, the viewer, the usage ping).
+- What is affected (the CLI, the viewer, the usage ping, `repoladder serve` and its Ask path).
 - Steps to reproduce, or a proof of concept.
 - The impact you expect.
 - Your Node version and OS, and the plugin commit if you know it.
@@ -29,9 +29,11 @@ Only the latest release of the plugin (`main`) and the latest `repoladder` npm v
 - The CLI and analyzer (`src/cli.ts`, `src/analyze/`, and the bundled `plugin/dist/` they ship as). For example: reading or writing outside the repo and its `.repoladder/` output, or executing code from the analyzed repo.
 - The viewer (`src/viewer/`) and the `diagram.html` it generates. For example: script injection from file names, paths or labels in an analyzed repo.
 - The opt-in usage ping: the client (`src/usage.ts`) and the endpoint (`server/ping/`, a Cloudflare Worker at `ping.repoladder.com`). For example: sending more than documented, or the endpoint accepting or storing more. See [PRIVACY.md](PRIVACY.md) for exactly what the ping sends.
+- `repoladder serve` and the Ask path (`src/serve/`). For example: reaching the server from another website or host name, getting past the access token, making the agent write files, run any command other than `repoladder query`, or read secret-looking files. The threat model is in [docs/serve-security.md](docs/serve-security.md).
 
 ## Out of scope
 
 - Your own Claude or Claude Artifact accounts and their sharing settings.
 - Third-party services and dependencies themselves. Report those upstream, and tell us if RepoLadder uses them unsafely.
-- Issues that need an already-compromised machine.
+- Claude Code's own behavior, including how it enforces the permissions RepoLadder passes it. Report that to Anthropic.
+- Issues that need an already-compromised machine, including anyone who already has your account or can read your terminal.

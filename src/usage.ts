@@ -1,6 +1,6 @@
 // The opt-in usage ping (PRIVACY.md). Nothing is sent unless the user said yes
 // and no opt-out env var is set. The payload is a fixed set of small values: never names, paths or code.
-// The only module allowed to reach the network; test/no-network.test.ts keeps analyze, build and model off it.
+// The only module that makes outbound requests; src/serve/ only listens on loopback (PRIVACY.md). test/no-network.test.ts keeps analyze, build and model off it.
 import { execFileSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
