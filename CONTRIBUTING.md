@@ -54,4 +54,4 @@ PRs written with AI tools are welcome. You are responsible for every line you su
 
 Report vulnerabilities privately, as described in [SECURITY.md](SECURITY.md).
 
-See the README's "Develop" section for the source layout and the rest.
+See [docs/development.md](docs/development.md) for the source layout and the rest.
