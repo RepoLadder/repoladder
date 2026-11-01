@@ -1,0 +1,196 @@
+/* Shared button skin, coarse-pointer sizes and the first side panel rhythm. */
+/* Shared button skin (the site's button.tsx variants): outline, ghost and filled, one disabled look, 44px on touch.
+   Each control's own rule below keeps only layout and size. */
+.tour-nav button,
+.focus-btn,
+.fbar button,
+.sbtn,
+.copy,
+.xmenu button,
+.zoom button,
+.hist button {
+  font: 500 var(--text-small)/1.25 var(--font-ui);
+  cursor: pointer;
+  transition: background-color .15s, color .15s;
+}
+.tour-nav button,
+.focus-btn,
+.fbar button,
+.sbtn,
+.copy {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+}
+.zoom button,
+.hist button,
+.xmenu button {
+  border: 0;
+  background: none;
+  color: var(--ink);
+}
+.tour-nav button:hover:not(:disabled),
+.focus-btn:hover:not(:disabled),
+.fbar button:hover:not(:disabled),
+.sbtn:hover:not(:disabled),
+.copy:hover:not(:disabled),
+.zoom button:hover:not(:disabled),
+.hist button:hover:not(:disabled),
+.xmenu button:hover:not(:disabled) {
+  background: var(--soft);
+}
+.tour-nav button.primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.tour-nav button.primary:hover:not(:disabled) {
+  background: var(--accent);
+  opacity: .9;
+}
+.tour-nav button:disabled,
+.focus-btn:disabled,
+.fbar button:disabled,
+.sbtn:disabled,
+.copy:disabled,
+.zoom button:disabled,
+.hist button:disabled,
+.xmenu button:disabled {
+  opacity: .5;
+  pointer-events: none;
+}
+@media (pointer: coarse) {
+  .tour-nav button,
+  .focus-btn,
+  .fbar button,
+  .sbtn,
+  .copy,
+  .xmenu button,
+  .zoom button,
+  .hist button {
+    min-height: 44px;
+  }
+  .zoom button,
+  .hist button {
+    min-width: 44px;
+  }
+}
+.zoom {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.zoom button {
+  width: 30px;
+  height: 28px;
+  font-size: var(--text-body);
+}
+.zoom button[hidden] {
+  display: none;
+}
+.zoom button:not([hidden]) ~ button:not([hidden]) {
+  border-left: 1px solid var(--line);
+}
+.zoom svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+  margin: auto;
+}
+#zfs .fs-in,
+#zfs[aria-pressed="true"] .fs-out {
+  display: none;
+}
+#zfs[aria-pressed="true"] .fs-in {
+  display: inline;
+}
+.zoom button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+.xmenu,
+.xnote,
+.xprev {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  font: var(--text-small) var(--font-ui);
+}
+.xmenu {
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+}
+.xmenu button,
+.xnote button,
+.xprev button {
+  border-radius: 8px;
+  padding: 6px 10px;
+  text-align: left;
+}
+.xnote button,
+.xprev button {
+  border: 0;
+  background: none;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+.xnote button:hover,
+.xprev button:hover {
+  background: var(--soft);
+}
+.xmenu button:focus-visible {
+  outline: 2px solid var(--accent);
+}
+.xmenu p,
+.xnote,
+.xprev p {
+  margin: 0;
+  color: var(--muted);
+}
+.xmenu p {
+  padding: 4px 10px;
+}
+.xnote {
+  z-index: 5;
+  padding: 2px 4px 2px 10px;
+}
+.xprev {
+  inset: 0;
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 12px;
+  border-radius: 0;
+  background: var(--paper);
+}
+.xprev img {
+  flex: 1;
+  min-height: 0;
+  max-width: 100%;
+  object-fit: contain;
+}
+.xprev button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+aside {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  max-height: calc(100vh - 90px);
+}

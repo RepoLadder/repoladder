@@ -2,6 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { THEMES, TYPE, tokenCss } from "../src/viewer/theme.ts";
+import { viewerCss } from "./helpers/viewercss.ts";
 
 const dir = new URL("../src/viewer/", import.meta.url);
 const read = (f: string) => readFileSync(new URL(f, dir), "utf8");
@@ -30,12 +31,11 @@ function sizes(css: string): Array<[string, string]> {
 
 test("every chrome font size uses the type scale", () => {
   let seen = 0;
-  for (const f of ["styles.css", "walk.css", "dial.css", "edgecue.css"]) {
-    for (const [sel, size] of sizes(read(f))) {
-      seen++;
-      if (ALLOW.has(sel)) continue;
-      assert.ok(/^var\(--text-(micro|small|body|lg|h3)\)$|^inherit$|^[\d.]+(em|%)$/.test(size), `${f} ${sel}: ${size}`);
-    }
+  // the diagram's own styles (board.css, stops.css) are sized by the box-size model
+  for (const [sel, size] of sizes(viewerCss("styles.css", ["board.css", "stops.css"]))) {
+    seen++;
+    if (ALLOW.has(sel)) continue;
+    assert.ok(/^var\(--text-(micro|small|body|lg|h3)\)$|^inherit$|^[\d.]+(em|%)$/.test(size), `${sel}: ${size}`);
   }
   assert.ok(seen > 40);
 });
@@ -56,6 +56,6 @@ test("the type scale is not a theme group", () => {
 });
 
 test("the search input stays at least 16px (iOS focus zoom)", () => {
-  assert.ok(/\.sbox input\{[^}]*font-size:var\(--text-body\)|\.sbox input \{[^}]*font-size: var\(--text-body\)/.test(read("styles.css")));
+  assert.ok(/\.sbox input\{[^}]*font-size:var\(--text-body\)|\.sbox input \{[^}]*font-size: var\(--text-body\)/.test(viewerCss()));
   assert.equal(TYPE["text-body"], "16px");
 });
