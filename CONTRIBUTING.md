@@ -32,6 +32,9 @@ New analysis or model behavior comes with tests (`test/*.test.ts`, fixtures unde
 
 Any change to what a diagram looks like includes before/after screenshots. On the base branch run `npm run gallery` and `npm run shots`, and move `.gallery/shots` aside. After your change run `npm run gallery && npm run shots -- --compare <before shots dir>`. Attach the side-by-side PNGs from `.gallery/shots/compare/` to the PR under "How verified", or say that nothing changed. On a fresh machine run `npx playwright install chromium` once.
 
+## Viewer guard
+`npm run guardbase` checks the viewer's structure against `test/baselines/viewer-structure.json`: every board's fit view (1280x800 and 390x844), every wire's route and the drill-in and drill-out animations (tolerance half a board unit; durations and easings exactly). CI runs it with `npm run motioncheck` as the `viewer guard` job for PRs touching `src/viewer/**` or `src/build/**`, and the `test, typecheck, build` check fails when it fails. Pixels (colors, radii, type) may change freely. A deliberate change to fit, routing or timing re-records the baseline in the same PR with `npm run guardbase -- --update` (refused under `CI`); the JSON diff is part of review and the PR says why. Screenshot comparison stays local (`npm run shots -- --compare`, `npm run design -- --compare`).
+
 ## Issues
 
 Use the bug or feedback forms. Questions and ideas go to [Discussions](https://github.com/repoladder/repoladder/discussions). The maintainer reads every issue and labels it; not every idea gets built. Opening an issue before a large PR is welcome.
