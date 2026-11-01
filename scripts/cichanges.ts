@@ -12,6 +12,8 @@ export type Entry = { status: string; path: string };
 export type Decision = { code: boolean; windows: boolean };
 
 // Added or modified files here cannot affect any test, typecheck, build or install check.
+// Caveat: a PR touching only these skips the matrix jobs, whose required names ("plugin install (ubuntu-latest)") then never
+// report, so branch protection keeps it BLOCKED. Pair a docs-only change with a file outside this list, or merge it as admin.
 // Not server/ (tests import server/ping/worker.ts).
 const SKIP = [/^docs\//, /^CLAUDE\.md$/];
 

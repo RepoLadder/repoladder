@@ -20,7 +20,7 @@ test("states: unique kebab-case ids, a valid mode and a known fixture", () => {
 });
 
 test("SEL: every selector is a non-empty string", () => {
-  for (const k of ["board", "hit", "searchOpen", "search", "searchInput", "sheet", "grip", "walkCard", "zoom", "dial", "copyRow", "filterBar"]) {
+  for (const k of ["board", "hit", "searchOpen", "search", "searchInput", "sheet", "grip", "inspectorToggle", "walkCard", "zoom", "topbar", "actions", "tourMenu", "tbtours", "tbfilters", "dial", "copyRow", "filterBar"]) {
     const v = (SEL as Record<string, unknown>)[k];
     assert.ok(typeof v === "string" && v.length > 0, k);
   }

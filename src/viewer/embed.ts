@@ -39,4 +39,5 @@ export function installEmbed(): void {
   bar.className = "tbar";
   document.querySelector("main")!.prepend(bar);
   bar.append(document.getElementById("crumbs")!);
+  bar.append(document.getElementById("zexp")!);
 }

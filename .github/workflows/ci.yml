@@ -140,7 +140,10 @@ jobs:
           key: playwright-${{ runner.os }}-1.64.1
       - run: npx playwright install --with-deps chromium
       - run: npm run guardbase
+      - run: npm run barcheck
+      - run: npm run clearcheck
       - run: npm run motioncheck
+      - run: npm run zoomcheck
 
   gallery-default:
     # Default-grouping gate (#361): clones the pinned gallery repos and runs analyze + score only (no layout),

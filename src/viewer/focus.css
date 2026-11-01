@@ -54,8 +54,6 @@ g.sel.node {
   margin: auto;
   display: flex;
   flex-direction: column;
-  background: var(--surface);
-  border-radius: var(--radius);
   overflow: hidden;
 }
 .sbox input {

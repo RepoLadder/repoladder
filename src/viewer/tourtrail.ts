@@ -79,8 +79,8 @@ function place(): void {
   // on a phone the middle levels fold into "…" before the step's own name is cut short
   const fits = (plan: number[]) => { el.innerHTML = pathHtml(segs, plan); return el.scrollWidth <= el.clientWidth + 0.5; };
   el.innerHTML = pathHtml(segs, collapse(segs.length, fits));
-  // on a phone the strip sits on the canvas, measured by tour.ts before this line was in it
-  const c = card.parentElement;
+  // on a phone the strip sits in the canvas's dock, measured by tour.ts before this line was in it
+  const c = document.getElementById("canvas");
   if (c?.style.getPropertyValue("--walk-h")) c.style.setProperty("--walk-h", `${card.offsetHeight}px`);
 }
 

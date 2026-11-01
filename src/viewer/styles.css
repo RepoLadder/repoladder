@@ -3,6 +3,7 @@
 @import "./walk.css";
 @import "./stops.css";
 @import "./dial.css";
+@import "./edgecue.css";
 @import "./chrome.css";
 @import "./buttons.css";
 @import "./panel.css";
@@ -15,3 +16,8 @@
 @import "./cards.css";
 @import "./trail.css";
 @import "./footer.css";
+@import "./canvas.css";
+@import "./topbar.css";
+@import "./popover.css";
+@import "./inspector.css";
+@import "./phone.css";
