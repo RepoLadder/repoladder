@@ -23,6 +23,7 @@ const ALLOW: Record<string, string> = {
 };
 const CHILD_PROCESS_OK: Record<string, string> = {
   "src/analyze/files.ts": "runs git locally (ls-files, rev-parse) to list the repo's files; no network",
+  "src/serve/ask.ts": "spawns the user's own claude CLI headless (argv array, no shell) to answer a question under repoladder serve; see PRIVACY.md",
   "src/serve/open.ts": "spawns the platform's browser opener with an argv array and the local URL; no network code of its own",
   "src/install.ts": "runs npm install for the plugin's runtime deps on the explicit install command, outside the engine",
 };
@@ -30,6 +31,8 @@ const DYNAMIC_IMPORT_OK: Record<string, string> = {
   "src/build/export.ts": "import(name) loads optional playwright to render local SVGs to PNG with page.setContent; it never navigates",
 };
 const NETWORK_CAPABLE = ["src/usage.ts", "src/cli.ts"];
+// spawn with an argv array is the only way src/serve starts a process: a shell string is never built
+const SHELL_EXEC = ["exec", "execSync", "execFile", "execFileSync"];
 const SERVE_HTTP_NAMES = ["createServer", "STATUS_CODES"];
 
 const bareName = (spec: string) => spec.replace(/^node:/, "");
@@ -89,6 +92,10 @@ export function scanSource(file: string, text: string): string[] {
       if (/^node:/.test(n.text) && isNetworkModule(n.text)) report(n, `mentions ${n.text}`);
     } else if (ts.isIdentifier(n) && NETWORK_GLOBALS.includes(n.text) && !isKey(n)) {
       report(n, `uses ${n.text}`);
+    } else if (inServe && ts.isIdentifier(n) && SHELL_EXEC.includes(n.text) && !isKey(n)) {
+      report(n, `uses ${n.text}`);
+    } else if (inServe && ts.isPropertyAssignment(n) && (ts.isIdentifier(n.name) || ts.isStringLiteral(n.name)) && n.name.text === "shell" && n.initializer.kind !== ts.SyntaxKind.FalseKeyword) {
+      report(n, "sets shell");
     }
     ts.forEachChild(n, walk);
   };
@@ -202,6 +209,32 @@ test("src/serve may listen on loopback via named node:http imports and nothing e
   assert.ok(found.includes("src/analyze/imp.ts:1: imports src/serve/index.ts (network-capable)"));
   assert.ok(found.includes("src/build/imp2.ts:1: imports src/serve/open.ts (network-capable)"));
   assert.ok(found.includes("src/lib.ts:1: imports src/serve/index.ts (network-capable)"));
+});
+
+test("src/serve may spawn only with an argv array: exec* and a shell option are reported", () => {
+  const root = mkdtempSync(join(tmpdir(), "cw-nonet-exec-"));
+  mkdirSync(join(root, "src/serve"), { recursive: true });
+  const bad: [string, string][] = [
+    ['import { exec } from "node:fs";', "uses exec"],
+    ["cp.execSync(cmd);", "uses execSync"],
+    ["cp.execFile(a, b);", "uses execFile"],
+    ["cp.execFileSync(a, b);", "uses execFileSync"],
+    ["spawn(a, b, { shell: true });", "sets shell"],
+    ['spawn(a, b, { "shell": process.platform === "win32" });', "sets shell"],
+  ];
+  writeFileSync(join(root, "src/serve/bad.ts"), bad.map(([l]) => l).join("\n") + "\n");
+  writeFileSync(join(root, "src/serve/good.ts"), ["spawn(a, b, { shell: false, cwd: c });", "const o = { exec: 1 };"].join("\n") + "\n");
+  const found = scanTree(root);
+  assert.deepEqual(found.filter((f) => f.includes("good.ts")), []);
+  bad.forEach(([line, what], i) => assert.ok(found.includes(`src/serve/bad.ts:${i + 1}: ${what}`), `not caught: ${line}`));
+});
+
+test("claude.ts and stage.ts stay free of child_process", () => {
+  const root = fileURLToPath(new URL("..", import.meta.url));
+  for (const f of ["src/serve/claude.ts", "src/serve/stage.ts"]) {
+    assert.ok(!(f in CHILD_PROCESS_OK), f);
+    assert.doesNotMatch(readFileSync(join(root, f), "utf8"), /child_process/, f);
+  }
 });
 
 test("analyze, build and model make no network calls", () => {

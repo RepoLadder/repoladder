@@ -207,7 +207,7 @@ async function runExport() {
   console.log(`EXPORT_OK ${dir} (${files.length} board${files.length === 1 ? "" : "s"}, ${theme})`);
 }
 
-const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export|serve> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--port n] [--no-open] [--help] [--version]`;
+const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export|serve> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--port n] [--no-open] [--no-ask] [--help] [--version]`;
 if (cmd === "--help" || cmd === "-h" || cmd === "help") { console.log(USAGE); process.exit(0); }
 if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version()); process.exit(0); }
 
@@ -269,6 +269,7 @@ switch (cmd) {
   case "query": {
     // read-only: never analyzes unless --fresh, never writes, and keeps stdout pure JSON
     const fail = (code: string, message: string): never => { console.error(`${code}: ${message}`); process.exit(2); };
+    if (flags.has("fresh") && process.env.REPOLADDER_READONLY === "1") fail("READ_ONLY", "query is read-only in this mode");
     const factsPath = join(out, "facts.json");
     let limit: number | undefined;
     if (flags.has("limit")) {
@@ -321,7 +322,7 @@ switch (cmd) {
     }
     const { startServer, pageFromFile } = await import("./serve/index.ts");
     let running;
-    try { running = await startServer({ page: pageFromFile(page), port }); }
+    try { running = await startServer({ page: pageFromFile(page), port, ask: flags.has("no-ask") ? false : { root, out } }); }
     catch (e) {
       if ((e as NodeJS.ErrnoException).code === "EADDRINUSE") { console.error(`PORT_IN_USE: port ${port} is in use; pick another or omit --port`); process.exit(1); }
       throw e;
