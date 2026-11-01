@@ -85,7 +85,7 @@ const size = () => [st.svgEl.clientWidth, st.svgEl.clientHeight] as const;
  */
 const fitFor = (cw: number, ch: number) => {
   const open = cw < 760 ? openHeight(ch) : ch;
-  // Everything is read by zooming in, so a phone opens it whole too
+  // A narrow canvas opens at the readable zoom, cropped; the rest is a pan away and edgecue.ts marks each clipped side.
   let v = cw < 760 && !onEvery() ? readableView(whole, cw, open, undefined, boxes()) : [...whole];
   const cropped = v[2] < whole[2] - 0.5 || v[3] < whole[3] - 0.5;
   // a cropped story opens on its first sentence, not on actors with arrows leaving the screen (#288)
