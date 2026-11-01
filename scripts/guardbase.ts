@@ -31,7 +31,7 @@ async function settledView(p: Page): Promise<number[]> {
 
 const wires = (p: Page): Promise<Record<string, string>> => p.evaluate(() => {
   const seen: Record<string, number> = {}, out: Record<string, string> = {};
-  const list = [...document.querySelectorAll("svg.board g.wire[data-hit]")].map((g) => [g.getAttribute("data-hit")!, g.querySelector("path.line")?.getAttribute("d") ?? ""] as const);
+  const list = [...document.querySelectorAll("svg.board g.wire[data-hit]")].filter((g) => g.querySelector(":scope > path.line")).map((g) => [g.getAttribute("data-hit")!, g.querySelector(":scope > path.line")!.getAttribute("d") ?? ""] as const);
   for (const [k, d] of list.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0))) {
     seen[k] = (seen[k] ?? 0) + 1;
     out[seen[k] > 1 ? `${k}#${seen[k]}` : k] = d;

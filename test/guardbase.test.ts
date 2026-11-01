@@ -55,6 +55,7 @@ test("the committed baseline has the tourapp boards, both viewports, wires and d
   assert.ok(Object.keys(b.fit).length >= 2 && b.fit.root);
   for (const v of Object.values(b.fit)) assert.deepEqual(Object.keys(v).sort(), ["1280x800", "390x844"]);
   assert.ok(Object.values(b.wires).some((w) => Object.keys(w).length > 0));
+  for (const w of Object.values(b.wires)) for (const d of Object.values(w)) assert.ok(d.length > 0, "a wire without a path (a label group?)");
   assert.ok(b.timing.in.length > 0 && b.timing.out.length > 0);
   assert.ok(Object.keys(b.tour).length > 0);
 });
