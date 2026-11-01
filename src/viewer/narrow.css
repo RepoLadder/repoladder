@@ -1,0 +1,199 @@
+/* Narrow screens (the phone sheet) and touch targets. */
+/* Narrow screens (sheet.ts): a full-width canvas under a two-row header, and the panel as a bottom sheet. */
+.grip {
+  display: none;
+}
+@media (max-width: 760px) {
+  html,
+  body {
+    overflow: hidden;
+  }
+  body {
+    height: 100dvh;
+    padding-inline: 0;
+  }
+  header {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    padding: 10px 16px 8px;
+  }
+  .brand .mk {
+    width: 20px;
+    height: 20px;
+  }
+  h1 {
+    flex: 1;
+    min-width: 0;
+    font-size: var(--text-lg);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sbtn {
+    order: 1;
+    padding: 4px 12px;
+  }
+  .sbtn kbd,
+  .meta {
+    display: none;
+  }
+  .crumbs {
+    order: 2;
+    flex: 0 0 100%;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    font-size: var(--text-small);
+  }
+  main {
+    display: block;
+    position: relative;
+    padding: 0 0 var(--peek, 148px);
+    min-height: 0;
+  }
+  .canvas {
+    height: 100%;
+    min-height: 0;
+    border-radius: 0;
+    border-inline: 0;
+    border-bottom: 0;
+  }
+  aside {
+    position: fixed;
+    inset: auto 0 0;
+    z-index: 5;
+    height: var(--sheet-h, 148px);
+    max-height: none;
+    padding: 0 16px 24px;
+    gap: 10px;
+    overflow: hidden auto;
+    overscroll-behavior: contain;
+    background: var(--ground);
+    border-top: 1px solid var(--line);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -6px 24px var(--shadow);
+    box-sizing: border-box;
+    transition: height .25s ease;
+  }
+  aside.dragging {
+    transition: none;
+  }
+  .grip {
+    all: unset;
+    display: flex;
+    justify-content: center;
+    flex: none;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    margin: 0 -16px -4px;
+    padding: 10px 0 12px;
+    background: var(--ground);
+    cursor: grab;
+    touch-action: none;
+  }
+  .grip i {
+    width: 40px;
+    height: 5px;
+    border-radius: 3px;
+    background: var(--line);
+  }
+  .grip:focus-visible i {
+    background: var(--accent);
+  }
+  /* the title, then its Open button, so both fit in the peek height */
+  #details > .panel:not(.box) {
+    display: flex;
+    flex-direction: column;
+  }
+  #details > .panel:not(.box) > h3 {
+    order: -2;
+  }
+  #details > .panel:not(.box) > p:has(> .open) {
+    order: -1;
+  }
+  #details > .box > .box-body {
+    display: flex;
+    flex-direction: column;
+  }
+  #details > .box > .box-body > h3 {
+    order: -2;
+  }
+  #details > .box > .box-body > p:has(> .open) {
+    order: -1;
+  }
+  .panel {
+    padding: 14px 14px 12px;
+  }
+  /* no double-tap on a phone: Open is the way in, so it reads as a button */
+  #details .open[data-open],
+  #details .open[data-goto],
+  #details .open[data-part] {
+    padding: 8px 14px;
+    border-radius: var(--radius);
+    background: var(--accent);
+    color: var(--accent-ink);
+    text-decoration: none;
+  }
+  #details .open[data-open]:hover,
+  #details .open[data-goto]:hover,
+  #details .open[data-part]:hover {
+    opacity: .9;
+  }
+}
+@media (max-width: 760px) and (pointer: coarse) {
+  #details .open[data-open],
+  #details .open[data-goto],
+  #details .open[data-part] {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+}
+/* Touch: finger-sized targets. */
+@media (pointer: coarse) {
+  .box > summary {
+    min-height: 24px;
+  }
+  .brand {
+    min-width: 40px;
+    min-height: 40px;
+    margin-block: -10px;
+    justify-content: center;
+    align-items: center;
+  }
+  .zoom button {
+    width: 44px;
+    height: 44px;
+    font-size: var(--text-lg);
+  }
+  .zoom svg {
+    width: 18px;
+    height: 18px;
+  }
+  .xnote button,
+  .xprev button {
+    min-height: 40px;
+  }
+  .item {
+    padding-block: 10px;
+  }
+  .copy {
+    line-height: 26px;
+    padding: 0 12px;
+  }
+  .open {
+    display: inline-block;
+    padding: 6px 0;
+  }
+  .crumbs button,
+  h1 button {
+    padding-block: 4px;
+  }
+  .tour-nav button {
+    padding: 9px 14px;
+  }
+}

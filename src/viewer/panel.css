@@ -1,0 +1,118 @@
+/* Side panel rhythm and boxes. */
+section h2,
+.panel h4 {
+  font: 600 var(--text-micro) var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+/* one rhythm: 24px between blocks; an eyebrow pulls 16px back so it sits 8px above its card */
+#details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+#details > h2 {
+  margin: 0 0 -16px;
+}
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px 16px 14px;
+}
+.panel h3 {
+  font-family: var(--font-display);
+  margin: 0 0 6px;
+  font-size: var(--text-h3);
+  line-height: 1.2;
+  font-weight: 650;
+  letter-spacing: -.015em;
+  overflow-wrap: anywhere;
+}
+.panel h4 {
+  margin: 16px 0 6px;
+}
+.panel p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.list li + li {
+  border-top: 1px solid var(--soft);
+}
+.item {
+  all: unset;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 6px;
+  margin-inline: -6px;
+  border-radius: 6px;
+  cursor: pointer;
+  width: calc(100% + 12px);
+  box-sizing: border-box;
+}
+.item > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.item:hover {
+  background: var(--soft);
+}
+.item.minor span:first-child {
+  color: var(--muted);
+}
+.open {
+  all: unset;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+  text-decoration-thickness: 1.5px;
+}
+.open:hover {
+  text-decoration-color: currentColor;
+}
+.mono {
+  font-family: var(--font-mono);
+}
+.num {
+  font: var(--text-micro) var(--font-ui);
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+.none {
+  padding: 6px 0;
+}
+.ev {
+  font: var(--text-micro)/1.55 var(--font-mono);
+  overflow-x: auto;
+  white-space: nowrap;
+  color: var(--ink);
+  padding: 4px 0;
+}
+.ev span {
+  color: var(--muted);
+}
+.files summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 550;
+  margin-bottom: 4px;
+}
+.files .ev {
+  max-height: 220px;
+  overflow: auto;
+}
