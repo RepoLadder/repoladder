@@ -103,28 +103,45 @@ export function scanSource(file: string, text: string): string[] {
   return out;
 }
 
+// the served in-page Ask client: api.ts makes the request; main.ts binds the page's fetch once and view.ts only takes it as an injected dependency (`typeof fetch`, passed to api.ts)
+const VIEWER_NETWORK_OK = ["src/viewer/ask/api.ts", "src/viewer/ask/main.ts", "src/viewer/ask/view.ts"];
+const VIEWER_DIR = "src/viewer";
+
+const tsFiles = (root: string, dir: string): string[] =>
+  existsSync(join(root, dir)) ? readdirSync(join(root, dir), { recursive: true, encoding: "utf8" }).filter((f) => f.endsWith(".ts")).map((f) => `${dir}/${f.replaceAll("\\", "/")}`) : [];
+
+/** Every .ts file under src/ (the engine, src/serve, the viewer and the top-level modules). */
 export function scanTree(root: string): string[] {
-  const files: string[] = [];
-  for (const dir of ENGINE_DIRS) {
-    if (!existsSync(join(root, dir))) continue;
-    for (const f of readdirSync(join(root, dir), { recursive: true, encoding: "utf8" })) {
-      if (f.endsWith(".ts")) files.push(`${dir}/${f.replaceAll("\\", "/")}`);
-    }
-  }
-  if (existsSync(join(root, SERVE_DIR))) {
-    for (const f of readdirSync(join(root, SERVE_DIR), { recursive: true, encoding: "utf8" })) {
-      if (f.endsWith(".ts")) files.push(`${SERVE_DIR}/${f.replaceAll("\\", "/")}`);
-    }
-  }
-  if (existsSync(join(root, "src"))) {
-    for (const f of readdirSync(join(root, "src"), { withFileTypes: true })) {
-      if (f.isFile() && f.name.endsWith(".ts")) files.push(`src/${f.name}`);
-    }
-  }
+  const files = tsFiles(root, "src");
   return files
-    .filter((f) => !(f in ALLOW))
+    .filter((f) => !(f in ALLOW) && !VIEWER_NETWORK_OK.includes(f))
     .sort()
     .flatMap((f) => scanSource(f, readFileSync(join(root, f), "utf8")));
+}
+
+/** The published page is browser code: no Node imports, no src/serve, and the top-level modules never import the Ask client. */
+export function scanViewer(root: string): string[] {
+  const out: string[] = [];
+  for (const file of tsFiles(root, VIEWER_DIR).sort()) {
+    const sf = ts.createSourceFile(file, readFileSync(join(root, file), "utf8"), ts.ScriptTarget.Latest, true);
+    const topLevel = posix.dirname(file) === VIEWER_DIR;
+    const check = (n: TS.Node, spec: string) => {
+      const line = sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1;
+      if (/^node:/.test(spec) || ["fs", "path", "os", "child_process", "http", "https", "net", "crypto"].includes(spec)) out.push(`${file}:${line}: imports ${spec}`);
+      if (spec.startsWith(".")) {
+        const resolved = posix.normalize(posix.join(posix.dirname(file), spec));
+        if (resolved.startsWith("src/serve/")) out.push(`${file}:${line}: imports ${resolved}`);
+        if (topLevel && resolved.startsWith(`${VIEWER_DIR}/ask/`)) out.push(`${file}:${line}: imports the Ask client ${resolved}`);
+      }
+    };
+    const walk = (n: TS.Node) => {
+      if ((ts.isImportDeclaration(n) || ts.isExportDeclaration(n)) && n.moduleSpecifier && ts.isStringLiteralLike(n.moduleSpecifier)) check(n, n.moduleSpecifier.text);
+      else if (ts.isCallExpression(n) && n.expression.kind === ts.SyntaxKind.ImportKeyword && n.arguments[0] && ts.isStringLiteralLike(n.arguments[0])) check(n, n.arguments[0].text);
+      ts.forEachChild(n, walk);
+    };
+    walk(sf);
+  }
+  return out;
 }
 
 test("the scanner catches network code and skips comments, strings and keys", () => {
@@ -244,6 +261,42 @@ test("analyze, build and model make no network calls", () => {
     [],
     "the engine must only read the files it is given (PRIVACY.md); network code belongs in src/usage.ts behind consent, and an exception needs an entry with its reason in this file's allowlists",
   );
+});
+
+test("the whole of src/ is scanned: only src/serve, src/usage.ts and src/cli.ts may import a network module, and only src/viewer/ask/api.ts may use a network global", () => {
+  const root = mkdtempSync(join(tmpdir(), "cw-nonet-all-"));
+  for (const d of ["src/viewer/ask", "src/other"]) mkdirSync(join(root, d), { recursive: true });
+  writeFileSync(join(root, "src/viewer/page.ts"), 'fetch("x");\n');
+  writeFileSync(join(root, "src/viewer/ask/api.ts"), 'fetch("/api/ask");\n');
+  writeFileSync(join(root, "src/viewer/ask/other.ts"), 'new WebSocket("x");\n');
+  writeFileSync(join(root, "src/other/net.ts"), 'import net from "node:net";\nimport { x } from "../serve/index.ts";\n');
+  const found = scanTree(root);
+  assert.ok(found.includes("src/viewer/page.ts:1: uses fetch"));
+  assert.ok(found.includes("src/viewer/ask/other.ts:1: uses WebSocket"));
+  assert.ok(found.includes("src/other/net.ts:1: imports node:net"));
+  assert.ok(found.includes("src/other/net.ts:2: imports src/serve/index.ts (network-capable)"));
+  assert.ok(!found.some((f) => f.startsWith("src/viewer/ask/api.ts")));
+});
+
+test("viewer scan: no Node imports, no src/serve, and top-level modules never import the Ask client", () => {
+  const root = mkdtempSync(join(tmpdir(), "cw-nonet-viewer-"));
+  mkdirSync(join(root, "src/viewer/ask"), { recursive: true });
+  writeFileSync(join(root, "src/viewer/bad.ts"), 'import { readFileSync } from "node:fs";\nimport { s } from "../serve/index.ts";\nimport { a } from "./ask/api.ts";\nexport { b } from "./ask/panel.ts";\nconst m = await import("./ask/lazy.ts");\n');
+  writeFileSync(join(root, "src/viewer/good.ts"), 'import { x } from "./box.ts";\nimport type { T } from "../model/schema.ts";\n');
+  writeFileSync(join(root, "src/viewer/ask/inner.ts"), 'import { a } from "./api.ts";\nimport { fs } from "fs";\n');
+  const found = scanViewer(root);
+  assert.deepEqual(found, [
+    "src/viewer/ask/inner.ts:2: imports fs",
+    "src/viewer/bad.ts:1: imports node:fs",
+    "src/viewer/bad.ts:2: imports src/serve/index.ts",
+    "src/viewer/bad.ts:3: imports the Ask client src/viewer/ask/api.ts",
+    "src/viewer/bad.ts:4: imports the Ask client src/viewer/ask/panel.ts",
+    "src/viewer/bad.ts:5: imports the Ask client src/viewer/ask/lazy.ts",
+  ]);
+});
+
+test("the published viewer code follows its import boundaries", () => {
+  assert.deepEqual(scanViewer(fileURLToPath(new URL("..", import.meta.url))), []);
 });
 
 test("every allowlist entry still exists", () => {

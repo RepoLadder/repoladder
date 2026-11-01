@@ -19,11 +19,15 @@ The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never
 While `repoladder serve` runs, it can answer a question about your repo with your own Claude Code. The flow: your browser, then the local server on your machine, then your own `claude` command, then Anthropic under your own Claude account and plan. RepoLadder never sees or stores a key or a sign-in.
 
 - **What Claude can do here:** read files, search them, and run `repoladder query` in your repo. With its default settings it cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar).
-- **What leaves your machine:** what Claude Code itself sends when it reads the files it needs to answer. RepoLadder sends nothing of its own.
+- **What leaves your machine:** only what your own Claude Code already sends when it answers: your question and the file excerpts it reads, to Anthropic, under your own account. RepoLadder sends nothing of its own and stores nothing.
+- **Where it runs:** the page, the server and the agent all run on your machine. The Ask path exists only while `repoladder serve` runs, and `--no-ask` turns it off.
+- **Who can reach it:** only your own machine, with a random token made for each run. The token is printed only in your terminal. Pages on other websites cannot use it, and requests that carry a foreign origin are refused.
+- **The browser opener:** the link (token included) is also handed to your browser opener, so for a moment it is visible in the process list. On a shared machine, use `--no-open` and open the link yourself.
+- **Logs:** your question text and the token are never logged.
+- **Limits:** one question at a time, up to 2,000 characters; a stopped or timed-out question also stops everything Claude started for it.
 - **Where it shows up:** the conversation appears in Claude Code's own session history for that folder.
 - **Your repo's own Claude settings are not loaded** for these questions; your personal Claude Code settings still apply, so any extra permissions you have granted there (a shell command or tool you always allow) apply to these questions too.
-- **When it exists:** only while `repoladder serve` runs, and only on your machine behind the same token. `--no-ask` turns it off.
-- **How the limits are enforced, honestly:** by Claude Code's own permission system. Our tests pin the exact arguments we pass, and the maintainers check the behavior by hand against a real install; a test cannot prove Claude Code enforces them.
+- **How the limits are enforced, honestly:** by Claude Code's own permission system. RepoLadder's tests prove the exact settings it passes (see [docs/serve-security.md](docs/serve-security.md)), and the maintainers check real enforcement by hand against a real install; a test cannot prove Claude Code enforces them. The Claude Code version and date of that check are recorded in that file once it is done.
 
 ## Usage stats: off unless you say yes
 

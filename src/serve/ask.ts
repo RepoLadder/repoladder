@@ -22,7 +22,9 @@ export type AskConfig = {
 type Handler = (req: IncomingMessage, res: ServerResponse) => void;
 export type Ask = { routes: Record<string, Handler>; close(): void };
 
-const MAX_BODY = 64 * 1024;
+const MAX_BODY = 16 * 1024;
+const MAX_QUESTION = 2000;
+const POSIX = process.platform !== "win32";
 const MAX_TOOLS = 25;
 const MAX_CONVERSATIONS = 20;
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -41,20 +43,29 @@ const timeoutMs = () => {
   return Number.isInteger(n) && n > 0 ? n : DEFAULT_TIMEOUT_MS;
 };
 
-const killChild = (c: ChildProcess) => {
-  if (c.exitCode !== null || c.signalCode !== null) return;
-  c.kill("SIGTERM");
-  setTimeout(() => { if (c.exitCode === null && c.signalCode === null) c.kill("SIGKILL"); }, 2000).unref();
+const exited = (c: ChildProcess) => c.exitCode !== null || c.signalCode !== null;
+/** Signals the child, or on POSIX its whole process group (the child leads its own group, so a shell or tool it started dies with it). */
+const signal = (c: ChildProcess, sig: NodeJS.Signals, group: boolean) => {
+  try {
+    if (group && POSIX && c.pid) process.kill(-c.pid, sig);
+    else c.kill(sig);
+  } catch { /* already gone */ }
+};
+const killChild = (c: ChildProcess, group = false) => {
+  if (exited(c) && !group) return;
+  signal(c, "SIGTERM", group);
+  setTimeout(() => { if (group || !exited(c)) signal(c, "SIGKILL", group); }, 2000).unref();
 };
 
 type Convo = { sessionUuid: string; lastUsed: number };
 
 export function createAsk(cfg: AskConfig): Ask {
-  const staged: Staged | null = stageAgentCommand({ out: cfg.out, node: cfg.node ?? process.execPath, cli: cfg.cli ?? process.argv[1] });
+  const staged: Staged | null = stageAgentCommand({ out: cfg.out, root: cfg.root, node: cfg.node ?? process.execPath, cli: cfg.cli ?? process.argv[1] });
   const convos = new Map<string, Convo>();
   const live = new Set<ChildProcess>();
   const bin = () => process.env.REPOLADDER_CLAUDE_BIN || "claude";
   const env = () => ({ ...childEnv(process.env), ...cfg.extraEnv });
+  let busy = false;
   let status: { at: number; body: Record<string, unknown> } | undefined;
 
   const probe = (): Promise<Record<string, unknown>> => new Promise((resolve) => {
@@ -89,7 +100,13 @@ export function createAsk(cfg: AskConfig): Ask {
     req.on("data", (d: Buffer) => {
       if (over) return;
       size += d.length;
-      if (size > MAX_BODY) { over = true; res.setHeader("Connection", "close"); bad(res, 413, "TOO_LARGE", "That question is too large."); return; }
+      if (size > MAX_BODY) {
+        over = true;
+        res.setHeader("Connection", "close");
+        res.on("finish", () => req.destroy());
+        bad(res, 413, "BODY_TOO_LARGE", "That question is too large.");
+        return;
+      }
       chunks.push(d);
     });
     req.on("end", () => { if (!over) then(Buffer.concat(chunks).toString("utf8")); });
@@ -98,12 +115,15 @@ export function createAsk(cfg: AskConfig): Ask {
 
   const askRoute: Handler = (req, res) => {
     if (!/^application\/json\s*(;|$)/i.test(req.headers["content-type"] ?? "")) return bad(res, 415, "BAD_CONTENT_TYPE", "Send the question as application/json.");
-    readBody(req, res, (raw) => {
+    readBody(req, res, (raw) => { try { handle(raw); } catch { if (!res.headersSent) bad(res, 500, "INTERNAL", "Something went wrong inside repoladder serve."); else res.end(); } });
+    function handle(raw: string) {
       let body: any;
       try { body = JSON.parse(raw); } catch { return bad(res, 400, "BAD_QUESTION", "The request body is not valid JSON."); }
       const question = typeof body?.question === "string" ? body.question.trim() : "";
       if (!question || question.includes("\0")) return bad(res, 400, "BAD_QUESTION", "Ask a question as a non-empty string.");
-      if (body.conversation !== undefined && typeof body.conversation !== "string") return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
+      if (question.length > MAX_QUESTION) return bad(res, 400, "QUESTION_TOO_LONG", `That question is too long. Keep it under ${MAX_QUESTION} characters.`);
+      if (body.conversation !== undefined && (typeof body.conversation !== "string" || !/^[0-9a-f]{16}$/.test(body.conversation))) return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
+      if (busy) return bad(res, 429, "ASK_BUSY", "Claude is still answering the last question. Wait for it to finish or stop it.");
       let id: string, convo: Convo, resume: boolean;
       if (body.conversation !== undefined) {
         const found = convos.get(body.conversation);
@@ -125,10 +145,12 @@ export function createAsk(cfg: AskConfig): Ask {
         return json(res, 200, { available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE });
       }
       stream(res, question, id, convo, resume);
-    });
+    }
   };
 
   function stream(res: ServerResponse, question: string, id: string, convo: Convo, resume: boolean) {
+    busy = true;
+    const release = () => { busy = false; };
     res.writeHead(200, { ...HEAD, "Content-Type": "application/x-ndjson; charset=utf-8" });
     const send = (o: unknown) => { if (!res.writableEnded) res.write(JSON.stringify(o) + "\n"); };
     send({ type: "start", conversation: id });
@@ -137,24 +159,24 @@ export function createAsk(cfg: AskConfig): Ask {
     let result: { ok: boolean; text: string; error?: string } | undefined;
     let child: ChildProcess;
     let timer: NodeJS.Timeout | undefined;
-    const end = (last: unknown) => { if (finished) return; finished = true; clearTimeout(timer); send(last); res.end(); };
+    const end = (last: unknown) => { if (finished) return; finished = true; clearTimeout(timer); release(); send(last); res.end(); };
     const fail = (f: Failure) => {
       if (!resume && !sessionStarted) convos.delete(id);
       end({ type: "error", code: f.code, message: f.message });
     };
     try {
-      child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false });
+      child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix, guardCmd: staged!.guard }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false, detached: POSIX });
     } catch (e) { return fail(explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); }
     live.add(child);
-    timer = setTimeout(() => { timedOut = true; killChild(child); }, timeoutMs());
-    res.on("close", () => { if (!finished) { finished = true; clearTimeout(timer); killChild(child); } });
+    timer = setTimeout(() => { timedOut = true; killChild(child, true); }, timeoutMs());
+    res.on("close", () => { if (!finished) { finished = true; clearTimeout(timer); release(); killChild(child, true); } });
     const line = (l: string) => {
       for (const ev of parseStreamLine(l)) {
         if (ev.type !== "result") sessionStarted = true;
         if (ev.type === "text") { deltas += ev.text; send({ type: "text", text: ev.text }); }
         else if (ev.type === "tool") {
           send({ type: "tool", name: ev.name });
-          if (++tools > MAX_TOOLS && !tooMany) { tooMany = true; killChild(child); }
+          if (++tools > MAX_TOOLS && !tooMany) { tooMany = true; killChild(child, true); }
         } else result = ev;
       }
     };
@@ -186,7 +208,8 @@ export function createAsk(cfg: AskConfig): Ask {
   return {
     routes: { "GET /api/ask/status": statusRoute, "POST /api/ask": askRoute },
     close() {
-      for (const c of live) killChild(c);
+      for (const c of live) killChild(c, true);
+      busy = false;
       staged?.cleanup();
     },
   };
