@@ -1,6 +1,6 @@
 {
   "name": "repoladder",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Architecture diagrams grounded in your code that stay in sync.",
   "type": "module",
