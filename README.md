@@ -1,4 +1,26 @@
-# RepoLadder
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/media/logo-dark.svg">
+    <img src="docs/media/logo-light.svg" alt="RepoLadder" width="88">
+  </picture>
+</p>
+
+<h1 align="center">RepoLadder</h1>
+
+<p align="center"><strong>Architecture diagrams grounded in your code that stay in sync.</strong></p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: Apache-2.0" src="https://img.shields.io/badge/license-Apache--2.0-blue"></a>
+  <a href="https://www.npmjs.com/package/repoladder"><img alt="npm version" src="https://img.shields.io/npm/v/repoladder"></a>
+  <a href="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://www.npmjs.com/package/repoladder"><img alt="Node.js version" src="https://img.shields.io/node/v/repoladder"></a>
+</p>
+
+<p align="center">
+  <a href="https://repoladder.com/browse">Live demo</a> ·
+  <a href="docs/install.md">Install</a> ·
+  <a href="#documentation">Documentation</a>
+</p>
 
 **Run one command on your TypeScript or JavaScript repo. In a few minutes you get a diagram a newcomer can click through and understand, and every box and arrow comes from the code.**
 
