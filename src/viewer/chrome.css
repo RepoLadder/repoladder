@@ -48,14 +48,6 @@ header {
   gap: 4px 18px;
   padding-block: 18px 12px;
 }
-h1 {
-  font-family: var(--font-display);
-  font-size: var(--text-h3);
-  line-height: 1.15;
-  margin: 0;
-  font-weight: 700;
-  letter-spacing: -.02em;
-}
 .crumbs {
   display: flex;
   flex-wrap: wrap;
@@ -81,21 +73,11 @@ h1 {
   text-underline-offset: 4px;
   text-decoration-thickness: 1.5px;
 }
-h1 button {
-  all: unset;
-  cursor: pointer;
-  text-underline-offset: 4px;
-  text-decoration-thickness: 1.5px;
-}
-h1 button:hover {
-  text-decoration: underline;
-}
 .crumbs button:hover {
   color: var(--ink);
   text-decoration-color: currentColor;
 }
 .crumbs button:focus-visible,
-h1 button:focus-visible,
 .item:focus-visible,
 .open:focus-visible {
   outline: 2px solid var(--accent);

@@ -87,7 +87,6 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
 <!-- Geist and Geist Mono: Copyright 2024 The Geist Project Authors, SIL Open Font License 1.1 (full text packed with the fonts below) -->
 <header class="topbar">
   <a class="brand" href="${esc(madeWithUrl())}" target="_blank" rel="noopener" aria-label="${esc(brandName())}" title="${esc(brandName())}">${HEADER_MARK}</a>
-  <h1>${esc(model.repo)}</h1>
   <nav class="crumbs" id="crumbs" aria-label="Diagram depth"></nav>
   <span class="meta" id="meta"></span>
   <div class="actions" id="actions" role="group" aria-label="Actions"><button class="tbact" id="zexp" aria-label="Export this view" title="Export this view" aria-haspopup="menu" aria-expanded="false"></button></div>
@@ -95,6 +94,7 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
 <main>
   <div class="stage" id="stage">
   <div class="canvas" id="canvas">
+    <div class="board-title" id="boardtitle"><p class="bt-level"></p><h1>${esc(model.repo)}</h1><p class="bt-sum"></p><button class="bt-more" hidden aria-haspopup="dialog" aria-expanded="false">More</button><span class="bt-gauge"></span></div>
     <button id="insp" aria-label="Inspector" title="Inspector (I)" aria-controls="details" aria-expanded="false" aria-pressed="false">${INSPECTOR_ICON}</button>
     <div class="zoom"><button id="zfs" hidden aria-label="Full screen" aria-pressed="false">${FS_ICON}</button><button id="zfit" hidden aria-label="Reframe" title="Reframe (F)">${REFRAME_ICON}</button><button id="zin" aria-label="Zoom in" title="Zoom in (+)">+</button><button id="zout" aria-label="Zoom out" title="Zoom out (-)">−</button></div>
     <!-- the bottom dock (phone.css): the tour card sits in it on a phone; the Ask bar will dock here too -->

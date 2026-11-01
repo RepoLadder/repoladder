@@ -54,6 +54,7 @@ export function show(id: string, back?: Place, hit: string | null = null, exact 
   host.prepend(st.svgEl);
   storyShown(id);
   applyFilters();
+  renderRepoTitle();
   fitBoard();
   if (back?.view.length) setView(back.view);
   zoomBetween(old, from, st.svgEl, id);
@@ -91,7 +92,6 @@ function renderCrumbs(): void {
   const plain = onStoreBoard() ? storeMeta() : `${st.cur === STORY ? storyMeta() : ""}${n.children.length ? `${plural(n.children.length, "part")} · ` : ""}${plural(n.count, "file")}`;
   $("meta").innerHTML = metaHtml(plain, !onStoreBoard() && st.cur === home() && st.data.sha ? st.data.sha : null);
   renderTrail(st.cur);
-  renderRepoTitle();
   syncTopActions();
 }
 

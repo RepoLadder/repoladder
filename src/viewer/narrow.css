@@ -22,14 +22,6 @@
     width: 20px;
     height: 20px;
   }
-  h1 {
-    flex: 1;
-    min-width: 0;
-    font-size: var(--text-lg);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
   .sbtn {
     order: 1;
     padding: 4px 12px;
@@ -189,8 +181,7 @@
     display: inline-block;
     padding: 6px 0;
   }
-  .crumbs button,
-  h1 button {
+  .crumbs button {
     padding-block: 4px;
   }
   .tour-nav button {

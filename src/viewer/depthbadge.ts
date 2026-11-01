@@ -3,6 +3,7 @@
 // left) down to the deepest board, indented like an outline, with the rung you're on in ink.
 // By default ("auto") the text shows, on a phone too: the owner picked the words over the gauge, and on the phone they sit on the breadcrumbs' own row, which has the room.
 // localStorage "repoladder.depth" = "text" | "gauge" | "off".
+import { isEmbed } from "./embed.ts";
 import { $, esc } from "./state.ts";
 
 export const DEPTH_KEY = "repoladder.depth";
@@ -45,9 +46,12 @@ export function renderDepth(d: number, max: number): void {
     el.setAttribute("role", "img");
     $("crumbs").after(el);
   }
+  // outside embed the board title's level label says it; only the gauge, when chosen, sits in the title (.bt-gauge)
+  const inTitle = !isEmbed(location.search), slot = document.querySelector(".bt-gauge");
   const m = mode(), v = depthView(d, max, m);
-  el.hidden = !v;
-  if (!v) return;
+  if (slot) slot.innerHTML = inTitle && v?.gauge ? v.gauge : "";
+  el.hidden = !v || inTitle;
+  if (!v || inTitle) return;
   el.dataset.mode = m;
   el.title = v.say;
   el.setAttribute("aria-label", v.say);

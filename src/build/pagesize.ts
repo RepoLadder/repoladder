@@ -29,11 +29,14 @@ import { encodeWire } from "../viewer/wire.ts";
  * 2026-10: the inspector as a toggleable floating panel (viewer/inspector.ts, inspector.css, the lead/More structure of the panels): about 1KB packed on top of the open region: 97KB.
  * 2026-10: the +, - and F zoom keys and the upward export popover (zoomkeys.ts, anchor.ts): 95KB, the page was a few bytes over 94KB.
  * 2026-10: the full-window canvas's open region (#78) merged with the phone's edge cue (#76): 95KB, the page was 110 bytes over 94KB.
+ * 2026-10: the board title over the canvas (viewer/repotitle.ts, boardtitle.css, #44): 96KB, the page was 464 bytes over 95KB.
+ * 2026-10: CI packs this page 161 bytes over 96KB (about 0.5KB bigger than macOS): 97KB.
  * 2026-10: the floating zoom control at the bottom right (zoomcontrol, +, - and F): 96KB, CI packed the page 242 bytes over the 95KB cap.
+ * 2026-11: merged with the board title over the canvas (#44): 102KB, the page was 172 bytes over 101KB on CI.
  * 2026-10: the phone layout stacked on the floating UI changes before them, and the phone's dock: 100KB.
  * 2026-11: the zoom strip kept at the lower right with the top bar and inspector merged in: 101KB, the page was 48 bytes over 100KB on CI.
  */
-export const VIEWER_KB = 101;
+export const VIEWER_KB = 102;
 /**
  * The embedded Geist and Geist Mono subsets with their licence (#337): a packed blob of about 58KB, a separate
  * line outside the VIEWER_KB ratchet (the fonts change when the font files do, not with viewer code).
