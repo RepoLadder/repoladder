@@ -44,12 +44,11 @@ jobs:
           commit-message: "chore: version packages"
           create-github-releases: false
           push-git-tags: false
-        env:
           # A fine-grained PAT (contents + pull requests write on this repo), not GITHUB_TOKEN: a PR opened with
           # GITHUB_TOKEN starts its pull_request CI as action_required, and the waiting run blocks the merge until
           # someone clicks Approve. Rotate it before it expires (rl/engine#95). The merge and publish steps below
           # keep the built-in token on purpose: a merge made with the PAT would also start publish.yml by push.
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}
+          github-token: ${{ secrets.RELEASE_PR_TOKEN }}
       - name: Auto-merge minor and patch
         id: automerge
         if: steps.changesets.outputs.pr-number != ''

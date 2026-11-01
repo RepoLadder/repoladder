@@ -14,7 +14,7 @@ const at = (s: string) => {
 
 test("the Version Packages PR is opened with RELEASE_PR_TOKEN so its CI starts on its own", () => {
   const action = at("changesets/action");
-  const token = at("GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}");
+  const token = at("github-token: ${{ secrets.RELEASE_PR_TOKEN }}");
   assert.ok(token > action, "the PAT is the changesets step's token");
   assert.ok(!yml.includes("gh workflow run ci.yml"), "no manual CI dispatch: the PR's own pull_request CI is the gate");
   at("actions: write");
