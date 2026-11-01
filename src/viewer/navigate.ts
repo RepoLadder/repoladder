@@ -5,6 +5,7 @@ import { metaHtml } from "./mono.ts";
 import { writeHash } from "./deeplink.ts";
 import { onEscape } from "./deselect.ts";
 import { draw } from "./draw.ts";
+import { shadeOk } from "./shapes.ts";
 import { tourShown } from "./tour.ts";
 import { applyFilters } from "./filterui.ts";
 import { fitBoard } from "./fit.ts";
@@ -46,6 +47,7 @@ export function show(id: string, back?: Place, hit: string | null = null, exact 
   tmp.innerHTML = draw(st.data.layout[id]);
   st.svgEl = tmp.querySelector("svg")!;
   st.svgEl.classList.add("board");
+  st.svgEl.classList.toggle("shaded", shadeOk(st.svgEl.querySelectorAll("g.node").length));
   st.svgEl.setAttribute("preserveAspectRatio", "xMidYMid meet");
   host.prepend(st.svgEl);
   storyShown(id);

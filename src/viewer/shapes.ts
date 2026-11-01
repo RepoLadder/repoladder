@@ -29,6 +29,11 @@ export interface Box {
 
 /** Corner radius per kind (build/lint.ts traces the same outlines). */
 export const R: Record<Kind | "part", number> = { web: 8, backend: 4, library: 8, scripts: 2, part: 8 };
+/** Drawn corner radius per kind: softer than the layout radius `R`, which wires still end on. Web is capped at its 10-unit browser bar. */
+export const RX: Record<Kind | "part", number> = { web: 10, backend: 5, library: 12, scripts: 2, part: 12 };
+/** Boards with more nodes than this stay flat (no per-box shadow), so panning stays light. */
+export const SHADE_MAX = 150;
+export const shadeOk = (nodes: number) => nodes <= SHADE_MAX;
 /** Offsets of the two cards drawn behind an openable box. */
 export const STACK = [8, 4];
 /** Depth of a cylinder's lid ellipse. */
@@ -63,9 +68,9 @@ export function boxBody(b: Box): string {
     out += cylinder(x, y, w, h);
     ty += 4;
   } else if (b.ctx) {
-    out = rect("body", x, y, w, h, 8);
+    out = rect("body", x, y, w, h, 12);
   } else {
-    const k = b.kind ?? "part", r = R[k];
+    const k = b.kind ?? "part", r = RX[k];
     // two cards behind: "there is more inside" has to read at a glance, even zoomed out
     if (b.openable) out += STACK.map((d) => rect("stack", x + d, y + d, w, h, r)).join("");
     if (k === "library") out += `<path class="band" d="M${x + 10} ${y + 2}L${x + 14} ${y - 5}H${x + 42}L${x + 46} ${y + 2}z"/>`;
