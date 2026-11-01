@@ -136,8 +136,8 @@ function card(): string {
   return `<div id="tour" class="panel tour-card walk-card" aria-live="polite"><div class="tour-dots" aria-hidden="true">${dots}</div><p class="num">Step ${i + 1} of ${n} · ${esc(tour.title)}<span class="rd-tap"> · tap for next</span></p><p class="tour-text">${esc(s.caption)}</p>${undrawn}${notes}<div class="tour-nav"><button data-tour-step="-1"${i === 0 ? " disabled" : ""}>‹ Back</button><button data-tour-step="1" class="primary">${i === n - 1 ? "Done" : "Next ›"}</button><button data-tour-exit aria-label="Leave the tour">✕</button></div></div>`;
 }
 
-/** Whether the card sits on the canvas: always, except embedded mode (a framed canvas, the card below it, #164). */
-const onCanvas = (): boolean => phone() || !document.documentElement.classList.contains("embed");
+/** Whether the card sits on the canvas: always, except embedded mode and full screen (a framed canvas, the card below it, #164). */
+const onCanvas = (): boolean => phone() || !(document.documentElement.classList.contains("embed") || document.fullscreenElement);
 
 /** The card: a strip on the canvas under the board, floating over the full-window canvas (embedded: below it). */
 function sync(): void {

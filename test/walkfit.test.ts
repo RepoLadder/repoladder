@@ -123,3 +123,11 @@ test("aboveStrip with a right bound centers in [0, x1]; the default keeps today'
   const w = aboveStrip(v, 1000, 600, 500, 0, 600), k = 1000 / w[2];
   assert.ok(Math.abs(onScreen(w, 1000, 600, [0, 0, 400, 200])[0] + 400 * k / 2 - 300) < 1e-6);
 });
+
+test("panAbove with bounds keeps a step below the header and left of the panel", () => {
+  const v = [0, 0, 1000, 600], r = { x: 20, y: 5, w: 100, h: 40 }, b = { y0: 60, x1: 700 };
+  const plain = panAbove(v, 1000, 600, 500, r), bound = panAbove(v, 1000, 600, 500, r, b);
+  assert.ok(bound[1] < plain[1], "panned further down, clear of the header band");
+  const far = { x: 800, y: 200, w: 100, h: 50 }, p = panAbove(v, 1000, 600, 500, far, b);
+  assert.ok(onScreen(p, 1000, 600, [far.x, far.y, far.w, far.h])[0] + far.w <= 700);
+});

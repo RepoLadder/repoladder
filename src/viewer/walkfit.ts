@@ -4,7 +4,7 @@
 // lit boxes and arrow sit there too. Leaving puts the plain fit back, unless the reader has moved the view; a resize
 // or rotation mid-walk refits above the strip too (fit.ts hands its refit over).
 import { clearCorner, covers, type Box4 } from "./corner.ts";
-import { dock } from "./dock.ts";
+import { walkBounds, type Bounds } from "./walkregion.ts";
 import { MIN_NAME_PX, NAME_PX, boardFit, setRefitter, slideFor } from "./fit.ts";
 import { cornerButtons as clearOf } from "./focuscorner.ts";
 import { zoomClass } from "./focus.ts";
@@ -58,12 +58,10 @@ export function liftAbove(v: View, cw: number, ch: number, top: number, r: Rect,
  * readable fit allows (liftAbove).
  */
 function walkFit(base: View, cw: number, ch: number, top: number): View {
-  const btns = clearOf(), phone = cw < 760;
+  const btns = clearOf(), { y0: yMin, x1 } = walkBounds(cw), phone = x1 < 760;
   const boxes = (st.data.layout[st.cur]?.n ?? []).map(([, x, y, w, h]): Box4 => [x, y, w, h]);
   const x0 = Math.min(...boxes.map((b) => b[0])), y0 = Math.min(...boxes.map((b) => b[1]));
   const r = { x: x0, y: y0, w: Math.max(...boxes.map((b) => b[0] + b[2])) - x0, h: Math.max(...boxes.map((b) => b[1] + b[3])) - y0 };
-  // the board stays out from under the floating header and panel (dock.ts)
-  const d = dock(), x1 = cw - (d.right ? d.right + 8 : 0), yMin = d.top ? d.top + 8 : 0;
   const fitIn = (y: number) => (!phone ? aboveStrip(base, cw, ch, top, Math.max(y, yMin), x1) : boxes.length ? liftAbove(base, cw, ch, top, r, Math.max(y, yMin)) : base);
   // clearCorner gives back v itself when v is clear already or nothing clears it
   const v = fitIn(0), c = clearCorner(v, boxes, cw, ch, btns, phone, slideFor(v, cw, ch));
@@ -74,12 +72,12 @@ function walkFit(base: View, cw: number, ch: number, top: number): View {
  * View `v` (canvas aspect) panned the least that puts board rect `r` inside the top `top` pixels of a
  * cw×ch canvas, with a margin; a rect too big for that is centered there. Exported for tests.
  */
-export function panAbove(v: View, cw: number, ch: number, top: number, r: Rect): View {
+export function panAbove(v: View, cw: number, ch: number, top: number, r: Rect, { y0, x1 }: Bounds = { y0: 0, x1: cw }): View {
   const k = scaleOf(v, cw, ch), ox = (cw - v[2] * k) / 2, oy = (ch - v[3] * k) / 2;
   const sx = ox + (r.x - v[0]) * k, sy = oy + (r.y - v[1]) * k, sw = r.w * k, sh = r.h * k;
   const shift = (s: number, len: number, lo: number, hi: number) =>
     len > hi - lo - 2 * M ? s + len / 2 - (lo + hi) / 2 : s < lo + M ? s - lo - M : s + len > hi - M ? s + len - hi + M : 0;
-  const dx = shift(sx, sw, 0, cw), dy = shift(sy, sh, 0, top);
+  const dx = shift(sx, sw, 0, x1), dy = shift(sy, sh, y0, top);
   return dx || dy ? [v[0] + dx / k, v[1] + dy / k, v[2], v[3]] : v;
 }
 
@@ -91,9 +89,9 @@ export interface Refit { base: View; view: View | null }
  * the strip (`above`) takes its place, as on entering. The view moves only if it is still the walk's
  * (`ours`), panned to the step's lit rect. Exported for tests.
  */
-export function walkResized(plain: View, cw: number, ch: number, top: number, lit: Rect | null, ours: boolean, above = (b: View) => aboveStrip(b, cw, ch, top)): Refit {
+export function walkResized(plain: View, cw: number, ch: number, top: number, lit: Rect | null, ours: boolean, above = (b: View) => aboveStrip(b, cw, ch, top), bounds?: Bounds): Refit {
   const base = above(plain);
-  const view = !ours ? null : lit ? panAbove(base, cw, ch, top, lit) : base;
+  const view = !ours ? null : lit ? panAbove(base, cw, ch, top, lit, bounds) : base;
   return { base, view };
 }
 
@@ -156,7 +154,7 @@ function resized(plain: View): void {
     if (ours) put([...plain]);
     return;
   }
-  const r = walkResized(plain, cw, ch, top, lastLit, ours, onCanvas() ? (b) => walkFit(b, cw, ch, top) : (b) => b);
+  const r = walkResized(plain, cw, ch, top, lastLit, ours, onCanvas() ? (b) => walkFit(b, cw, ch, top) : (b) => b, walkBounds(cw));
   st.base = r.base;
   if (r.view) put(r.view);
   walkView = r.view ?? walkView;
@@ -180,7 +178,7 @@ export function walkFrame(entering: boolean, lit: Rect | null): void {
   }
   // and a lit box clear of the corner buttons and the dial (on a phone, above its strip too)
   if (lit) {
-    const p = panAbove(v, cw, ch, top, lit);
+    const p = panAbove(v, cw, ch, top, lit, walkBounds(cw));
     v = onCanvas() ? clearLit(p, litBoxes(), cw, ch, top, clearOf(), slideFor(p, cw, ch)) : clearCorner(p, litBoxes(), cw, ch, clearOf());
   }
   if (!same(v, st.view)) show(v);
