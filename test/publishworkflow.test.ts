@@ -31,9 +31,13 @@ test("publish.yml: id-token: write only in the publish job; default is contents:
   assert.ok(!checkJob.includes("id-token"));
 });
 
-test("publish.yml: publish is gated behind check and the npm-publish environment, with provenance", () => {
+test("publish.yml: publish is gated behind check, picks its environment from the bump, and uses provenance", () => {
   assert.match(publishJob, /needs: check/);
-  assert.match(publishJob, /environment: npm-publish/);
+  assert.ok(publishJob.includes("environment: ${{ needs.check.outputs.bump == 'major' && 'npm-publish-major' || 'npm-publish' }}"));
+  assert.equal(code.match(/npm-publish-major/g)?.length, 1);
+  assert.equal(code.match(/npm-publish(?!-major)/g)?.length, 1);
+  assert.match(checkJob, /^ {6}bump: \$\{\{ steps\.decide\.outputs\.bump \}\}$/m);
+  assert.match(checkJob, /node scripts\/versionbump\.ts/);
   assert.match(publishJob, /needs\.check\.outputs\.dry == 'false'/);
   assert.match(publishJob, /npm publish [^\n]*--provenance/);
   assert.match(checkJob, /npm publish --dry-run/);
