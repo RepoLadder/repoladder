@@ -10,6 +10,7 @@
 | Malicious repo | Its own Claude settings or hooks | `--setting-sources user`: the repo's settings are never loaded | `test/serve-security.test.ts` |
 | Prompt injection from repo contents | Text in a file steers the agent | Tools limited to Read, Grep, Glob and one `repoladder query` command; no writes, no web, `dontAsk` | `test/serve-security.test.ts`, `test/askargv.test.ts` |
 | Secrets in the repo | The agent reads `.env`, keys, `.ssh` | Read deny list in both the flags and the settings; the child's environment holds only allowlisted names | `test/serve-security.test.ts` |
+| Reads outside the repo | A planted instruction or a plain question points the agent at another folder, a home-directory file or `/etc` | A `PreToolUse` hook (`repoladder readguard <root>`) refuses any Read, Grep or Glob whose path, glob prefix or symlink target resolves outside the repo root; it fails closed on input it cannot parse | `test/readguard.test.ts`, `test/askargv.test.ts` |
 | Hostile question text | Flag or shell injection through the question | Argv array, no shell; the question is always the last single argument | `test/serve-security.test.ts` |
 | Oversized or flooding requests | Huge body or question, many asks, slow headers | 2,000 characters, 16 KB body (chunked included), one ask at a time (429), header and request timeouts | `test/serve-security.test.ts` |
 | Runaway turns | Endless or tool-hungry answer | Wall-clock timeout and a 25-tool-call cap | `test/ask.test.ts`, `test/serve-security.test.ts` |
@@ -22,7 +23,7 @@ Known limits: on Windows the child's own process is killed but not its tree. The
 
 ## Verified by hand
 
-Not yet recorded. Someone signed in to the real Claude Code CLI runs this once, then writes the Claude Code version, date and results here:
+Run against a real signed-in Claude Code CLI; results are in the table. Repeat it when Claude Code's permission or hook behaviour changes:
 
 1. Ask it to write or edit a file: refused.
 2. Ask it to read `.env` and a `.pem` file: refused.
@@ -33,4 +34,4 @@ Not yet recorded. Someone signed in to the real Claude Code CLI runs this once, 
 
 | Claude Code version | Date | Results |
 | --- | --- | --- |
-| | | |
+| 2.1.316 | 2026-11-01 | All six pass. Writes refused and nothing written. `.env` and `.pem` reads refused by the permission rules. `; ls`, redirection and `$(...)` forms did not run. Reads outside the repo (absolute, `../` and home paths) are refused; with the system prompt's own refusal removed, the read guard hook alone still blocked a Read and a Glob outside the repo while an in-repo Read worked. In-repo questions answered. Signed out: the "run `claude` once" message appears. |

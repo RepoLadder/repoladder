@@ -69,7 +69,9 @@ test("ask streams start, text, tool, done from the CLI run in the repo", { skip 
   assert.equal(seen.env.REPOLADDER_NO_USAGE, "1");
   const sessionIdx = seen.argv.indexOf("--session-id");
   const stagedPrefix = seen.argv[seen.argv.indexOf("--allowedTools") + 1].slice("Bash(".length, -":*)".length);
-  assert.deepEqual(seen.argv, askArgv({ prompt: "what touches the database?", session: seen.argv[sessionIdx + 1], resume: false, cmdPrefix: stagedPrefix }));
+  const guardCmd = JSON.parse(seen.argv[seen.argv.indexOf("--settings") + 1]).hooks.PreToolUse[0].hooks[0].command as string;
+  assert.match(guardCmd, / readguard \S+\/root$/);
+  assert.deepEqual(seen.argv, askArgv({ prompt: "what touches the database?", session: seen.argv[sessionIdx + 1], resume: false, cmdPrefix: stagedPrefix, guardCmd }));
 });
 
 test("a follow-up resumes the same Claude session and no session id reaches the browser", { skip }, async (t) => {

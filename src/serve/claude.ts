@@ -12,6 +12,9 @@ export const TOOL_DENY = ["Write", "Edit", "MultiEdit", "NotebookEdit", "WebFetc
 
 const denyList = (): string[] => [...TOOL_DENY, ...SECRET_DENY.map((p) => `Read(${p})`)];
 
+/** The tools whose paths the read guard checks. */
+export const GUARDED_TOOLS = "Read|Grep|Glob";
+
 export const KINDS = "definitions|importers|callers|touches|files";
 
 export function systemPrompt(cmdPrefix: string): string {
@@ -19,15 +22,15 @@ export function systemPrompt(cmdPrefix: string): string {
     "You answer questions about the code in the current directory.",
     "You may read files, grep and glob. You may run exactly one shell command, in this form and no other shell syntax:",
     `${cmdPrefix} . <kind> <arg>   (kind is one of ${KINDS})`,
-    "You cannot write files or run anything else.",
+    "You cannot write files, read outside this directory or run anything else.",
     "Cite files as path:line and name only things you saw in a tool result.",
     "Say so when you are unsure.",
   ].join("\n");
 }
 
-export type AskArgs = { prompt: string; session: string; resume: boolean; cmdPrefix: string };
+export type AskArgs = { prompt: string; session: string; resume: boolean; cmdPrefix: string; guardCmd: string };
 
-export function askArgv({ prompt, session, resume, cmdPrefix }: AskArgs): string[] {
+export function askArgv({ prompt, session, resume, cmdPrefix, guardCmd }: AskArgs): string[] {
   const deny = denyList();
   const question = prompt.trim();
   return [
@@ -38,7 +41,7 @@ export function askArgv({ prompt, session, resume, cmdPrefix }: AskArgs): string
     "--disallowedTools", ...deny,
     "--permission-mode", "dontAsk",
     "--setting-sources", "user",
-    "--settings", JSON.stringify({ permissions: { deny } }),
+    "--settings", JSON.stringify({ permissions: { deny }, hooks: { PreToolUse: [{ matcher: GUARDED_TOOLS, hooks: [{ type: "command", command: guardCmd }] }] } }),
     "--append-system-prompt", systemPrompt(cmdPrefix),
     resume ? "--resume" : "--session-id", session,
     question.startsWith("-") ? `Question: ${question}` : question,

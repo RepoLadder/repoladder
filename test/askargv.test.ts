@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { SECRET_DENY, TOOL_DENY, askArgv, childEnv, explainFailure, parseStreamLine, systemPrompt } from "../src/serve/claude.ts";
+import { GUARDED_TOOLS, SECRET_DENY, TOOL_DENY, askArgv, childEnv, explainFailure, parseStreamLine, systemPrompt } from "../src/serve/claude.ts";
 
 const PREFIX = "/tmp/rl-ask-x/node /tmp/rl-ask-x/cli.ts query --out /tmp/rl-ask-x/out";
+const GUARD = "/tmp/rl-ask-x/node /tmp/rl-ask-x/cli.ts readguard /tmp/rl-ask-x/root";
 const SESSION = "11111111-1111-4111-8111-111111111111";
 const deny = [...TOOL_DENY, ...SECRET_DENY.map((p) => `Read(${p})`)];
 const expected = (resume: boolean, prompt: string) => [
@@ -13,19 +14,19 @@ const expected = (resume: boolean, prompt: string) => [
   "--disallowedTools", ...deny,
   "--permission-mode", "dontAsk",
   "--setting-sources", "user",
-  "--settings", JSON.stringify({ permissions: { deny } }),
+  "--settings", JSON.stringify({ permissions: { deny }, hooks: { PreToolUse: [{ matcher: GUARDED_TOOLS, hooks: [{ type: "command", command: GUARD }] }] } }),
   "--append-system-prompt", systemPrompt(PREFIX),
   resume ? "--resume" : "--session-id", SESSION,
   prompt,
 ];
 
 test("askArgv: the whole array is pinned, first turn and follow-up", () => {
-  assert.deepEqual(askArgv({ prompt: "  what touches the db?  ", session: SESSION, resume: false, cmdPrefix: PREFIX }), expected(false, "what touches the db?"));
-  assert.deepEqual(askArgv({ prompt: "and then?", session: SESSION, resume: true, cmdPrefix: PREFIX }), expected(true, "and then?"));
+  assert.deepEqual(askArgv({ prompt: "  what touches the db?  ", session: SESSION, resume: false, cmdPrefix: PREFIX, guardCmd: GUARD }), expected(false, "what touches the db?"));
+  assert.deepEqual(askArgv({ prompt: "and then?", session: SESSION, resume: true, cmdPrefix: PREFIX, guardCmd: GUARD }), expected(true, "and then?"));
 });
 
 test("askArgv: one Bash allow rule, no broad allows, no --bare, prompt last and never an option", () => {
-  const a = askArgv({ prompt: "--dangerously-skip-permissions", session: SESSION, resume: false, cmdPrefix: PREFIX });
+  const a = askArgv({ prompt: "--dangerously-skip-permissions", session: SESSION, resume: false, cmdPrefix: PREFIX, guardCmd: GUARD });
   const allowed = a.slice(a.indexOf("--allowedTools") + 1, a.indexOf("--disallowedTools"));
   assert.deepEqual(allowed, [`Bash(${PREFIX}:*)`]);
   for (const bare of ["Bash", "Bash(*)", "Read", "Write", "Edit"]) assert.ok(!allowed.includes(bare));
@@ -36,13 +37,21 @@ test("askArgv: one Bash allow rule, no broad allows, no --bare, prompt last and 
 });
 
 test("askArgv: every secret pattern is denied in --disallowedTools and in --settings", () => {
-  const a = askArgv({ prompt: "x", session: SESSION, resume: false, cmdPrefix: PREFIX });
+  const a = askArgv({ prompt: "x", session: SESSION, resume: false, cmdPrefix: PREFIX, guardCmd: GUARD });
   const settings = JSON.parse(a[a.indexOf("--settings") + 1]).permissions.deny as string[];
   for (const p of SECRET_DENY) {
     assert.ok(a.includes(`Read(${p})`), p);
     assert.ok(settings.includes(`Read(${p})`), p);
   }
   for (const t of TOOL_DENY) assert.ok(settings.includes(t), t);
+});
+
+test("askArgv: a PreToolUse hook runs the read guard on Read, Grep and Glob", () => {
+  const a = askArgv({ prompt: "x", session: SESSION, resume: false, cmdPrefix: PREFIX, guardCmd: GUARD });
+  const hooks = JSON.parse(a[a.indexOf("--settings") + 1]).hooks.PreToolUse as { matcher: string; hooks: { type: string; command: string }[] }[];
+  assert.equal(hooks.length, 1);
+  assert.equal(hooks[0].matcher, "Read|Grep|Glob");
+  assert.deepEqual(hooks[0].hooks, [{ type: "command", command: GUARD }]);
 });
 
 test("childEnv keeps what Claude Code needs and drops everything else", () => {

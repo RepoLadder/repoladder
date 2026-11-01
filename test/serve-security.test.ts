@@ -213,7 +213,7 @@ test("the child's environment holds only allowlisted names", { skip }, async (t)
 });
 
 test("every secret deny pattern is in both deny layers; the path tables behave", () => {
-  const argv = askArgv({ prompt: "q", session: "s", resume: false, cmdPrefix: "/x/node /x/cli.mjs query --out /x/out" });
+  const argv = askArgv({ prompt: "q", session: "s", resume: false, cmdPrefix: "/x/node /x/cli.mjs query --out /x/out", guardCmd: "/x/node /x/cli.mjs readguard /x/root" });
   const flagDeny = argv.slice(argv.indexOf("--disallowedTools") + 1, argv.indexOf("--permission-mode"));
   const settings = JSON.parse(after(argv, "--settings")).permissions.deny as string[];
   for (const p of SECRET_DENY) {

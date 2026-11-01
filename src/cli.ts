@@ -289,6 +289,14 @@ switch (cmd) {
     catch (e) { if (e instanceof QueryError) fail(e.code, e.message); throw e; }
     break;
   }
+  case "readguard": {
+    // the Ask agent's PreToolUse hook (src/serve/readguard.ts): the tool call on stdin, a deny on stdout
+    const { runGuard } = await import("./serve/readguard.ts");
+    const chunks: Buffer[] = [];
+    for await (const c of process.stdin) chunks.push(c as Buffer);
+    process.stdout.write(runGuard(Buffer.concat(chunks).toString("utf8"), root));
+    process.exit(0);
+  }
   case "analyze":
     exitOnFail(() => runAnalyze());
     break;

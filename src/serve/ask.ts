@@ -57,7 +57,7 @@ const killChild = (c: ChildProcess, group = false) => {
 type Convo = { sessionUuid: string; lastUsed: number };
 
 export function createAsk(cfg: AskConfig): Ask {
-  const staged: Staged | null = stageAgentCommand({ out: cfg.out, node: cfg.node ?? process.execPath, cli: cfg.cli ?? process.argv[1] });
+  const staged: Staged | null = stageAgentCommand({ out: cfg.out, root: cfg.root, node: cfg.node ?? process.execPath, cli: cfg.cli ?? process.argv[1] });
   const convos = new Map<string, Convo>();
   const live = new Set<ChildProcess>();
   const bin = () => process.env.REPOLADDER_CLAUDE_BIN || "claude";
@@ -155,7 +155,7 @@ export function createAsk(cfg: AskConfig): Ask {
       end({ type: "error", code: f.code, message: f.message });
     };
     try {
-      child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false, detached: POSIX });
+      child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix, guardCmd: staged!.guard }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false, detached: POSIX });
     } catch (e) { return fail(explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); }
     live.add(child);
     timer = setTimeout(() => { timedOut = true; killChild(child, true); }, timeoutMs());
