@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // A fake `claude` for the Ask tests. Logs what it was given to FAKE_CLAUDE_LOG, then behaves per FAKE_CLAUDE_MODE.
 import { appendFileSync } from "node:fs";
+import { spawn } from "node:child_process";
 
 const mode = process.env.FAKE_CLAUDE_MODE || "ok";
 const argv = process.argv.slice(2);
@@ -16,7 +17,11 @@ const delta = (text) => emit({ type: "stream_event", event: { type: "content_blo
 if (mode === "signedout") { console.error("Not logged in. Please run /login"); process.exit(1); }
 if (mode === "oldcli") { console.error("error: unknown option '--include-partial-messages'"); process.exit(1); }
 if (mode === "ratelimit") { console.error("API Error: 429 rate limit reached"); process.exit(1); }
-if (mode === "slow") setInterval(() => {}, 1000);
+if (mode === "grandchild") {
+  const kid = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
+  log({ childPid: kid.pid });
+  setInterval(() => {}, 1000);
+} else if (mode === "slow") setInterval(() => {}, 1000);
 else if (mode === "manytools") {
   emit({ type: "system", subtype: "init" });
   for (let i = 0; i < 40; i++) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } });

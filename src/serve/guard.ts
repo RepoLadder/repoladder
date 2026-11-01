@@ -32,10 +32,20 @@ export type Verdict = { ok: true } | { ok: false; status: 401 | 403; message: st
 
 const first = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
 
-/** Order: remote address, Host, token. The query token counts only on `GET /` (the first page load cannot send headers). */
+/** A request from a page on another site (or an opaque origin) must never reach a route. `Origin` must be exactly our own origin; `Sec-Fetch-Site` of cross-site or same-site is refused except on the first page load. */
+export const originAllowed = (req: Req, port: number): boolean => {
+  const origin = first(req.headers.origin);
+  if (origin !== undefined && origin !== `http://127.0.0.1:${port}` && origin !== `http://localhost:${port}`) return false;
+  const site = first(req.headers["sec-fetch-site"])?.toLowerCase();
+  const firstLoad = req.method === "GET" && (req.path === "/" || req.path === "/index.html");
+  return firstLoad || (site !== "cross-site" && site !== "same-site");
+};
+
+/** Order: remote address, Host, Origin, token. The query token counts only on `GET /` (the first page load cannot send headers). */
 export function authorize(req: Req, ctx: { port: number; token: string }): Verdict {
   if (!remoteAllowed(req.remoteAddress)) return { ok: false, status: 403, message: "Forbidden: local connections only." };
   if (!hostAllowed(first(req.headers.host), ctx.port)) return { ok: false, status: 403, message: "Forbidden: unexpected Host." };
+  if (!originAllowed(req, ctx.port)) return { ok: false, status: 403, message: "Forbidden: cross-origin requests are refused." };
   const fromQuery = req.method === "GET" && req.path === "/" ? req.query.get("t") ?? undefined : undefined;
   if (tokenOk(first(req.headers[TOKEN_HEADER]), ctx.token) || tokenOk(fromQuery, ctx.token)) return { ok: true };
   return { ok: false, status: 401, message: "Open the link `repoladder serve` printed; it carries the access token." };
