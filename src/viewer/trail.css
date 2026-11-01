@@ -42,10 +42,6 @@
   min-width: 180px;
   max-width: 240px;
   padding: 4px;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: 0 8px 24px var(--shadow);
   font-size: var(--text-small);
 }
 .crumbmenu button {
@@ -190,6 +186,6 @@ svg.focusing:not(.touring) g.every-name:not(.lit) {
 @media (max-width: 760px) {
   .walk-card:has(.tour-link) .tour-dots,
   .walk-card:has(.tour-link) .num {
-    padding-right: 152px;
+    padding-right: 168px;
   }
 }

@@ -118,14 +118,11 @@
 .xnote,
 .xprev {
   position: absolute;
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  color: var(--ink);
   font: var(--text-small) var(--font-ui);
 }
 .xmenu {
   z-index: 5;
+  color: var(--ink);
   display: flex;
   flex-direction: column;
   padding: 4px;
@@ -173,8 +170,10 @@
   gap: 8px;
   align-items: center;
   padding: 12px;
+  border: 1px solid var(--line);
   border-radius: 0;
   background: var(--paper);
+  color: var(--ink);
 }
 .xprev img {
   flex: 1;

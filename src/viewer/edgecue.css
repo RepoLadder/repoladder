@@ -1,0 +1,67 @@
+.edge-cue {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.edge-cue span {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 150ms ease-out;
+  color: var(--muted);
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.edge-cue [data-on] {
+  opacity: 1;
+}
+.edge-cue .r,
+.edge-cue .l {
+  top: 0;
+  bottom: 0;
+  width: 32px;
+}
+.edge-cue .t,
+.edge-cue .b {
+  left: 0;
+  right: 0;
+  height: 32px;
+}
+.edge-cue .r {
+  right: 0;
+  background: linear-gradient(to left, var(--paper), transparent);
+}
+.edge-cue .l {
+  left: 0;
+  background: linear-gradient(to right, var(--paper), transparent);
+}
+.edge-cue .t {
+  top: 0;
+  background: linear-gradient(to bottom, var(--paper), transparent);
+}
+.edge-cue .b {
+  bottom: 0;
+  background: linear-gradient(to top, var(--paper), transparent);
+}
+.edge-cue .r::after {
+  content: "\203A";
+}
+.edge-cue .l::after {
+  content: "\2039";
+}
+.edge-cue .t::after {
+  content: "\2039";
+  transform: rotate(90deg);
+}
+.edge-cue .b::after {
+  content: "\203A";
+  transform: rotate(90deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge-cue span {
+    transition: none;
+  }
+}

@@ -83,6 +83,7 @@ const size = () => [st.svgEl.clientWidth, st.svgEl.clientHeight] as const;
 const fitFor = (cw: number, ch: number) => {
   // the open part of the canvas: the floating header, the wide-window panel and the phone's sheet are not in it
   const r = openRegion(cw, ch, dock(), coveredBottom(ch)), w = r.w, open = r.h;
+  // A narrow canvas opens at the readable zoom, cropped; the rest is a pan away and edgecue.ts marks each clipped side.
   let v = w < 760 && !onEvery() ? readableView(whole, w, open, undefined, boxes()) : [...whole];
   const cropped = v[2] < whole[2] - 0.5 || v[3] < whole[3] - 0.5;
   // a cropped story opens on its first sentence, not on actors with arrows leaving the screen (#288)
