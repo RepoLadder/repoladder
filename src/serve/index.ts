@@ -3,6 +3,7 @@ import { createServer, type IncomingMessage, type Server, type ServerResponse } 
 import { readFileSync } from "node:fs";
 import { authorize, newToken } from "./guard.ts";
 import { createAsk, type AskConfig } from "./ask.ts";
+import { askAssets } from "../build/viewer.ts";
 
 export type Handler = (req: IncomingMessage, res: ServerResponse) => void;
 /** "GET /api/x" -> handler. Looked up only after authorize() passed. */
@@ -31,12 +32,20 @@ const internal = (res: ServerResponse) => {
   send(res, 500, INTERNAL, "application/json; charset=utf-8");
 };
 
+/** The style and script `GET /` appends when Ask is on (their `</script`/`</style` are already escaped by askAssets). */
+export function askTail(): string {
+  const a = askAssets();
+  return `\n<style>${a.css}</style>\n<script>${a.js};repoladderAsk.start();</script>\n`;
+}
+
 export const pageFromFile = (path: string) => () => readFileSync(path);
 
 export function startServer(opts: ServerOpts): Promise<Running> {
   const token = newToken();
   const ask = opts.ask ? createAsk(opts.ask) : undefined;
   const routes = { ...ask?.routes, ...opts.routes };
+  // The Ask bar ships only in the served response: the file on disk and every published page stay free of it.
+  const tail = ask ? askTail() : "";
   let port = 0;
   const server = createServer({ maxHeaderSize: 16 * 1024 }, (req, res) => {
     // never URL-parse the target: `//` or `http://` would throw or rewrite the path. Anything but one leading `/` gets a path no route has.
@@ -58,7 +67,7 @@ export function startServer(opts: ServerOpts): Promise<Running> {
     }
     if (method === "POST") return send(res, 405, "Method not allowed");
     if (url.pathname === "/" || url.pathname === "/index.html") {
-      try { return send(res, 200, opts.page(), "text/html; charset=utf-8"); }
+      try { return send(res, 200, tail ? Buffer.concat([Buffer.from(opts.page()), Buffer.from(tail)]) : opts.page(), "text/html; charset=utf-8"); }
       catch { return send(res, 500, "The map could not be read."); }
     }
     send(res, 404, "Not found");

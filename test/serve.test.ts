@@ -53,7 +53,8 @@ test("serve: token, Host, loopback, headers and rebuild behaviour", async (t) =>
   const page = await get(s, `/?t=${s.token}`);
   assert.equal(page.status, 200);
   assert.ok(page.body.includes("<title>"));
-  assert.equal(page.body, built);
+  // with Ask on, the served page is the file plus the appended Ask style and script (test/askpage.test.ts)
+  assert.ok(page.body.startsWith(built));
   assert.equal(page.headers["cache-control"], "no-store");
   assert.equal(page.headers["referrer-policy"], "no-referrer");
   assert.equal(page.headers["x-content-type-options"], "nosniff");

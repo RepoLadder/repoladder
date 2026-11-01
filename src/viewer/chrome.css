@@ -167,6 +167,10 @@ main {
   touch-action: none;
   min-height: 320px;
 }
+/* Viewer only: exportsvg.ts drops `.shaded` rules, so saved files stay flat. */
+svg.board.shaded .node:not(.ctx):not(.actor):not(.file) .body {
+  filter: drop-shadow(0 1px 2px var(--shadow));
+}
 .canvas svg.board {
   width: 100%;
   height: 100%;

@@ -6,6 +6,8 @@ import { existsSync, mkdtempSync, readFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { writeFileSync } from "node:fs";
+import { analyze } from "../src/analyze/index.ts";
 import { startServer, type Running } from "../src/serve/index.ts";
 import { askArgv } from "../src/serve/claude.ts";
 
@@ -14,16 +16,17 @@ const fake = fileURLToPath(new URL("helpers/fake-claude/claude.mjs", import.meta
 const skip = process.platform === "win32" ? "fake claude is POSIX-only" : false;
 
 type Res = { status: number; headers: Record<string, unknown>; body: string };
-type Env = { s: Running; log: string; extra: Record<string, string> };
+type Env = { s: Running; log: string; extra: Record<string, string>; out: string };
 
 async function boot(t: { after(f: () => unknown): void }, ask: boolean = true): Promise<Env> {
   const log = join(mkdtempSync(join(tmpdir(), "rl-askt-")), "log.jsonl");
   const extra: Record<string, string> = { FAKE_CLAUDE_LOG: log };
   process.env.REPOLADDER_CLAUDE_BIN = fake;
-  const s = await startServer({ page: () => "x", ask: ask ? { root: repo, out: mkdtempSync(join(tmpdir(), "rl-askout-")), extraEnv: extra } : false });
+  const out = mkdtempSync(join(tmpdir(), "rl-askout-"));
+  const s = await startServer({ page: () => "x", ask: ask ? { root: repo, out, extraEnv: extra } : false });
   t.after(() => s.close());
   t.after(() => { delete process.env.REPOLADDER_CLAUDE_BIN; delete process.env.REPOLADDER_ASK_TIMEOUT_MS; });
-  return { s, log, extra };
+  return { s, log, extra, out };
 }
 
 const call = (s: Running, method: string, path: string, o: { body?: string; type?: string; token?: string | null; host?: string } = {}) =>
@@ -61,7 +64,7 @@ test("ask streams start, text, tool, done from the CLI run in the repo", { skip 
   const text = ev.filter((x) => x.type === "text").map((x) => x.text).join("");
   assert.ok(ev.some((x) => x.type === "text"));
   assert.deepEqual(ev.find((x) => x.type === "tool"), { type: "tool", name: "Grep" });
-  assert.deepEqual(ev.at(-1), { type: "done", text, conversation: ev[0].conversation });
+  assert.deepEqual(ev.at(-1), { type: "done", text, segments: null, conversation: ev[0].conversation });
   const [seen] = logs(e);
   assert.equal(seen.cwd, repo.replace(/\/$/, ""));
   assert.equal(seen.env.GITHUB_TOKEN, undefined);
@@ -91,7 +94,7 @@ test("status reports the CLI, or a plain reason when it is missing", { skip }, a
   const e = await boot(t);
   e.extra.FAKE_CLAUDE_MODE = "version";
   const ok = JSON.parse((await call(e.s, "GET", "/api/ask/status")).body);
-  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)" });
+  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)", starters: [] });
 
   const e2 = await boot(t);
   process.env.REPOLADDER_CLAUDE_BIN = "/nonexistent/claude-nope";
@@ -192,4 +195,29 @@ test("with ask off both URLs are 404", { skip }, async (t) => {
   const e = await boot(t, false);
   assert.equal((await call(e.s, "GET", "/api/ask/status")).status, 404);
   assert.equal((await call(e.s, "POST", "/api/ask", { body: '{"question":"x"}' })).status, 405);
+});
+
+test("the done event carries segments checked against the facts on disk, and a rebuilt facts.json is picked up", { skip }, async (t) => {
+  const e = await boot(t);
+  e.extra.FAKE_CLAUDE_MODE = "cites";
+  const facts = analyze(repo);
+  writeFileSync(join(e.out, "facts.json"), JSON.stringify(facts));
+  const refs = (r: Res) => events(r).at(-1).segments.filter((s: any) => s.ref);
+  const first = refs(await ask(e.s, "where?"));
+  assert.deepEqual(first.map((s: any) => [s.ref, s.verified]), [["src/lib/cart.ts:1", true], ["src/invented/ghost.ts", false]]);
+  assert.equal(first[1].reason, "not found in the code facts");
+  // the browser cannot supply segments
+  const forged = JSON.stringify({ question: "x", segments: [{ ref: "src/invented/ghost.ts", verified: true }] });
+  const r = await call(e.s, "POST", "/api/ask", { body: forged });
+  assert.equal(refs(r)[1].verified, false);
+  // a rebuild that drops the file is seen on the next turn
+  facts.files = facts.files.filter((f) => f.path !== "src/lib/cart.ts");
+  writeFileSync(join(e.out, "facts.json"), JSON.stringify(facts));
+  assert.equal(refs(await ask(e.s, "again"))[0].verified, false);
+});
+
+test("without facts the done event has segments: null", { skip }, async (t) => {
+  const e = await boot(t);
+  e.extra.FAKE_CLAUDE_MODE = "cites";
+  assert.equal(events(await ask(e.s, "where?")).at(-1).segments, null);
 });

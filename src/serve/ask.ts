@@ -3,6 +3,9 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { askArgv, childEnv, explainFailure, parseStreamLine, type Failure } from "./claude.ts";
+import { segments } from "../model/cite.ts";
+import { loadCiteContext } from "./facts.ts";
+import { starterQuestions } from "../model/starters.ts";
 import { stageAgentCommand, type Staged } from "./stage.ts";
 
 export type AskConfig = {
@@ -79,9 +82,16 @@ export function createAsk(cfg: AskConfig): Ask {
     });
   });
 
+  // starters come from the facts on disk each time, so a rebuild is picked up; the probe result itself is cached
+  const withStarters = (body: Record<string, unknown>) => {
+    if (body.available !== true) return body;
+    let starters: string[] = [];
+    try { starters = starterQuestions(loadCiteContext(cfg.out)?.facts); } catch { starters = []; }
+    return { ...body, starters };
+  };
   const statusRoute: Handler = (_req, res) => {
-    if (status && Date.now() - status.at < STATUS_TTL_MS) return json(res, 200, status.body);
-    probe().then((body) => { status = { at: Date.now(), body }; json(res, 200, body); });
+    if (status && Date.now() - status.at < STATUS_TTL_MS) return json(res, 200, withStarters(status.body));
+    probe().then((body) => { status = { at: Date.now(), body }; json(res, 200, withStarters(body)); });
   };
 
   const readBody = (req: IncomingMessage, res: ServerResponse, then: (raw: string) => void) => {
@@ -186,7 +196,10 @@ export function createAsk(cfg: AskConfig): Ask {
       if (result?.ok) {
         const text = result.text || deltas;
         if (!deltas && text) send({ type: "text", text });
-        return end({ type: "done", text, conversation: id });
+        // verified here, from the facts on disk: the browser never supplies or alters segments
+        let segs: unknown = null;
+        try { const c = loadCiteContext(cfg.out); if (c) segs = segments(text, c.facts, c.boxes); } catch { segs = null; }
+        return end({ type: "done", text, segments: segs, conversation: id });
       }
       fail(explainFailure({ exitCode: code, stderr, resultError: result?.error }));
     });

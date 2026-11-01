@@ -58,11 +58,11 @@ Each kind has a silhouette as well as a color, so kinds read without labels and 
 
 | Kind | Hue | Shape |
 |---|---|---|
-| Web app (`web`) | blue | browser window: top bar with three dots, rounded corners |
+| Web app (`web`) | blue | browser window: top bar with three dots, rounded corners (10) |
 | Server (`backend`) | green | rack unit: solid left rail with three status lights, tighter corners |
-| Library (`library`) | violet | folder: a tab on top |
+| Library (`library`) | violet | folder: a tab on top, corners 12 |
 | Scripts (`scripts`) | slate | terminal: square corners, `>_` prompt in the corner |
-| No single kind (`part`) | warm gray | plain rounded card |
+| No single kind (`part`) | warm gray | plain rounded card, corners 12 |
 | Shared hub (any kind) | its kind | double border (inset outline) |
 | Elsewhere (context) | its kind's line | dashed outline on paper, muted name |
 | External service | rose | cylinder with a tinted lid, its category glyph above the name |
@@ -94,6 +94,9 @@ At 760px and narrower (`phone.css`), top to bottom: the floating top bar (icon-o
 
 ### Embedded mode
 `?embed=1` on the page URL (the hosted site frames the map this way; `embed.ts`) is decided at runtime, never stored in the page. The title bar and the "Made with" footer are hidden by CSS (`<header>`, `#meta` and `<footer class="made">` stay in the DOM), the crumbs and Search move into a toolbar strip above the board, and the canvas fills the frame, keeping its framed grid layout (no floating chrome, no dock; the tour card sits below the canvas). Sheet, story and focus-zoom heights are measured from the toolbar's bottom edge. Copied links drop the param (`shareLink`). A stored map gets this only after an engine release and a rebuild; older viewers ignore the param.
+
+### Ask (served maps only)
+`repoladder serve` appends the Ask bar (`ask/`, `ask.css`) to the page it serves; the file on disk, published and exported pages never hold it, and the viewer bundle does not import it. It mounts only when `GET /api/ask/status` answers (the token from `?t=` goes in a header, never in storage or a copied link), so a saved copy of a served page shows nothing. One container, `#ask`, in the canvas: the bar (input and Send, Stop while an answer runs) with the answer panel above it on wide screens (bottom-centre, at most 40rem and half the canvas height, clear of the strips and the filter card), and docked at the canvas top at phone width (under the history and zoom strips) with the panel opening downward, so it never meets the bottom sheet. States: idle with up to four starter questions, loading, streaming (a muted "Looking at the code" line, never file contents), done (follow-ups keep the conversation; "New question" starts over), error ("Try again", or "Check again" when Claude Code is missing, old or signed out), no-agent (input disabled, the message, "Check again") and stopped. Tokens and the type scale only; the input is `--text-body` (16px, so iOS does not zoom); outline Send, ghost Stop and New question; 44px targets on coarse pointers; the 2px accent focus ring; no animation. Keys: `?` focuses the bar, Enter sends, Escape collapses the panel and then blurs (and does not take the board up a level); `/` and Cmd/Ctrl+K stay Search's. Citations are drawn only from the server's checked segments: verified ones open the part in the map, unverified ones are struck through and inert, ones still being checked read muted. It moves into the dock slot when the viewer restyle lands.
 
 ## Story board
 When the grouping has a `story`, the page opens on it (`story.ts`, `figures.ts`). It is for someone who has never seen the system:

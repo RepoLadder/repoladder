@@ -32,7 +32,8 @@ function sizes(css: string): Array<[string, string]> {
 test("every chrome font size uses the type scale", () => {
   let seen = 0;
   // the diagram's own styles (board.css, stops.css) are sized by the box-size model
-  for (const [sel, size] of sizes(viewerCss("styles.css", ["board.css", "stops.css"]))) {
+  // ask.css is appended by `serve`, not imported by the bundle, so it is checked on its own
+  for (const [sel, size] of [...sizes(viewerCss("styles.css", ["board.css", "stops.css"])), ...sizes(read("ask.css"))]) {
     seen++;
     if (ALLOW.has(sel)) continue;
     assert.ok(/^var\(--text-(micro|small|body|lg|h3)\)$|^inherit$|^[\d.]+(em|%)$/.test(size), `${sel}: ${size}`);

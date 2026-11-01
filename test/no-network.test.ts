@@ -103,8 +103,8 @@ export function scanSource(file: string, text: string): string[] {
   return out;
 }
 
-// the served in-page Ask client: the only viewer file that may call fetch (it exists once the Ask client has landed)
-const VIEWER_NETWORK_OK = ["src/viewer/ask/api.ts"];
+// the served in-page Ask client: api.ts makes the request; main.ts binds the page's fetch once and view.ts only takes it as an injected dependency (`typeof fetch`, passed to api.ts)
+const VIEWER_NETWORK_OK = ["src/viewer/ask/api.ts", "src/viewer/ask/main.ts", "src/viewer/ask/view.ts"];
 const VIEWER_DIR = "src/viewer";
 
 const tsFiles = (root: string, dir: string): string[] =>

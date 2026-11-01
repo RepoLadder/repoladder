@@ -3,7 +3,7 @@ import { build } from "esbuild";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildViewer } from "../src/build/viewer.ts";
+import { buildAsk, buildViewer } from "../src/build/viewer.ts";
 import { commitId } from "../src/usage.ts";
 
 const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -45,6 +45,7 @@ export async function bundleCli(o: { outfile: string; channel: Channel; version:
     banner: { js: `#!/usr/bin/env node\n// repoladder-build: ${o.version}` },
     define: {
       __REPOLADDER_VIEWER__: JSON.stringify(buildViewer()),
+      __REPOLADDER_ASK__: JSON.stringify(buildAsk()),
       __REPOLADDER_VERSION__: JSON.stringify(o.version),
       __REPOLADDER_CHANNEL__: JSON.stringify(o.channel),
       [ENGINE_VERSION_DEFINE]: JSON.stringify(o.engine),
