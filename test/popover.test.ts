@@ -4,7 +4,7 @@ import { viewerAssets } from "../src/build/viewer.ts";
 
 const POPOVERS = [".tour-card", ".crumbmenu", ".xmenu", ".xnote", ".fbar", ".sbox"];
 const rules = (): { sel: string[]; body: string }[] =>
-  [...viewerAssets().css.matchAll(/(?:^|[}])\s*([^{}@][^{}]*)\{([^{}]*)\}/g)].map((m) => ({ sel: m[1]!.split(",").map((s) => s.trim()), body: m[2]! }));
+  [...viewerAssets().css.matchAll(/(?<=^|[}])\s*([^{}@][^{}]*)\{([^{}]*)\}/g)].map((m) => ({ sel: m[1]!.split(",").map((s) => s.trim()), body: m[2]! }));
 
 test("one grouped rule gives every popover its surface, border, radius and shadow", () => {
   const shared = rules().find((r) => POPOVERS.every((p) => r.sel.includes(p)) && /box-shadow:/.test(r.body));
