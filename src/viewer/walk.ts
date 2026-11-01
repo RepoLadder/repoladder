@@ -44,6 +44,8 @@ export const groupTours = (): PlayTour[] => [...(st.data.tours ?? []).map(fromMo
 const listed = () => [...(st.cur === "root" || st.cur === STORY ? groupTours() : []), ...boardTours()];
 
 /** The panel's "Tours" block: empty where there are none. */
+export const tourRows = (): { id: string; title: string; steps: number }[] => listed().map((t) => ({ id: t.id, title: t.title, steps: t.steps.length }));
+
 export function tourList(open = false): string {
   const ts = listed();
   if (!ts.length) return "";

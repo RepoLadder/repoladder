@@ -1,0 +1,191 @@
+/* Breadcrumbs, depth badge, service panel, everything board, tour trail and copy link. */
+/* Breadcrumbs at any depth (crumbs.ts): one line, the middle collapsed into a "…" menu when it doesn't fit */
+@media (min-width: 761px) {
+  header {
+    flex-wrap: nowrap;
+  }
+  .crumbs {
+    flex: 0 1 auto;
+    min-width: 0;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    padding: 4px;
+    margin: -4px;
+  }
+}
+.crumbs [aria-current] {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crumbs.measuring [aria-current] {
+  flex-shrink: 0;
+}
+.crumbs button.more {
+  padding: 0 7px;
+  line-height: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  text-decoration: none;
+  letter-spacing: .08em;
+}
+.crumbs button.more[aria-expanded="true"] {
+  color: var(--ink);
+  border-color: var(--muted);
+}
+.crumbmenu {
+  position: fixed;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  min-width: 180px;
+  max-width: 240px;
+  padding: 4px;
+  font-size: var(--text-small);
+}
+.crumbmenu button {
+  all: unset;
+  cursor: pointer;
+  padding: 7px 10px 7px calc(10px + (var(--lvl) - 1) * 12px);
+  border-radius: 5px;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.crumbmenu button:hover,
+.crumbmenu button:focus-visible {
+  background: var(--ground);
+}
+.crumbmenu button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+/* Depth (depthbadge.ts): "3 rungs down", on a phone too; the gauge only when asked for */
+.depth {
+  flex: none;
+  align-self: center;
+  display: inline-flex;
+  color: var(--muted);
+}
+.depth[hidden] {
+  display: none;
+}
+.dtext {
+  font: var(--text-micro) var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.gauge {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 1.5px;
+}
+.gauge i {
+  width: 7px;
+  height: 2px;
+  margin-left: calc(var(--i) * 3px);
+  border-radius: 1px;
+  background: var(--line);
+}
+.gauge i.up {
+  background: var(--muted);
+}
+.gauge i.at {
+  width: 9px;
+  height: 3px;
+  margin-block: -.5px;
+  background: var(--ink);
+}
+@media (max-width: 760px) {
+  .depth {
+    order: 3;
+  }
+}
+@media (pointer: coarse) {
+  .crumbmenu button {
+    padding-block: 11px;
+  }
+}
+/* service panel: what the service is for, right under its name */
+.panel p.does {
+  margin: -2px 0 8px;
+  color: var(--muted);
+  font-size: var(--text-small);
+}
+/* Everything (everydraw.ts): pointing at a file fades the others, never the containers' names. */
+svg.focusing:not(.touring) g.every-name:not(.lit) {
+  opacity: .6;
+}
+.every-c {
+  cursor: zoom-in;
+}
+/* a double-click on a container opens its board; it shouldn't select its name's text too */
+.every-c,
+.every-name {
+  -webkit-user-select: none;
+  user-select: none;
+}
+/* The trail during a tour (tourtrail.ts): lit crumbs for the levels passed, the step's path in the strip */
+.crumbs .tour-lit::before,
+.crumbmenu .tour-lit::before {
+  content: "";
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin: 0 6px 1px 0;
+  border-radius: 50%;
+  background: var(--accent);
+  vertical-align: middle;
+}
+.crumbs button.tour-lit {
+  color: var(--ink);
+  text-decoration-color: var(--accent);
+}
+.crumbs button.more.tour-lit::before {
+  margin-right: 4px;
+}
+.panel p.tour-path {
+  display: flex;
+  gap: 6px;
+  margin: 2px 0 0;
+  font-size: var(--text-micro);
+  line-height: 1.4;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.tour-path > span {
+  flex: 0 0 auto;
+}
+.tour-path > span[aria-hidden] {
+  color: var(--line);
+  font-weight: 600;
+}
+.tour-path .tp-here {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--ink);
+  font-weight: 600;
+}
+/* Copy a link to the tour step (tourlink.ts) */
+.tour-nav button.tour-link {
+  padding: 5px 8px;
+  min-width: 32px;
+}
+.tour-nav button.tour-link svg {
+  display: block;
+  margin: 1px auto;
+}
+.walk-card .linkbox {
+  margin: 6px 0 0;
+}
+@media (max-width: 760px) {
+  .walk-card:has(.tour-link) .tour-dots,
+  .walk-card:has(.tour-link) .num {
+    padding-right: 168px;
+  }
+}

@@ -18,7 +18,18 @@ export const FONTS = {
 };
 
 /** Chrome shape, matching the site: cards, controls and the search box round to `radius`; chips are pills. Not colors (the palette is THEMES). */
-export const SHAPE = { radius: "12px", pill: "999px" };
+export const SHAPE = { radius: "12px", "radius-sm": "8px", pill: "999px" };
+
+/** Spacing scale on a 4px grid (24, 8 and 16 are the side panel's rhythm). Not colors. */
+export const SPACE = { "space-1": "4px", "space-2": "8px", "space-3": "12px", "space-4": "16px", "space-5": "24px", "space-6": "32px" };
+
+/** Floating chrome: three shadow tiers built on the `shadow` color token, and the backdrop blur (off at 0px; a surface that wants it writes `backdrop-filter: blur(var(--float-blur))`). Not colors. */
+export const ELEVATION = {
+  "shadow-1": "0 1px 2px var(--shadow)",
+  "shadow-2": "0 4px 12px var(--shadow)",
+  "shadow-3": "0 12px 32px var(--shadow)",
+  "float-blur": "0px",
+};
 
 /** Chrome type scale, mirroring the site's (`web/src/styles/theme.css`): size and line-height only, no weights or tracking. Keep in sync with the site; a follow-up moves this into `@repoladder/brand`. Diagram text is sized by the box-size model and does not use it. */
 export const TYPE = {
@@ -44,10 +55,10 @@ export const EXPORT_FONTS = {
 // Kind hues sit far apart on the wheel (blue, green, violet, slate, rose) so a box reads by color
 // before its label; every kind also has its own silhouette (draw.ts), so color is never the only cue.
 
-// Viewer-only tokens: the search scrim and the floating sheet/menu shadows; `accent-ink` (text on an accent fill) is the brand's own extra.
+// Viewer-only tokens: the search scrim, the floating sheet/menu shadows and the two floating surface tiers (`float` is the brand `surface`; `float-raised` is the brand's `paper`, the neutral nearest `surface`, so menus above a panel differ from it and no color is invented); `accent-ink` (text on an accent fill) is the brand's own extra.
 const LOCAL: Record<ThemeName, Record<string, string>> = {
-  light: { scrim: "#0005", shadow: "#0002", "accent-ink": EXTRAS.light["accent-ink"] },
-  dark: { scrim: "#0005", shadow: "#0002", "accent-ink": EXTRAS.dark["accent-ink"] },
+  light: { scrim: "#0005", shadow: "#0002", float: BRAND.light.surface, "float-raised": BRAND.light.paper, "accent-ink": EXTRAS.light["accent-ink"] },
+  dark: { scrim: "#0005", shadow: "#0002", float: BRAND.dark.surface, "float-raised": BRAND.dark.paper, "accent-ink": EXTRAS.dark["accent-ink"] },
 };
 
 export const THEMES: Record<ThemeName, Record<string, string>> = {
@@ -61,7 +72,7 @@ const props = (t: Record<string, string>) => Object.entries(t).map(([k, v]) => `
 export function tokenCss(): string {
   const fonts = `--font-display:${FONTS.display};--font-ui:${FONTS.ui};--font-mono:${FONTS.mono};`;
   const dark = `color-scheme:dark;${props(THEMES.dark)}`;
-  return `:root{${fonts}${props(SHAPE)}${props(TYPE)}${props(THEMES.light)}}`
+  return `:root{${fonts}${props(SHAPE)}${props(TYPE)}${props(SPACE)}${props(ELEVATION)}${props(THEMES.light)}}`
     + `@media (prefers-color-scheme:dark){:root:not([data-theme=light]){${dark}}}`
     + `:root[data-theme=dark]{${dark}}`;
 }

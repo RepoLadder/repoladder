@@ -14,6 +14,8 @@ import { bundleCli, bundleLib, engineVersion } from "./bundle.ts";
 
 const repo = resolve(fileURLToPath(new URL("..", import.meta.url)));
 
+// npm provenance compares this case-sensitively to GITHUB_REPOSITORY; the one place the slug is written.
+export const REPO_SLUG = "RepoLadder/repoladder";
 export const SEMVER = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
 
 const NODE_BUILTINS = new Set(builtinModules.flatMap((m) => [m, m.replace(/^node:/, "")]));
@@ -113,9 +115,9 @@ export function packageJson(o: { version: string; rootPkg: { description?: strin
     files: ["bin", "dist", "LICENSE", "NOTICE", "THIRD-PARTY-NOTICES.txt", "LICENSE-Geist.txt"],
     engines: { node: ">=20.6" },
     dependencies: o.dependencies,
-    repository: { type: "git", url: "git+https://github.com/RepoLadder/repoladder.git" },
+    repository: { type: "git", url: `git+https://github.com/${REPO_SLUG}.git` },
     homepage: "https://repoladder.com",
-    bugs: "https://github.com/RepoLadder/repoladder/issues",
+    bugs: `https://github.com/${REPO_SLUG}/issues`,
     license: o.rootPkg.license,
     publishConfig: { access: "public", provenance: true },
     keywords: ["architecture", "diagram", "typescript", "javascript", "d2", "codebase", "visualization"],

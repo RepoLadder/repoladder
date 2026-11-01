@@ -1,27 +1,33 @@
 # Publishes the `repoladder` npm package (the CLI and the library) with provenance.
 #
-# Triggers: a push to main that changes package.json (a real publish of the version in package.json,
-# unless npm already has it), a pushed `v*` tag (a real publish of that version), or a manual run (dry
-# run by default). Never runs for pull requests. A real publish runs on a commit reachable from
-# origin/main, in the public RepoLadder/repoladder repo, approved at the `npm-publish` environment.
-# A tag pushed anywhere else publishes nothing. After a publish, `release` tags v<version> and creates
+# Triggers: a push to main that changes package.json or the package generator files (a real publish of
+# the version in package.json, unless npm already has it), a pushed `v*` tag (a real publish of that
+# version), or a manual run (dry run by default; a real manual run is allowed from main when the version
+# equals package.json's, or from the tag v<version>). Never runs for pull requests. A real publish runs on
+# a commit reachable from origin/main, in the public RepoLadder/repoladder repo. A major release (compared
+# with the latest on npm) is approved at the `npm-publish-major` environment; every other real publish
+# (minor, patch, prerelease, first publish) runs at `npm-publish`, which has no reviewer. An unreadable npm
+# lookup counts as major. The guards stay for all of them: main-only commit, public repo, provenance,
+# installcheck and the `exists` short-circuit. A tag pushed anywhere else publishes nothing. After a publish, `release` tags v<version> and creates
 # the GitHub Release from CHANGELOG.md. The version bump itself comes from release.yml (Changesets).
 #
 # Auth: npm trusted publishing only (OIDC, needs npm >= 11.5.1). There is no token or secret.
 # `id-token: write` is granted to the `publish` job alone; `check` (build, installcheck, dry run) needs
-# no approval. Owner steps (2FA, trusted publisher, environment reviewers) are listed on rl#420.
+# no approval. Owner steps (2FA, trusted publisher, environment reviewers) are listed on rl#420 and in
+# docs/public-repo-settings.md.
 name: Publish to npm
 
 on:
   push:
     branches: [main]
-    # the version lands in package.json (release.yml's Version Packages PR); other main pushes publish nothing
-    paths: [package.json]
+    # the version lands in package.json (release.yml's Version Packages PR); a change to the package generator
+    # re-runs the publish too, which is a no-op when npm already has the version
+    paths: [package.json, scripts/npm-package.ts, scripts/installcheck.ts, scripts/npm-readme.md]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
-        description: Version to publish, e.g. 0.1.0 (a real publish must run on the tag v<version>)
+        description: Version to publish, e.g. 0.1.0 (a real run: on main, equal to package.json's version, or on the tag v<version>)
         required: true
         type: string
       dry-run:
@@ -50,6 +56,7 @@ jobs:
       dry: ${{ steps.decide.outputs.dry }}
       tag: ${{ steps.decide.outputs.tag }}
       exists: ${{ steps.decide.outputs.exists }}
+      bump: ${{ steps.decide.outputs.bump }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -79,8 +86,14 @@ jobs:
             VERSION="$(node -p "require('./package.json').version")"; DRY=false
           else
             VERSION="$INPUT_VERSION"; DRY="$INPUT_DRY"
-            if [ "$DRY" = "false" ] && { [ "$REF_TYPE" != "tag" ] || [ "$REF_NAME" != "v$VERSION" ]; }; then
-              echo "::error::a real publish must run on the tag v$VERSION"; exit 1
+            if [ "$DRY" = "false" ]; then
+              if [ "$REF_TYPE" = "tag" ] && [ "$REF_NAME" = "v$VERSION" ]; then :
+              elif [ "$REF_TYPE" = "branch" ] && [ "$REF_NAME" = "main" ]; then
+                PKG="$(node -p "require('./package.json').version")"
+                [ "$PKG" = "$VERSION" ] || { echo "::error::version input $VERSION is not package.json's version $PKG on main"; exit 1; }
+              else
+                echo "::error::a real publish runs on main (the version must equal package.json) or on the tag v$VERSION"; exit 1
+              fi
             fi
           fi
           if [ "$DRY" = "false" ]; then
@@ -96,6 +109,15 @@ jobs:
           if [ "$DRY" = "false" ] && npm view "repoladder@$VERSION" version >/dev/null 2>&1; then
             EXISTS=true; echo "repoladder@$VERSION is already on npm; nothing to publish"
           fi
+          # only a major release waits for approval; an unreadable npm lookup fails closed as major
+          BUMP=none
+          if [ "$DRY" = "false" ] && [ "$EXISTS" = "false" ]; then
+            if LATEST="$(npm view repoladder@latest version 2>"$RUNNER_TEMP/npm-view.err")"; then :
+            elif grep -q E404 "$RUNNER_TEMP/npm-view.err"; then LATEST=""
+            else echo "::warning::could not read the latest version from npm; treating this publish as a major release"; BUMP=major; fi
+            [ "$BUMP" = major ] || BUMP="$(node scripts/versionbump.ts "$LATEST" "$VERSION")"
+          fi
+          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "dry=$DRY" >> "$GITHUB_OUTPUT"
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
@@ -120,7 +142,7 @@ jobs:
     if: needs.check.outputs.dry == 'false' && needs.check.outputs.exists == 'false'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment: npm-publish
+    environment: ${{ needs.check.outputs.bump == 'major' && 'npm-publish-major' || 'npm-publish' }}
     permissions:
       contents: read
       id-token: write

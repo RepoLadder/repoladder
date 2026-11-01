@@ -16,6 +16,7 @@ import { coverageLines } from "./model/coverage.ts";
 import { resolveProfile, type Profile } from "./model/profile.ts";
 import type { Model } from "./model/rollup.ts";
 import { Facts, Grouping } from "./model/schema.ts";
+import { QueryError, runQuery } from "./model/query.ts";
 import { PartError, summarize, summarizePart } from "./model/summary.ts";
 import { askUsageOnce, channel, sendPing, usageState, version, writeConsent } from "./usage.ts";
 
@@ -33,6 +34,7 @@ const flags = new Map<string, string | true>();
 const args: string[] = [];
 for (let i = 0; i < rest.length; i++) {
   const a = rest[i];
+  if (a === "--") { args.push(...rest.slice(i + 1)); break; } // everything after is a plain argument, even `--odd-name`
   if (!a.startsWith("--")) args.push(a);
   else if (rest[i + 1] && !rest[i + 1].startsWith("--")) flags.set(a.slice(2), rest[++i]);
   else flags.set(a.slice(2), true);
@@ -205,7 +207,7 @@ async function runExport() {
   console.log(`EXPORT_OK ${dir} (${files.length} board${files.length === 1 ? "" : "s"}, ${theme})`);
 }
 
-const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|build|export> [root] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--help] [--version]`;
+const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--help] [--version]`;
 if (cmd === "--help" || cmd === "-h" || cmd === "help") { console.log(USAGE); process.exit(0); }
 if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version()); process.exit(0); }
 
@@ -262,6 +264,28 @@ switch (cmd) {
     let written = null;
     try { written = Grouping.safeParse(JSON.parse(readFileSync(groupingFile(), "utf8"))); } catch { /* none yet, or not JSON */ }
     process.stdout.write(summarize(facts, written?.success ? written.data : undefined, resolveFeatures(process.env, { story: flags.has("story") || undefined })));
+    break;
+  }
+  case "query": {
+    // read-only: never analyzes unless --fresh, never writes, and keeps stdout pure JSON
+    const fail = (code: string, message: string): never => { console.error(`${code}: ${message}`); process.exit(2); };
+    const factsPath = join(out, "facts.json");
+    let limit: number | undefined;
+    if (flags.has("limit")) {
+      const v = flags.get("limit");
+      limit = typeof v === "string" && /^\d+$/.test(v) ? Number(v) : NaN;
+    }
+    if (!flags.has("fresh") && !existsSync(factsPath)) fail("NO_FACTS", `no facts at ${factsPath}. Run \`repoladder analyze ${args[0] ?? "<repo>"}\` first.`);
+    const facts = flags.has("fresh") ? exitOnFail(() => runAnalyze((s) => console.error(s))).facts : Facts.parse(JSON.parse(readFileSync(factsPath, "utf8")));
+    let grouping: Grouping | undefined;
+    if (args[1] === "files" && existsSync(groupingFile())) {
+      let parsed;
+      try { parsed = Grouping.safeParse(JSON.parse(readFileSync(groupingFile(), "utf8"))); } catch { /* not JSON */ }
+      if (!parsed?.success) fail("INVALID_GROUPING", `${groupingFile()} is not a valid grouping`);
+      grouping = parsed!.data;
+    }
+    try { process.stdout.write(runQuery(facts, args[1], args[2], { limit, grouping, groupingSource: grouping ? "grouping.json" : "default" })); }
+    catch (e) { if (e instanceof QueryError) fail(e.code, e.message); throw e; }
     break;
   }
   case "analyze":

@@ -23,6 +23,8 @@ export const SourceFile = z.object({
   directive: z.enum(["client", "server"]).optional(),
   /** Names this file exports, sorted, without "default". */
   exports: z.array(z.string()).optional(),
+  /** 1-based line of each name in `exports`, same order and length; absent in facts written before this field. */
+  exportLines: z.array(z.number()).optional(),
 });
 
 export const ImportKind = z.enum(["static", "type", "reexport", "lazy", "require"]);

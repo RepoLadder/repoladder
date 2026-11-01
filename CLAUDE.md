@@ -13,7 +13,7 @@ A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architec
 ## Layout
 Each file starts with a comment saying what it is for; read it before editing.
 - `src/analyze/`: the facts. Parses with the TS compiler API (syntax only), resolves imports, detects packages, external services, runtime call edges, HTTP endpoints, pages and routes (Next.js, React Router/Remix), and database reads and writes. `source.ts` lets the analyzer read from disk or an in-memory file set.
-- `src/model/`: grouping and validation (`grouping.ts`, `depth.ts`), the no-AI default grouping (`budgetsplit.ts`), roll-up into boards (`rollup.ts`, `rollrules.ts`; a leaf's file board draws every connection in the `full` profile, `hosted` budgets arrows as before #449: `profile.ts`), the digest Claude reads (`summary.ts`), and tours and flows (`tours.ts`, `compose.ts`, `derivedtours.ts`, `flows.ts`).
+- `src/model/`: `query.ts` (the pure lookups behind `repoladder query`: file:line rows from the facts, bounded and sorted; experimental), grouping and validation (`grouping.ts`, `depth.ts`), the no-AI default grouping (`budgetsplit.ts`), roll-up into boards (`rollup.ts`, `rollrules.ts`; a leaf's file board draws every connection in the `full` profile, `hosted` budgets arrows as before #449: `profile.ts`), the digest Claude reads (`summary.ts`), and tours and flows (`tours.ts`, `compose.ts`, `derivedtours.ts`, `flows.ts`).
 - `src/build/`: D2 layout per board (`layout.ts`, `d2pool.ts`, `layoutsession.ts`, `passes.ts`), the page shell and packing (`html.ts`, `filepack.ts`), the layout lint and the digestibility budget (`lint.ts`, `budget.ts`), and `pipeline.ts`, which ties model, layout and HTML together for `cli.ts` and `lib.ts`.
 - `src/viewer/`: the in-page app, a typed TS module that runs in the browser (board drawing, navigation, panels, the tour player, deep links, the detail dial). It may import types from `src/model` and `src/build`, but nothing that pulls Node code into the page. Keep each module under about 200 lines; add a module rather than growing one. `DESIGN.md` explains the visual identity. `npm run build` bakes the viewer into the plugin bundle, so the shipped plugin never needs esbuild.
 - `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
@@ -26,7 +26,7 @@ Each file starts with a comment saying what it is for; read it before editing.
 ## Conventions
 - Node 22 runs the `.ts` sources directly (type stripping): use `.ts` import extensions and erasable syntax only (no enums, no parameter properties).
 - Output must be deterministic: the same repo gives byte-identical facts, model and HTML. Sort everything.
-- Keep the page self-contained and small: under `VIEWER_KB` (90KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
+- Keep the page self-contained and small: under `VIEWER_KB` (95KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
   - The only external scripts allowed are from cdnjs, jsdelivr or unpkg, pinned to an exact version.
   - Light and dark themes are defined through color tokens (`test/colors.test.ts` keeps colors out of other files).
   - It works at phone width.
@@ -37,10 +37,14 @@ Each file starts with a comment saying what it is for; read it before editing.
 ```bash
 npm test           # unit + fixture tests
 npm run typecheck  # tsc --noEmit
+node src/cli.ts query /path/to/repo touches database   # experimental: file:line facts as JSON, after `analyze`
 npm run build      # bundle to plugin/dist/repoladder.mjs (viewer included)
 node src/cli.ts build /path/to/repo --fresh --default   # diagram without the Claude grouping step
 node src/cli.ts build /path/to/repo --default --title "Name"   # the map's name in place of the folder name
 ```
+
+## Viewer guard
+`npm run guardbase` checks the viewer's structure against `test/baselines/viewer-structure.json`: every board's fit view (1280x800 and 390x844), every wire's route and the drill-in and drill-out animations (tolerance half a board unit; durations and easings exactly). CI runs it with `npm run motioncheck` as the `viewer guard` job for PRs touching `src/viewer/**` or `src/build/**`, and the `test, typecheck, build` check fails when it fails. Pixels (colors, radii, type) may change freely. A deliberate change to fit, routing or timing re-records the baseline in the same PR with `npm run guardbase -- --update` (refused under `CI`); the JSON diff is part of review and the PR says why. Screenshot comparison stays local (`npm run shots -- --compare`, `npm run design -- --compare`).
 
 ## Pull requests
 - Every PR passes `npm test` and `npm run typecheck`, and adds tests for new analysis or model behavior. The gallery CI job runs `npm run gallery -- --check` against `gallery/thresholds.json`; a change that makes default groupings worse fails it (`gallery/README.md`).

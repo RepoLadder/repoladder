@@ -1,0 +1,119 @@
+/* Filters and file boxes on a leaf's board. */
+/* filters (filter.ts, filterui.ts) */
+.canvas svg.board .f-off {
+  display: none;
+}
+.wire.xw .line {
+  stroke-width: 1.25;
+  opacity: 0.75;
+}
+/* a lit (tour step) or selected extra wire is drawn in full, a "uses" one (.wire.svc .line) too */
+.wire.xw:is(.sel, .wk-now) .line {
+  opacity: 1;
+}
+.wire.xw.xhub .line {
+  stroke-dasharray: 1 4;
+  stroke-linecap: round;
+  stroke-width: 1.75;
+}
+.lgi .wire.xw .line {
+  stroke-width: 1.5;
+}
+.lgi .wire.xhub .line {
+  stroke-width: 2.5;
+}
+.legend li:has(> .lgt) {
+  display: block;
+}
+.lgt {
+  all: unset;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: calc(100% + 8px);
+  margin: 0 -4px;
+  padding: 1px 4px;
+  border-radius: 6px;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.lgt:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+.lgt:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.lgt[aria-pressed="false"] {
+  color: var(--sub);
+  text-decoration: line-through;
+  text-decoration-color: var(--line);
+}
+.lgt[aria-pressed="false"] .lgi {
+  opacity: 0.45;
+}
+.fbar {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 20px);
+  padding: 4px 6px 4px 10px;
+  color: var(--muted);
+  font-size: var(--text-micro);
+}
+.fbar[hidden] {
+  display: none;
+}
+.fbar b {
+  color: var(--ink);
+  font-weight: 600;
+}
+.fbar button,
+.focus-btn {
+  font-size: var(--text-micro);
+  border-radius: var(--radius);
+  padding: 2px 8px;
+}
+.focus-btn[aria-pressed="true"] {
+  border-color: var(--accent);
+}
+/* file boxes on a leaf's board (files.ts) */
+.node.file .body {
+  fill: var(--surface);
+  stroke: var(--part-line);
+  stroke-width: 1.2;
+}
+.node.file .name {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 13px;
+}
+.node.file .ex {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  fill: var(--muted);
+}
+.node.file.more .body {
+  fill: var(--paper);
+  stroke: var(--wire);
+  stroke-dasharray: 3 3;
+}
+.cati {
+  width: 17px;
+  height: 17px;
+  margin-right: 7px;
+  vertical-align: -2px;
+  fill: none;
+  stroke: var(--svc-line);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.cati.store {
+  stroke: var(--store-line);
+}

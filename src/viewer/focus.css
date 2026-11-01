@@ -1,0 +1,110 @@
+/* Focus, edges into hubs, selection and search. */
+/* Focus (focus.ts): the hovered, keyboard-focused or selected part and its connections stay lit. */
+g[data-hit] {
+  transition: opacity .15s;
+}
+svg.focusing:not(.touring) g[data-hit]:not(.lit) {
+  opacity: .25;
+}
+/* Edges into a shared hub: drawn lighter so arrows into shared code don't dominate the board. */
+.wire.hub .line {
+  stroke-width: 1;
+  opacity: .6;
+}
+/* Labels labels.ts could not place clear of others: only when zoomed in or lit. */
+svg:not(.z-in) .wire:not(.lit):not(.sel) .lab.lo {
+  display: none;
+}
+/* Selected: accent outline on the card and its stack, and a wider halo, so it reads even when dimmed parts surround it. */
+g.sel.node .stack {
+  stroke: var(--accent);
+}
+g.sel.node {
+  filter: drop-shadow(0 0 1px var(--accent)) drop-shadow(0 0 10px var(--halo));
+}
+/* search (search.ts) */
+.sbtn {
+  border-radius: var(--radius);
+  padding: 0 4px 0 10px;
+  align-self: center;
+}
+.sbtn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.sbtn kbd {
+  font: var(--text-micro) var(--font-mono);
+  border: 1px solid var(--line);
+  border-radius: var(--pill);
+  padding: 0 5px;
+}
+.search {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: var(--scrim);
+  padding: 10vh 16px 16px;
+}
+.search[hidden] {
+  display: none;
+}
+.sbox {
+  max-width: 560px;
+  max-height: 100%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sbox input {
+  font: inherit;
+  /* 16px is the iOS focus-zoom guard: never below --text-body */
+  font-size: var(--text-body);
+  color: inherit;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 14px;
+  outline: 0;
+}
+.sbox ul {
+  margin: 0;
+  padding: 4px;
+  overflow: auto;
+}
+.sbox li {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  padding: 6px 8px;
+  border-radius: 5px;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+.sbox [aria-selected=true] {
+  background: var(--soft);
+}
+.sbox b {
+  grid-row: span 2;
+  font: 600 var(--text-micro) var(--font-ui);
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-top: 3px;
+}
+.sbox i {
+  font-style: normal;
+}
+.sbox li span {
+  font-size: var(--text-micro);
+  color: var(--muted);
+}
+.found {
+  outline: 2px solid var(--accent);
+  background: var(--soft);
+}
+/* a search can open a long file list; keep it from widening the page at phone width */
+@media (max-width: 760px) {
+  main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
