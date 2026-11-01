@@ -1,11 +1,10 @@
-// The walkthrough's caption is a strip below the canvas (walk.ts, #164): the board keeps its fit, and
-// each step pans, if it must, so the step's lit boxes and arrow are in view. On a phone the strip sits
-// at the bottom of the canvas, so the board makes room for it: on entering, a board shown at its fit is refitted into the part of the canvas above the strip,
-// and each step pans, if it must, so the step's lit boxes and arrow sit above the strip. Leaving puts
-// the plain fit back, unless the reader has moved the view in between. A resize or rotation mid-walk refits
-// above the strip too (fit.ts hands its refit over), so leaving later returns to the fit for the new size.
-// The owner picked the caption on the canvas, under the board.
+// The walkthrough's caption is a strip on the canvas under the board (walk.ts, #164), over a full-window canvas
+// with a floating header and panel (dock.ts). On entering, a board shown at its fit is refitted into the part of
+// the canvas above the strip and clear of the header and panel, and each step pans, if it must, so the step's
+// lit boxes and arrow sit there too. Leaving puts the plain fit back, unless the reader has moved the view; a resize
+// or rotation mid-walk refits above the strip too (fit.ts hands its refit over).
 import { clearCorner, covers, type Box4 } from "./corner.ts";
+import { dock } from "./dock.ts";
 import { MIN_NAME_PX, NAME_PX, boardFit, setRefitter, slideFor } from "./fit.ts";
 import { cornerButtons as clearOf } from "./focuscorner.ts";
 import { zoomClass } from "./focus.ts";
@@ -23,12 +22,12 @@ const same = (a: View, b: View) => a.length === b.length && a.every((v, i) => Ma
 
 /**
  * The view that shows all of `v` in the band of a cw×ch canvas from `y0` down to `top` pixels (centered
- * there), never zoomed in past `v`'s own scale. The result has the canvas's aspect, so "meet" adds no
+ * there) and from the left edge to `x1` (centered), never zoomed in past `v`'s own scale. The result has the canvas's aspect, so "meet" adds no
  * letterbox. Exported for tests.
  */
-export function aboveStrip(v: View, cw: number, ch: number, top: number, y0 = 0): View {
-  const k = Math.min(scaleOf(v, cw, ch), cw / v[2], Math.max(top - y0, 1) / v[3]);
-  return [v[0] + v[2] / 2 - cw / 2 / k, v[1] + v[3] / 2 - (y0 + top) / 2 / k, cw / k, ch / k];
+export function aboveStrip(v: View, cw: number, ch: number, top: number, y0 = 0, x1 = cw): View {
+  const k = Math.min(scaleOf(v, cw, ch), x1 / v[2], Math.max(top - y0, 1) / v[3]);
+  return [v[0] + v[2] / 2 - x1 / 2 / k, v[1] + v[3] / 2 - (y0 + top) / 2 / k, cw / k, ch / k];
 }
 
 /**
@@ -63,7 +62,9 @@ function walkFit(base: View, cw: number, ch: number, top: number): View {
   const boxes = (st.data.layout[st.cur]?.n ?? []).map(([, x, y, w, h]): Box4 => [x, y, w, h]);
   const x0 = Math.min(...boxes.map((b) => b[0])), y0 = Math.min(...boxes.map((b) => b[1]));
   const r = { x: x0, y: y0, w: Math.max(...boxes.map((b) => b[0] + b[2])) - x0, h: Math.max(...boxes.map((b) => b[1] + b[3])) - y0 };
-  const fitIn = (y: number) => (!phone ? aboveStrip(base, cw, ch, top, y) : boxes.length ? liftAbove(base, cw, ch, top, r, y) : base);
+  // the board stays out from under the floating header and panel (dock.ts)
+  const d = dock(), x1 = cw - (d.right ? d.right + 8 : 0), yMin = d.top ? d.top + 8 : 0;
+  const fitIn = (y: number) => (!phone ? aboveStrip(base, cw, ch, top, Math.max(y, yMin), x1) : boxes.length ? liftAbove(base, cw, ch, top, r, Math.max(y, yMin)) : base);
   // clearCorner gives back v itself when v is clear already or nothing clears it
   const v = fitIn(0), c = clearCorner(v, boxes, cw, ch, btns, phone, slideFor(v, cw, ch));
   return c != v || !covers(v, cw, ch, boxes, btns) ? c : fitIn(Math.max(...btns.map((b) => b[1] + b[3])));

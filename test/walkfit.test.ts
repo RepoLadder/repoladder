@@ -116,3 +116,10 @@ test("clearLit (#287): never pushes a lit box off the canvas's left edge; p when
   assert.ok(s[0] > 0);
   for (const b of roomy) assert.ok(onScreen(s, cw, ch, b)[0] >= 0);
 });
+
+test("aboveStrip with a right bound centers in [0, x1]; the default keeps today's result", () => {
+  const v = [0, 0, 400, 200], plain = aboveStrip(v, 1000, 600, 500);
+  assert.deepEqual(aboveStrip(v, 1000, 600, 500, 0, 1000), plain);
+  const w = aboveStrip(v, 1000, 600, 500, 0, 600), k = 1000 / w[2];
+  assert.ok(Math.abs(onScreen(w, 1000, 600, [0, 0, 400, 200])[0] + 400 * k / 2 - 300) < 1e-6);
+});
