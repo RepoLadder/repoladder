@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: Version to publish, e.g. 0.1.0 (a real run: on main, equal to package.json's version, or on the tag v<version>)
+        description: "Version to publish, e.g. 0.1.0 (a real run: on main, equal to package.json's version, or on the tag v<version>)"
         required: true
         type: string
       dry-run:
