@@ -58,11 +58,11 @@ Each kind has a silhouette as well as a color, so kinds read without labels and 
 
 | Kind | Hue | Shape |
 |---|---|---|
-| Web app (`web`) | blue | browser window: top bar with three dots, rounded corners |
+| Web app (`web`) | blue | browser window: top bar with three dots, rounded corners (10) |
 | Server (`backend`) | green | rack unit: solid left rail with three status lights, tighter corners |
-| Library (`library`) | violet | folder: a tab on top |
+| Library (`library`) | violet | folder: a tab on top, corners 12 |
 | Scripts (`scripts`) | slate | terminal: square corners, `>_` prompt in the corner |
-| No single kind (`part`) | warm gray | plain rounded card |
+| No single kind (`part`) | warm gray | plain rounded card, corners 12 |
 | Shared hub (any kind) | its kind | double border (inset outline) |
 | Elsewhere (context) | its kind's line | dashed outline on paper, muted name |
 | External service | rose | cylinder with a tinted lid, its category glyph above the name |

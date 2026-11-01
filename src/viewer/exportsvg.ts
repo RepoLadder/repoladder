@@ -37,7 +37,7 @@ export const standalone = (o: Parts): string =>
 function collect(rules: CSSRuleList, svg: SVGSVGElement, out: string[]): void {
   for (const r of Array.from(rules)) {
     try {
-      if (r instanceof CSSStyleRule) { if (svg.matches(r.selectorText) || svg.querySelector(r.selectorText)) out.push(r.cssText); }
+      if (r instanceof CSSStyleRule) { if (!r.selectorText.includes(".shaded") && (svg.matches(r.selectorText) || svg.querySelector(r.selectorText))) out.push(r.cssText); }
       else if (r instanceof CSSMediaRule) { if (matchMedia(r.conditionText).matches) collect(r.cssRules, svg, out); }
       else if (r instanceof CSSSupportsRule) { if (CSS.supports(r.conditionText)) collect(r.cssRules, svg, out); }
     } catch { /* a selector the browser rejects, or a rule it can't read */ }

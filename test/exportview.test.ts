@@ -48,3 +48,11 @@ test("standalone is a well-formed svg with the ground, the ancestor classes and 
   assert.ok(s.includes("animation:none!important;transition:none!important"));
   assert.ok(s.endsWith("</svg>"));
 });
+
+test("the viewer's node shadow is a `.shaded` rule, which the export skips", async () => {
+  const { readFileSync } = await import("node:fs");
+  const css = readFileSync(new URL("../src/viewer/chrome.css", import.meta.url), "utf8");
+  assert.match(css, /svg\.board\.shaded[^{]*\.body\s*\{[^}]*drop-shadow/);
+  assert.doesNotMatch(readFileSync(new URL("../src/viewer/board.css", import.meta.url), "utf8"), /drop-shadow/);
+  assert.match(readFileSync(new URL("../src/viewer/exportsvg.ts", import.meta.url), "utf8"), /includes\("\.shaded"\)/);
+});
