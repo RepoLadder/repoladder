@@ -43,6 +43,19 @@ html:not(.embed) .stage:not(:fullscreen) .dial {
   top: calc(var(--dock-top, 0px) + 66px);
   right: calc(var(--dock-right, 0px) + 10px);
 }
+@media (min-width: 761px) {
+  html:not(.embed) .stage:not(:fullscreen) .zoom {
+    top: auto;
+    bottom: var(--space-3);
+    right: calc(var(--dock-right, 0px) + var(--space-3));
+  }
+  html:not(.embed) .stage:not(:fullscreen) .walking .zoom {
+    bottom: calc(var(--walk-h, 0px) + var(--space-3) * 2);
+  }
+  html:not(.embed) .stage:not(:fullscreen) .dial {
+    top: calc(var(--dock-top, 0px) + 10px);
+  }
+}
 html:not(.embed) .canvas > .walk-card {
   right: calc(var(--dock-right, 0px) + 12px);
 }
