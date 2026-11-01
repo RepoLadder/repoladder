@@ -29,6 +29,7 @@ export const SEL = {
   sheet: "aside[data-sheet]",
   grip: "aside .grip",
   walkCard: ".walk-card",
+  inspectorToggle: "#insp",
   zoom: ".zoom",
   dial: ".dial",
   copyRow: "p.idrow",
@@ -92,6 +93,11 @@ const first = (c: Ctx, prefix: string) => c.hits.find((h) => h.startsWith(prefix
 
 export const STATES: State[] = [
   { id: "overview", label: "Overview (nothing selected)", mode: "all", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-closed", label: "Inspector closed (the default)", mode: "desktop", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-open-overview", label: "Inspector opened by the toggle, nothing selected", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.inspectorToggle).click();
+    await c.page.waitForTimeout(400);
+  } },
   { id: "selected-node", label: "A box selected", mode: "all", fixture: "tourapp", run: async (c) => {
     const h = nodeHit(c); if (!h) return "no part box on the root board";
     await pick(c.page, h);
