@@ -289,12 +289,12 @@ test("tool-call cap kills the whole tree", { skip }, async (t) => {
 });
 
 test("a throwing route returns a generic 500 with no internals", { skip }, async (t) => {
-  const s = await startServer({ page: () => "x", ask: false, routes: { "GET /api/boom": () => { throw new Error("secret detail at /Users/x/file.ts:1"); } } });
+  const s = await startServer({ page: () => "x", ask: false, routes: { "GET /api/boom": () => { throw new Error("secret detail at the-hidden-file.ts:1"); } } });
   t.after(() => s.close());
   const r = await call(s, "GET", "/api/boom");
   assert.equal(r.status, 500);
   assert.deepEqual(JSON.parse(r.body), { error: { code: "INTERNAL", message: "Something went wrong inside repoladder serve." } });
-  assert.doesNotMatch(r.body, /secret detail|\/Users|at /);
+  assert.doesNotMatch(r.body, /secret detail|hidden-file|\bat /);
 });
 
 test("the serve process never logs the question, and the token only in SERVE_OK", { skip }, async () => {
