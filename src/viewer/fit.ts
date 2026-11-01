@@ -134,6 +134,9 @@ function refit(): void {
   syncReframe();
 }
 
+/** Refits only a view still at the fit: a reader who panned or zoomed is never moved. */
+export function refitIfAtFit(): void { if (atFit()) refit(); }
+
 /** The current board's zoom and pan bounds on the canvas as it is now (zoomlimits.ts). */
 export function limits(): Limits {
   return limitsFor(whole, st.base, ...size());

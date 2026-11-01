@@ -26,6 +26,7 @@ import { encodeWire } from "../viewer/wire.ts";
  * Both together: 93KB.
  * 2026-10: the hosted fidelity profile's arrow budgeting shared with the viewer's file boards (rollrules.ts, #449): 94KB, the page was 72 bytes over 93KB.
  * 2026-10: the floating top bar (topactions.ts, barmenu.ts, baricons.ts, its styles, #41): about 1.8KB packed, so 97KB (CI packs about 0.5KB bigger).
+ * 2026-10: the inspector as a toggleable floating panel (viewer/inspector.ts, inspector.css, the lead/More structure of the panels): about 1KB packed on top of the open region: 97KB.
  */
 export const VIEWER_KB = 97;
 /**

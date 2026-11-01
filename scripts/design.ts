@@ -29,6 +29,7 @@ export const SEL = {
   sheet: "aside[data-sheet]",
   grip: "aside .grip",
   walkCard: ".walk-card",
+  inspectorToggle: "#insp",
   zoom: ".zoom",
   topbar: "header.topbar",
   actions: "#actions",
@@ -97,6 +98,11 @@ const first = (c: Ctx, prefix: string) => c.hits.find((h) => h.startsWith(prefix
 
 export const STATES: State[] = [
   { id: "overview", label: "Overview (nothing selected)", mode: "all", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-closed", label: "Inspector closed (the default)", mode: "desktop", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-open-overview", label: "Inspector opened by the toggle, nothing selected", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.inspectorToggle).click();
+    await c.page.waitForTimeout(400);
+  } },
   { id: "selected-node", label: "A box selected", mode: "all", fixture: "tourapp", run: async (c) => {
     const h = nodeHit(c); if (!h) return "no part box on the root board";
     await pick(c.page, h);
@@ -372,6 +378,9 @@ async function main() {
         mkdirSync(join(outDir, "controls"), { recursive: true });
         const crops: [string, string, string][] = [["zoom", "Zoom and fit", SEL.zoom], ["dial", "Detail dial", SEL.dial], ["copy", "Copy pills", SEL.copyRow], ["search", "Search button", SEL.searchOpen], ["filters", "Filter chips", SEL.filterBar]];
         // the chips card shows only while a filter is on (remembered in localStorage, so it is reset after the crop)
+        // the legend sits in the overview's More, inside the inspector: open both first
+        if ((await p.locator(SEL.inspectorToggle).isVisible()) && (await p.locator(SEL.inspectorToggle).getAttribute("aria-pressed")) !== "true") { await p.locator(SEL.inspectorToggle).click(); await p.waitForTimeout(400); }
+        await p.evaluate(() => document.querySelectorAll<HTMLDetailsElement>("details.more").forEach((d) => { d.open = true; }));
         const toggle = p.locator(SEL.legendToggle).first();
         if (await toggle.count()) await toggle.click();
         for (const [id, label, sel] of crops) {
