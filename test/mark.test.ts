@@ -24,7 +24,7 @@ test("the page has exactly one svg icon link, a percent-encoded data URI between
   assert.match(links[0]!, /type="image\/svg\+xml"/);
   assert.match(links[0]!, /href="data:image\/svg\+xml,/);
   assert.ok(!links[0]!.includes("base64"));
-  assert.ok(html.indexOf("</title>") < html.indexOf("<link rel=\"icon\"") && html.indexOf("<link rel=\"icon\"") < html.indexOf("<header>"));
+  assert.ok(html.indexOf("</title>") < html.indexOf("<link rel=\"icon\"") && html.indexOf("<link rel=\"icon\"") < html.indexOf("<header "));
 });
 
 test("the committed constants match the committed svg copies", () => {

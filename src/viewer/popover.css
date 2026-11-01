@@ -1,7 +1,8 @@
-/* The one popover look: the tour card, the crumb and export menus, the export note, the filter bar and the search box.
+/* The one popover look: the tour card, the crumb, top-bar and export menus, the export note, the filter bar and the search box.
    Each keeps only its layout in its own rule. Listed last so it wins over `.panel`; closing is instant (the element is removed). */
 .tour-card,
 .crumbmenu,
+.bmenu,
 .xmenu,
 .xnote,
 .fbar,
@@ -25,6 +26,7 @@
 @media (prefers-reduced-motion: reduce) {
   .tour-card,
   .crumbmenu,
+  .bmenu,
   .xmenu,
   .xnote,
   .fbar,
