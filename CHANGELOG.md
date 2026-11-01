@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.5.0
+
+### Minor Changes
+
+- 1efddcb: Add `analyzeFiles`, an analyze-only library entry that returns the extracted facts without grouping, layout or HTML, for callers that only need structure. `buildFromFiles` is unchanged.
+- 02d8802: Add `repoladder query`, a read-only lookup over the code facts with file:line evidence.
+- 6d63f95: Viewer: the header is a floating top bar with search, tours, export and filters; icons only on narrow screens.
+- c45dd65: Viewer: the diagram fills the window with a dot grid, and the header, side panel and tour card float over it; fit-to-window frames the board clear of them.
+- 8e33ba1: Viewer: zoom, fit and full screen are one floating control at the bottom right, with `+`, `-` and `F` shortcuts.
+
+### Patch Changes
+
+- fec214a: Fix the `"use client"` / `"use server"` directive scan hanging on large files that open with a comment and hold many block-comment ends; it now runs in linear time.
+- 5c20589: The inspector is now a floating panel that opens on selection and toggles with a button and the `I` key.
+- f85d083: Phone width: the first view of a wide map shows a fade at each clipped edge so it is clear the diagram continues.
+- 5c20589: The map's floating controls are arranged for phones: the tour card docks above the sheet and the board is framed clear of it.
+- 13da928: The viewer's tour card, menus, filter bar and search box share one popover look and open motion; the tour card gets round progress dots and Skip, Back and Next.
+- 1325e07: Viewer: design tokens for floating surfaces, shadows, spacing and a nested radius; the stylesheet is split into per-area files. No visible change.
+
 ## 0.4.0
 
 ### Minor Changes
