@@ -1,7 +1,7 @@
 // The one tour player (#192): plays any tour (tourstep.ts), a board's own or the grouping's, one at a
 // time. Every step looks the same: its boxes and arrows lit, the rest dimmed (passed steps too), its
 // arrows pulsing (pulse.ts), and the board framed on it (walkfit.ts). The card is the strip under the
-// canvas (on a phone, on the canvas under the board). Next/Back or ←/→ step; Escape, ✕, a click on
+// canvas (on a phone, on the canvas under the board). Next/Back or ←/→ step; Escape, Skip, a click on
 // empty canvas or on another board leaves, and picking a box or an arrow leaves for its details.
 // A step plays at its dial stop (#195): the dial follows it, and the stop you had before the tour
 // comes back when it ends or is left; turning the dial by hand leaves it, at the stop you picked.
@@ -17,7 +17,8 @@ import { finishTravel, travel } from "./travel.ts";
 import type { Tour } from "../model/compose.ts";
 import { auditStep, begin, litMarks, shownArrows, stepBy, type Playing, type PlayTour, type Step } from "./tourstep.ts";
 import { findTour } from "./walk.ts";
-import { $, board, esc, nameOf, st } from "./state.ts";
+import { $, board, nameOf, st } from "./state.ts";
+import { cardHtml } from "./tourcard.ts";
 import { walkAction } from "./walkorder.ts";
 import { stopWalkGlide, walkFrame, walkUnframe, type Rect } from "./walkfit.ts";
 
@@ -128,12 +129,8 @@ function paint(at?: number): void {
 
 function card(): string {
   if (!now) return "";
-  const { tour, i } = now, s = tour.steps[i], n = tour.steps.length;
-  const dots = tour.steps.map((_, k) => `<i class="${k === i ? "on" : k < i ? "done" : ""}"></i>`).join("");
-  const notes = (s.notes ?? []).map(([a, b]) => `<p class="rd-note"><b>${esc(a)}</b> ${esc(b)}</p>`).join("");
-  const undrawn = hidden.map(([a, b]) => `<p class="rd-undrawn"><b>${esc(nameOf(a))} → ${esc(nameOf(b))}</b> is a real connection in the code, but this board does not draw it (minor, or into a service used throughout).</p>`).join("");
-  // id "tour": sheet.ts reads the step from it; the dial's Alt+↑/↓ turn it and leave the tour
-  return `<div id="tour" class="panel tour-card walk-card" aria-live="polite"><div class="tour-dots" aria-hidden="true">${dots}</div><p class="num">Step ${i + 1} of ${n} · ${esc(tour.title)}<span class="rd-tap"> · tap for next</span></p><p class="tour-text">${esc(s.caption)}</p>${undrawn}${notes}<div class="tour-nav"><button data-tour-step="-1"${i === 0 ? " disabled" : ""}>‹ Back</button><button data-tour-step="1" class="primary">${i === n - 1 ? "Done" : "Next ›"}</button><button data-tour-exit aria-label="Leave the tour">✕</button></div></div>`;
+  const { tour, i } = now, s = tour.steps[i];
+  return cardHtml({ i, n: tour.steps.length, title: tour.title, caption: s.caption, notes: s.notes ?? [], undrawn: hidden.map(([a, b]) => [nameOf(a), nameOf(b)]) });
 }
 
 /** Whether the card sits on the canvas: always, except embedded mode and full screen (a framed canvas, the card below it, #164). */
