@@ -12,8 +12,11 @@ const at = (s: string) => {
   return i;
 };
 
-test("release.yml still runs CI on the Version Packages PR", () => {
-  at("gh workflow run ci.yml");
+test("the Version Packages PR is opened with RELEASE_PR_TOKEN so its CI starts on its own", () => {
+  const action = at("changesets/action");
+  const token = at("GITHUB_TOKEN: ${{ secrets.RELEASE_PR_TOKEN }}");
+  assert.ok(token > action, "the PAT is the changesets step's token");
+  assert.ok(!yml.includes("gh workflow run ci.yml"), "no manual CI dispatch: the PR's own pull_request CI is the gate");
   at("actions: write");
   at("timeout-minutes: 60");
 });
@@ -40,7 +43,14 @@ test("the publish is dispatched from main after the wait step", () => {
   assert.match(line, /dry-run=false/);
 });
 
-test("no secret other than GITHUB_TOKEN is used", () => {
+test("no secret other than GITHUB_TOKEN and RELEASE_PR_TOKEN is used", () => {
   const used = [...yml.matchAll(/secrets\.(\w+)/g)].map((m) => m[1]);
-  assert.deepEqual(used.filter((n) => n !== "GITHUB_TOKEN"), []);
+  assert.deepEqual(used.filter((n) => n !== "GITHUB_TOKEN" && n !== "RELEASE_PR_TOKEN"), []);
+});
+
+test("the merge and publish steps keep the built-in token", () => {
+  // A merge made with the PAT would also start publish.yml by push.
+  const merge = at("gh pr merge");
+  assert.ok(!yml.slice(merge - 400, merge).includes("RELEASE_PR_TOKEN"), "the auto-merge step does not use the PAT");
+  assert.equal(yml.split("RELEASE_PR_TOKEN").length - 1, 1, "the PAT is used in exactly one place");
 });
