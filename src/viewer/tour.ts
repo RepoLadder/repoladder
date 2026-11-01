@@ -144,7 +144,9 @@ function sync(): void {
   document.querySelector(".walk-card")?.remove();
   c.classList.toggle("walking", !!html);
   if (!html) return;
-  c.insertAdjacentHTML(onCanvas() ? "beforeend" : "afterend", html);
+  const dock = phone() ? document.getElementById("dock") : null;
+  if (dock) dock.insertAdjacentHTML("beforeend", html);
+  else c.insertAdjacentHTML(onCanvas() ? "beforeend" : "afterend", html);
   if (onCanvas()) c.style.setProperty("--walk-h", `${c.querySelector<HTMLElement>(".walk-card")!.offsetHeight}px`);
 }
 

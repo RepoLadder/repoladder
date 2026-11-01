@@ -35,6 +35,11 @@ function measure(): boolean {
 export function installDock(): void {
   measure();
   const again = () => { if (measure()) window.dispatchEvent(new Event("dockchange")); };
+  // the bottom dock (phone.css) publishes its height on the canvas, for the zoom strip riding above it
+  const bottom = document.getElementById("dock");
+  const canvas = document.getElementById("canvas");
+  const dockH = new ResizeObserver(() => { canvas?.style.setProperty("--dock-h", `${Math.round(bottom?.getBoundingClientRect().height ?? 0)}px`); });
+  if (bottom) dockH.observe(bottom);
   const ro = new ResizeObserver(again);
   for (const s of ["header", "main > aside", "#canvas"]) { const e = document.querySelector(s); if (e) ro.observe(e); }
   addEventListener("resize", again);

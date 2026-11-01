@@ -52,7 +52,7 @@
   html:not(.embed) .stage:fullscreen #insp {
     display: none;
   }
-  /* below the button; the dial sits below the toggle; the zoom keeps its bottom-right corner */
+  /* below the button; the dial stays left of the panel, level with it; the zoom strip sits lower right (canvas.css) */
   html:not(.embed) main > aside {
     top: calc(var(--dock-top, 64px) + 54px);
     max-height: calc(100vh - var(--dock-top, 64px) - 54px - var(--space-3));

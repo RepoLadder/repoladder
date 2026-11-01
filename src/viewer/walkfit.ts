@@ -99,7 +99,7 @@ export function walkResized(plain: View, cw: number, ch: number, top: number, li
 const litBoxes = (): Box4[] => [...st.svgEl.querySelectorAll<SVGGElement>("g[data-hit^='n:'].wk-now")].map((g) => g.getBBox()).map((b) => [b.x, b.y, b.width, b.height]);
 
 /** Whether the strip is on the canvas (a phone), so the board's fit makes room for it. */
-const onCanvas = () => !!document.querySelector("#canvas > .walk-card");
+const onCanvas = () => !!document.querySelector("#canvas .walk-card");
 
 /** The strip's top, in canvas pixels (the canvas's height when the strip is below it), or null when no strip is shown. */
 function stripTop(): number | null {

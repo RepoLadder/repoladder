@@ -68,7 +68,7 @@ async function main() {
     await p.keyboard.press("Escape");
     const z = await p.evaluate(() => { const r = document.querySelector(".zoom")!.getBoundingClientRect(), c = document.getElementById("canvas")!.getBoundingClientRect(); return { r, c }; });
     ok(z.r.top > z.c.top + z.c.height / 2 && z.r.right <= z.c.right, "the strip is not at the lower right on a wide window");
-    const side = await p.evaluate(() => { const a = document.querySelector("main > aside")!.getBoundingClientRect(), r = document.querySelector(".zoom")!.getBoundingClientRect(); return a.width > 0 && getComputedStyle(document.querySelector("main > aside")!).display !== "none" ? r.right <= a.left + 1 : true; });
+    const side = await p.evaluate(() => { const a = document.querySelector("main > aside")!.getBoundingClientRect(), r = document.querySelector(".zoom")!.getBoundingClientRect(); return a.width > 0 && (document.querySelector("main > aside") as HTMLElement).dataset.inspector !== "closed" && getComputedStyle(document.querySelector("main > aside")!).display !== "none" ? r.right <= a.left + 1 : true; });
     ok(side, "the strip sits under the inspector");
     await p.click("#zexp"); await frame(p);
     const m = await p.evaluate(() => { const r = document.querySelector(".xmenu")!.getBoundingClientRect(), b = document.getElementById("zexp")!.getBoundingClientRect(); return r.top >= b.bottom - 1 && r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1 && r.left >= 0; });

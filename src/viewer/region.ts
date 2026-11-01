@@ -20,10 +20,19 @@ export function atRegion(v: View, cw: number, ch: number, r: Region): View {
   return [v[0] + v[2] / 2 - (r.x + r.w / 2) / s, v[1] + v[3] / 2 - (r.y + r.h / 2) / s, cw / s, ch / s];
 }
 
-/** How many px of the canvas's bottom the phone's sheet covers: its peek, or its half height at the story level (sheet.ts). */
+/**
+ * The phone's open height rule: the px of a `ch`-tall canvas's bottom the resting sheet (`sheetCover`, already
+ * measured from the canvas's bottom edge) and the dock's other occupants (`dockH`) cover. The board keeps 40% of the canvas.
+ */
+export const phoneCover = (ch: number, sheetCover: number, dockH: number): number => Math.min(Math.max(0, sheetCover) + Math.max(0, dockH), ch * 0.6);
+
+/** The height of what #dock holds besides the tour card, whose framing walkfit.ts does itself. */
+const dockUsed = (): number =>
+  [...(document.getElementById("dock")?.children ?? [])].filter((k) => !k.classList.contains("walk-card")).reduce((n, k) => n + k.getBoundingClientRect().height, 0);
+
+/** How many px of the canvas's bottom the phone's sheet (its peek, or its half height at the story level, sheet.ts) and the dock cover. */
 export function coveredBottom(ch: number): number {
   if (!matchMedia("(max-width: 760px)").matches) return 0;
   const h = heights(innerHeight, topEdge()), up = st.cur === STORY ? h.half : h.peek;
-  const covered = document.getElementById("canvas")!.getBoundingClientRect().bottom - (innerHeight - up);
-  return Math.min(Math.max(0, covered), ch * 0.6);
+  return phoneCover(ch, document.getElementById("canvas")!.getBoundingClientRect().bottom - (innerHeight - up), dockUsed());
 }
