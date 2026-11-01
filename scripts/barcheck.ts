@@ -87,6 +87,13 @@ async function main() {
       await p.keyboard.press("Enter");
       check(await p.locator(".xmenu button").count() === 3, `${m.n}: Enter opens Export`);
       await p.keyboard.press("Escape");
+      // the Tours menu lists what the panel's Tours box lists
+      await p.locator("#tbtours").focus();
+      await p.keyboard.press("Enter");
+      const menuRows = await p.evaluate(() => [...document.querySelectorAll(".bmenu [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
+      const panelRows = await p.evaluate(() => [...document.querySelectorAll("#details .walk-panel [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
+      check(!!menuRows && menuRows === panelRows, `${m.n}: the Tours menu matches the panel's Tours box`);
+      await p.keyboard.press("Escape");
       // a tour row plays the tour
       await p.locator("#tbtours").focus();
       await p.keyboard.press("Enter");

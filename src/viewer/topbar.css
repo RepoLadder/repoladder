@@ -146,6 +146,12 @@
     order: 1;
   }
 }
+.zoom .tbact .lbl {
+  display: none;
+}
+.zoom .tbact {
+  padding: 0;
+}
 /* Export's menu and note hang under the bar's button, over the side panel (the stage under them is its own stacking context) */
 .xmenu,
 .xnote {

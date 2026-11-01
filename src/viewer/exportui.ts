@@ -16,8 +16,8 @@ export function installExport(decode?: typeof decode91, fonts?: string): (kind: 
     return kind === "png" ? toPng(v.text, v.w, v.h) : new Blob([v.text], { type: "image/svg+xml" });
   };
   // the menu and note hang under the top-bar button, over the side panel: in the body, which matches the canvas's
-  // coordinates on the full-window page; embedded, the canvas is smaller than the page and stays the host
-  const host = (cls: string) => cls === "xprev" || document.documentElement.classList.contains("embed") ? canvas : document.body;
+  // coordinates on the full-window page; embedded or in full screen (the body is not shown), the canvas is the host
+  const host = (cls: string) => cls === "xprev" || document.fullscreenElement || document.documentElement.classList.contains("embed") ? canvas : document.body;
   const el = (tag: string, cls: string, html: string, role: string) => {
     const e = document.createElement(tag);
     e.className = `${cls} exp-ui`;

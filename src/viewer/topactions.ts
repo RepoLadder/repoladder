@@ -35,6 +35,11 @@ export function installTopActions(): void {
   exp.insertAdjacentHTML("beforeend", `<span class="lbl">Export</span>`);
   if (isEmbed(location.search)) return;
   $("actions").insertAdjacentHTML("afterbegin", btn("tbtours", ICONS.tour, "Tours") + btn("tbfilters", ICONS.filter, "Filters"));
+  // the header is not shown in full screen: Export joins the zoom strip there, and goes back after
+  document.addEventListener("fullscreenchange", () => {
+    const full = document.fullscreenElement === $("stage");
+    if (full) $("canvas").querySelector(".zoom")!.append(exp); else $("actions").append(exp);
+  });
   const toggle = (b: HTMLElement, html: () => string, label: string, closeOnPick: boolean) => b.addEventListener("click", () => {
     const wasMine = b.getAttribute("aria-expanded") === "true";
     closeBarMenu();
