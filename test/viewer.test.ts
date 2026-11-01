@@ -20,9 +20,11 @@ test("viewer bundles to a deterministic IIFE exposing repoladder.start", () => {
 
 test("viewer modules stay small", () => {
   const dir = new URL("../src/viewer/", import.meta.url);
-  for (const f of readdirSync(dir).filter((f) => f.endsWith(".ts"))) {
-    const lines = readFileSync(new URL(f, dir), "utf8").split("\n").length;
-    assert.ok(lines <= 220, `${f} has ${lines} lines`);
+  for (const sub of ["", "ask/"]) {
+    for (const f of readdirSync(new URL(sub, dir)).filter((f) => f.endsWith(".ts"))) {
+      const lines = readFileSync(new URL(sub + f, dir), "utf8").split("\n").length;
+      assert.ok(lines <= 220, `${sub}${f} has ${lines} lines`);
+    }
   }
 });
 

@@ -11,6 +11,15 @@ export function stripEmbed(href: string): string {
   } catch { return href; }
 }
 
+/** A URL without the access token `t` that `repoladder serve` puts in the address; every other param and the hash stay. Unparseable input is returned as is. */
+export function dropToken(href: string): string {
+  try {
+    const u = new URL(href);
+    u.searchParams.delete("t");
+    return u.href;
+  } catch { return href; }
+}
+
 /** The bar above the board: the toolbar when embedded, else the header. */
 export const chrome = (): HTMLElement => document.querySelector<HTMLElement>(".tbar") ?? document.querySelector("header")!;
 

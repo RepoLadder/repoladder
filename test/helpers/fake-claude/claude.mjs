@@ -21,6 +21,18 @@ else if (mode === "manytools") {
   emit({ type: "system", subtype: "init" });
   for (let i = 0; i < 40; i++) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } });
   setInterval(() => {}, 1000);
+} else if (mode === "stream") {
+  // for screenshots: deltas with pauses, so loading and streaming can be captured
+  const full = "The database is touched by src/db.ts:1 and by src/invented/ghost.ts.";
+  emit({ type: "system", subtype: "init" });
+  const words = full.split(" ");
+  let i = 0;
+  const wait = Number(process.env.FAKE_CLAUDE_DELAY_MS || 400);
+  setTimeout(function tick() {
+    if (i === 2) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Grep", input: {} }] } });
+    if (i < words.length) { delta((i ? " " : "") + words[i++]); setTimeout(tick, wait); }
+    else { emit({ type: "result", subtype: "success", is_error: false, result: full }); process.exit(0); }
+  }, wait * 2);
 } else if (mode === "cites") {
   const text = "It lives in src/lib/cart.ts:1 but not in src/invented/ghost.ts.";
   emit({ type: "system", subtype: "init" });
