@@ -1,6 +1,7 @@
 // File boards: a leaf group opened into its files. Box drawing and side panels for file boxes.
 import { exportLine, linesLabel, moreLabel } from "../model/fileboards.ts";
 import { pathLink } from "./codelink.ts";
+import { more } from "./box.ts";
 import { mono } from "./mono.ts";
 import { $, N, board, esc, filePathOf, isFile, nameOf, path, plural, st } from "./state.ts";
 
@@ -33,7 +34,7 @@ export function renderFile(id: string, conns: string): void {
     return;
   }
   const [loc, ...ex] = st.data.files?.[id] ?? [0];
-  $("details").innerHTML = `<h2>File</h2><div class="panel"><h3>${esc(nameOf(id))}</h3><div class="ev">${pathLink(filePathOf(id))}</div><p class="num">${esc(linesLabel(loc))}</p>${ex.length ? `<h4>Top exports</h4><p class="num">${ex.map((e) => mono(e)).join(", ")}</p>` : ""}${conns}</div>`;
+  $("details").innerHTML = `<h2>File</h2><div class="panel"><h3>${esc(nameOf(id))}</h3><div class="ev">${pathLink(filePathOf(id))}</div><p class="num">${esc(linesLabel(loc))}</p>${more(ex.length ? `<h4>Top exports</h4><p class="num">${ex.map((e) => mono(e)).join(", ")}</p>` : "")}${conns}</div>`;
 }
 
 /** The file boxes of a leaf board, for the overview list. */

@@ -1,5 +1,6 @@
 // Search (`/` or Cmd/Ctrl+K): fuzzy match over parts, files, endpoints, pages, services and collections,
 // then jump to the board where the match is drawn and select it.
+import { ICONS } from "./baricons.ts";
 import { chrome } from "./embed.ts";
 import { goTo, show } from "./navigate.ts";
 import { $, esc, st, type ViewerData } from "./state.ts";
@@ -79,7 +80,10 @@ function go([kind, label, , node, board]: Hit): void {
 
 export function installSearch(): void {
   let index: Hit[], res: Hit[] = [], act = 0;
-  chrome().insertAdjacentHTML("beforeend", `<button class="sbtn" aria-haspopup="dialog">Search <kbd>/</kbd></button>`);
+  // before the actions (Export is there, in the header or the embedded toolbar)
+  const tail = chrome().querySelector("#actions, #zexp");
+  const sbtn = `<button class="sbtn" aria-haspopup="dialog" aria-keyshortcuts="/" aria-label="Search files, parts…" title="Search (/)">${ICONS.search}<span class="lbl">Search files, parts…</span><kbd>/</kbd></button>`;
+  if (tail) tail.insertAdjacentHTML("beforebegin", sbtn); else chrome().insertAdjacentHTML("beforeend", sbtn);
   document.body.insertAdjacentHTML("beforeend", `<div class="search" role="dialog" aria-label="Search the diagram" hidden><div class="sbox"><input type="search" role="combobox" aria-expanded="true" aria-controls="sres" autocomplete="off" spellcheck="false" placeholder="Files, parts, endpoints, services…"><ul id="sres" role="listbox"></ul></div></div>`);
   const btn = document.querySelector<HTMLElement>(".sbtn")!, dlg = document.querySelector<HTMLElement>(".search")!;
   const input = dlg.querySelector("input")!, list = dlg.querySelector("ul")!;

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import { isEmbed, pickTop, stripEmbed } from "../src/viewer/embed.ts";
+import { viewerCss } from "./helpers/viewercss.ts";
 
 test("isEmbed is on only for embed=1", () => {
   assert.equal(isEmbed("?embed=1"), true);
@@ -22,8 +23,13 @@ test("pickTop measures from the toolbar when embedded, else the header", () => {
   assert.equal(pickTop(false, 60, 44), 60);
 });
 
+test("embedded mode moves Export into the toolbar with the crumbs", () => {
+  const src = readFileSync(new URL("../src/viewer/embed.ts", import.meta.url), "utf8");
+  assert.ok(/bar\.append\(document\.getElementById\("zexp"\)!\)/.test(src));
+});
+
 test("embed CSS hides the title bar and the footer", () => {
-  const css = readFileSync(new URL("../src/viewer/styles.css", import.meta.url), "utf8");
+  const css = viewerCss();
   const rule = css.match(/html\.embed header,\s*html\.embed \.made\s*\{([^}]*)\}/);
   assert.ok(rule && /display:\s*none/.test(rule[1]));
 });

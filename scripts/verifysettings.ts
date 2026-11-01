@@ -17,6 +17,7 @@ export type Config = {
   defaultBranch: string;
   requiredChecks: string[];
   requireCodeOwnerReview: boolean;
+  allowAutoMerge: boolean;
   allowedBypassActorTypes: string[];
   interactionLimit: { limit: string; expiry: string };
 };
@@ -74,7 +75,7 @@ function field(r: Read, id: string, label: string, path: string[], want: unknown
   return got === want ? ok(id, label) : off(id, label, `${path.join(".")} is ${JSON.stringify(got)}, want ${JSON.stringify(want)}`);
 }
 
-function repoChecks(read: Runner, repo: string): Result[] {
+function repoChecks(read: Runner, repo: string, cfg: Config): Result[] {
   const r = read(`repos/${repo}`);
   const out: Result[] = [];
   if (r.status !== 200) {
@@ -82,6 +83,7 @@ function repoChecks(read: Runner, repo: string): Result[] {
       ["merge-methods", "Squash and merge commits are allowed (no rebase)"],
       ["delete-branch-on-merge", "Head branches are deleted after merge"],
       ["discussions", "Discussions are on"],
+      ["auto-merge", "Auto-merge is allowed"],
       ["secret-scanning", "Secret scanning is enabled"],
       ["push-protection", "Push protection for secrets is enabled"],
       ["dependabot-updates", "Dependabot security updates are enabled"],
@@ -95,6 +97,7 @@ function repoChecks(read: Runner, repo: string): Result[] {
   else out.push(off("merge-methods", label, `squash=${squash} merge-commit=${merge} rebase=${rebase}`));
   out.push(field(r, "delete-branch-on-merge", "Head branches are deleted after merge", ["delete_branch_on_merge"], true));
   out.push(field(r, "discussions", "Discussions are on", ["has_discussions"], true));
+  out.push(field(r, "auto-merge", "Auto-merge is allowed", ["allow_auto_merge"], cfg.allowAutoMerge));
   out.push(field(r, "secret-scanning", "Secret scanning is enabled", ["security_and_analysis", "secret_scanning", "status"], "enabled"));
   out.push(field(r, "push-protection", "Push protection for secrets is enabled", ["security_and_analysis", "secret_scanning_push_protection", "status"], "enabled"));
   out.push(field(r, "dependabot-updates", "Dependabot security updates are enabled", ["security_and_analysis", "dependabot_security_updates", "status"], "enabled"));
@@ -212,13 +215,13 @@ function launchCheck(read: Runner, repo: string, cfg: Config, now: number): Resu
 }
 
 export function evaluate(read: Runner, repo: string, cfg: Config, opts: { launchWeek: boolean; now?: number }): Result[] {
-  const out = [...repoChecks(read, repo), ...actionsChecks(read, repo), ...alertChecks(read, repo), ...rulesetChecks(read, repo, cfg)];
+  const out = [...repoChecks(read, repo, cfg), ...actionsChecks(read, repo), ...alertChecks(read, repo), ...rulesetChecks(read, repo, cfg)];
   if (opts.launchWeek) out.push(launchCheck(read, repo, cfg, opts.now ?? Date.now()));
   return out;
 }
 
 export const CHECK_IDS: string[] = [
-  "merge-methods", "delete-branch-on-merge", "discussions", "secret-scanning", "push-protection", "dependabot-updates",
+  "merge-methods", "delete-branch-on-merge", "discussions", "auto-merge", "secret-scanning", "push-protection", "dependabot-updates",
   "read-only-token", "actions-create-prs", "fork-pr-approval", "dependabot-alerts", "private-vuln-reporting",
   ...RULESET_IDS.map(([id]) => id), "interaction-limit",
 ];

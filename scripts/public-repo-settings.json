@@ -9,6 +9,7 @@
     "PR carries a changeset or version bump"
   ],
   "requireCodeOwnerReview": false,
+  "allowAutoMerge": true,
   "allowedBypassActorTypes": ["Integration", "DeployKey"],
   "interactionLimit": { "limit": "existing_users", "expiry": "one_week" }
 }

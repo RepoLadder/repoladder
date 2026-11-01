@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="29.4 10 220 220" fill="none" stroke-width="14" stroke-miterlimit="10" stroke-linejoin="miter" stroke-linecap="butt">
+  <title>RepoLadder</title>
+  <defs><clipPath id="base"><rect x="0" y="0" width="260" height="210"/></clipPath></defs>
+  <g clip-path="url(#base)">
+    <path stroke="#12805F" d="M76 58V216M76 89H105.34L175.19 216M76 127H126.24M76 165H147.14"/>
+    <path stroke="#151918" d="M69 37H158.19A45 45 0 0 1 158.19 127L207.14 216"/>
+  </g>
+</svg>
