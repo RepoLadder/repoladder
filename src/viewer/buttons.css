@@ -82,7 +82,8 @@
   display: flex;
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  background: var(--surface);
+  background: var(--float);
+  box-shadow: var(--shadow-1);
   overflow: hidden;
 }
 .zoom button {

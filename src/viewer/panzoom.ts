@@ -19,6 +19,11 @@ function zoom(f0: number, cx = 0.5, cy = 0.5): void {
   setView([v[0] + (v[2] - w) * cx, v[1] + (v[3] - h) * cy, w, h]);
 }
 
+/** Zoom in (f < 1) or out (f > 1) about the canvas center: what the buttons and the +/- keys share. */
+export { zoom as zoomBy };
+/** Back to the fit, as the Reframe button does. */
+export const reframeNow = (): void => setView(reframe());
+
 type Pt = [number, number];
 const mid = (a: Pt, b: Pt): Pt => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
 const dist = (a: Pt, b: Pt) => Math.hypot(a[0] - b[0], a[1] - b[1]);
@@ -76,5 +81,5 @@ export function installPanZoom(): void {
   window.addEventListener("pointercancel", up);
   $("zin").onclick = () => zoom(1 / 1.25);
   $("zout").onclick = () => zoom(1.25);
-  $("zfit").onclick = () => { setView(reframe()); $("zin").focus(); };
+  $("zfit").onclick = () => { reframeNow(); $("zin").focus(); };
 }
