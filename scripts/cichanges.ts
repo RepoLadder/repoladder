@@ -2,7 +2,7 @@
 //
 //   EVENT=pull_request BASE_REF=develop BASE_SHA=<sha> HEAD_SHA=<sha> node scripts/cichanges.ts
 //
-// Writes `code=` and `windows=` to $GITHUB_OUTPUT (stdout when unset). Fails safe: any doubt
+// Writes `code=`, `windows=` and `viewer=` to $GITHUB_OUTPUT (stdout when unset). Fails safe: any doubt
 // (not a PR, a PR into main, a git error, an empty or unparsable diff) means both are true, so every job runs.
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
@@ -22,6 +22,16 @@ const WINDOWS = [
   /^plugin\//, /^\.claude-plugin\//, /^package(-lock)?\.json$/, /^tsconfig/,
   /^\.github\/workflows\/ci\.yml$/,
 ];
+
+// Paths that can change the viewer's fit, wire routing or drill-in timing; the viewer guard job (guardbase + motioncheck) runs for these.
+const VIEWER = [
+  /^src\/(viewer|build)\//, /^scripts\/(guardbase|guardcompare|motioncheck|cichanges)\.ts$/,
+  /^test\/baselines\//, /^test\/fixtures\/tourapp\//, /^package(-lock)?\.json$/, /^\.github\/workflows\/ci\.yml$/,
+];
+
+export function touchesViewer(entries: Entry[]): boolean {
+  return entries.some((e) => VIEWER.some((r) => r.test(e.path)));
+}
 
 export function classify(entries: Entry[]): Decision {
   if (entries.length === 0) return { code: true, windows: true };
@@ -60,10 +70,22 @@ export function decide(env: Record<string, string | undefined>, git: (range: str
   }
 }
 
+// Fail-safe like `decide`: true for anything but a feature PR, and on any doubt.
+export function decideViewer(env: Record<string, string | undefined>, git: (range: string) => string): boolean {
+  if (runsEverything(env.EVENT, env.BASE_REF) || !env.BASE_SHA || !env.HEAD_SHA) return true;
+  try {
+    const entries = parseNameStatus(git(`${env.BASE_SHA}...${env.HEAD_SHA}`));
+    return !entries || entries.length === 0 || touchesViewer(entries);
+  } catch {
+    return true;
+  }
+}
+
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const d = decide(process.env, (range) => execFileSync("git", ["diff", "--name-status", "--no-renames", range], { encoding: "utf8" }));
-  const lines = `code=${d.code}\nwindows=${d.windows}\n`;
+  const git = (range: string) => execFileSync("git", ["diff", "--name-status", "--no-renames", range], { encoding: "utf8" });
+  const d = decide(process.env, git), viewer = decideViewer(process.env, git);
+  const lines = `code=${d.code}\nwindows=${d.windows}\nviewer=${viewer}\n`;
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, lines);
   else process.stdout.write(lines);
-  console.log(`::notice title=CI scope::code=${d.code} windows=${d.windows} (${d.files} files)`);
+  console.log(`::notice title=CI scope::code=${d.code} windows=${d.windows} viewer=${viewer} (${d.files} files)`);
 }

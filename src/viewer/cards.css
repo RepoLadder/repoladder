@@ -1,0 +1,120 @@
+/* Collection panel, actor cards, connection counts and history buttons. */
+/* collection panel (collections.ts): every field, how it is used, and where */
+.flds {
+  gap: 6px;
+}
+.flds .fld {
+  padding: 2px 6px;
+}
+.fname {
+  font: 500 var(--text-micro) var(--font-mono);
+  overflow-wrap: anywhere;
+}
+.fname .how {
+  font: var(--text-micro) var(--font-ui);
+  color: var(--muted);
+  margin-left: 8px;
+}
+.flds .ev {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  padding: 1px 0;
+}
+/* Actor cards (figures.ts): the card, not the medallion inside it, shows hover, focus, selection and a lit sentence */
+g.sel.actor .card,
+g.actor[data-hit]:focus-visible .card {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+g.sel.actor .body,
+g.actor[data-hit]:focus-visible .body {
+  stroke: var(--ink) !important;
+  stroke-width: 1.25 !important;
+}
+.node.actor:hover .card,
+svg.board.telling g.told.actor .card {
+  stroke-width: 2.25;
+}
+.node.actor:hover .body,
+svg.board.telling g.told.actor .body {
+  stroke-width: 1.25;
+}
+/* Connection counts (counts.ts): the numbers arrows no longer carry */
+.counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 12px;
+  padding: 0;
+  list-style: none;
+}
+.counts li {
+  flex: 1 1 0;
+  min-width: 72px;
+  padding: 8px 10px 7px;
+  background: var(--soft);
+  border-radius: var(--radius);
+}
+.counts b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.counts span {
+  display: block;
+  font: var(--text-micro) var(--font-ui);
+  color: var(--muted);
+}
+/* Back / Forward (history.ts): the canvas's top left, mirroring the zoom buttons on its right */
+.hist {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 3;
+  display: flex;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+}
+.hist button {
+  padding: 0;
+  width: 30px;
+  height: 28px;
+  text-align: center;
+  line-height: 28px;
+  font-size: var(--text-body);
+}
+.hist button + button {
+  border-left: 1px solid var(--line);
+}
+.hist button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+@media (max-width: 760px) {
+  /* second row: the breadcrumbs, then the depth */
+  header::after {
+    content: "";
+    order: 2;
+    flex: 0 0 100%;
+    margin-top: -4px;
+  }
+  .crumbs {
+    order: 3;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+@media (pointer: coarse) {
+  .hist button {
+    width: 44px;
+    height: 44px;
+    line-height: 44px;
+    font-size: var(--text-lg);
+  }
+}

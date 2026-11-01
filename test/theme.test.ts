@@ -6,7 +6,7 @@ import { FONTS, THEMES, resolveTokens, tokenCss } from "../src/viewer/theme.ts";
 const KINDS = ["web", "backend", "library", "scripts", "part", "svc", "store"];
 const KEYS = [
   "ground", "surface", "paper", "ink", "muted", "sub", "line", "soft", "accent", "halo", "wire", "call",
-  ...KINDS.flatMap((k) => [k, `${k}-line`]), "scrim", "shadow", "accent-ink",
+  ...KINDS.flatMap((k) => [k, `${k}-line`]), "scrim", "shadow", "float", "float-raised", "accent-ink",
 ].sort();
 
 function lum(hex: string): number {
@@ -31,6 +31,12 @@ test("brand colors pass through untouched, in valid formats", () => {
   for (const t of ["light", "dark"] as const) {
     for (const [k, v] of Object.entries(BRAND[t])) assert.equal(THEMES[t][k], v, `${t}.${k}`);
     for (const [k, v] of Object.entries(THEMES[t])) assert.match(v, /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$|^rgba\(/, `${t}.${k}`);
+  }
+});
+
+test("text on the floating surfaces is readable in both themes", () => {
+  for (const t of ["light", "dark"] as const) {
+    for (const k of ["float", "float-raised"]) assert.ok(ratio(THEMES[t].ink, THEMES[t][k]) >= 4.5, `${t}: ink on ${k}`);
   }
 });
 

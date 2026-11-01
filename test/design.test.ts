@@ -36,6 +36,8 @@ test("renderDesignSheet escapes labels, has a section per state and only relativ
   assert.ok(!html.includes("/Users/"));
   assert.ok(html.includes("approximation, not the site"));
   assert.ok(html.includes("Not shown"), "no type scale: a note says why");
+  assert.ok(html.includes("Floating surfaces") && html.includes("--space-6") && html.includes("var(--shadow-3)"));
+  assert.ok(!/\/Users\/|\/home\//.test(html));
 });
 
 test("renderDesignSheet shows the type scale when the viewer has one", () => {

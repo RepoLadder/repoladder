@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { classify, decide, parseNameStatus, runsEverything, type Entry } from "../scripts/cichanges.ts";
+import { classify, decide, decideViewer, touchesViewer, parseNameStatus, runsEverything, type Entry } from "../scripts/cichanges.ts";
 
 const e = (status: string, path: string): Entry => ({ status, path });
 
@@ -72,7 +72,7 @@ test("ci.yml triggers: PRs into main and develop, ready_for_review, push to main
 });
 
 test("ci.yml: only `changes` and `leak-guard` carry the draft condition, every other job needs `changes`", () => {
-  assert.equal(jobs.length, 9);
+  assert.equal(jobs.length, 10);
   for (const j of jobs) {
     const name = j.slice(0, j.indexOf(":"));
     assert.match(j, /timeout-minutes: \d+/, name);
@@ -103,8 +103,33 @@ test("ci.yml: sharded unit job and aggregating gate", () => {
   assert.equal(tb.match(/npm run build/g)?.length, 1);
   const check = job("check");
   assert.match(check, /name: test, typecheck, build\n/);
-  assert.match(check, /needs: \[changes, unit, typecheck-build\]/);
+  assert.match(check, /needs: \[changes, unit, typecheck-build, viewer-guard\]/);
   assert.ok(check.includes("needs.unit.result") && check.includes("needs.typecheck-build.result"));
+  assert.ok(check.includes("needs.viewer-guard.result") && check.includes('"$GUARD" = skipped'));
+  const guard = job("viewer-guard");
+  assert.match(guard, /needs\.changes\.outputs\.viewer == 'true'/);
+  assert.ok(guard.includes("npm run guardbase") && guard.includes("npm run motioncheck"));
   const pkg = JSON.parse(readFileSync(fileURLToPath(new URL("../package.json", import.meta.url)), "utf8"));
   assert.ok(!pkg.scripts.test.includes("--test-shard"));
+});
+
+test("touchesViewer is true for viewer, build, baseline, fixture, lockfile and workflow files", () => {
+  for (const p of ["src/viewer/main.ts", "src/build/layout.ts", "test/baselines/viewer-structure.json", "test/fixtures/tourapp/a.ts", "package-lock.json", ".github/workflows/ci.yml", "scripts/guardbase.ts"]) {
+    assert.equal(touchesViewer([e("M", p)]), true, p);
+  }
+});
+
+test("touchesViewer is false for docs and analyzer-only changes", () => {
+  assert.equal(touchesViewer([e("M", "docs/a.md"), e("M", "src/analyze/x.ts")]), false);
+});
+
+test("decideViewer fails safe and otherwise follows the changed files", () => {
+  const env = { EVENT: "pull_request", BASE_REF: "develop", BASE_SHA: "a", HEAD_SHA: "b" };
+  assert.equal(decideViewer(env, () => "M\tsrc/viewer/main.ts\n"), true);
+  assert.equal(decideViewer(env, () => "M\tdocs/a.md\nM\tsrc/analyze/x.ts\n"), false);
+  assert.equal(decideViewer(env, () => ""), true);
+  assert.equal(decideViewer(env, () => { throw new Error("git"); }), true);
+  assert.equal(decideViewer(env, () => "garbage"), true);
+  assert.equal(decideViewer({ ...env, EVENT: "push" }, () => "M\tdocs/a.md\n"), true);
+  assert.equal(decideViewer({ ...env, BASE_REF: "main" }, () => "M\tdocs/a.md\n"), true);
 });

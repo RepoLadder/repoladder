@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import { viewerCss } from "./helpers/viewercss.ts";
 
-const css = readFileSync(new URL("../src/viewer/styles.css", import.meta.url), "utf8").replace(/\s+/g, " ");
+const css = viewerCss().replace(/\s+/g, " ");
 
 test("embedded body takes the 24px site gutter above the phone layout", () => {
   const m = css.match(/@media \(min-width: 761px\) \{ html\.embed \{ --gutter: 24px; \} html\.embed body \{ padding-inline: var\(--gutter\); \} \}/);

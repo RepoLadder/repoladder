@@ -1,0 +1,113 @@
+/* Footer links and embedded mode. */
+/* "Made with" and Feedback (#217): plain links at the foot of the panel, quiet until hovered */
+.made {
+  margin-top: auto;
+  padding-top: 4px;
+  color: var(--muted);
+  font-size: var(--text-micro);
+  opacity: .75;
+}
+.made a {
+  color: inherit;
+  text-decoration: none;
+}
+.made a:hover,
+.made a:focus-visible {
+  color: var(--ink);
+  text-decoration: underline;
+}
+.made a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+/* on a desktop the panel scrolls: the links stay pinned to its foot; in the phone's sheet they end the content */
+@media (min-width: 761px) {
+  .made {
+    position: sticky;
+    bottom: 0;
+    padding-block: 6px 2px;
+    background: var(--ground);
+    opacity: 1;
+  }
+}
+/* embedded mode (embed.ts): no title bar or footer; crumbs and Search sit in a toolbar above the board */
+html.embed,
+html.embed body {
+  height: 100dvh;
+  overflow: hidden;
+}
+html.embed body {
+  padding: 0 12px 12px;
+}
+@media (min-width: 761px) {
+  html.embed {
+    --gutter: 24px;
+  }
+  html.embed body {
+    padding-inline: var(--gutter);
+  }
+}
+html.embed header,
+html.embed .made {
+  display: none;
+}
+.tbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  height: 44px;
+}
+.tbar .crumbs {
+  flex: 0 1 auto;
+  min-width: 0;
+  order: 0;
+  padding-right: 0;
+}
+.tbar .depth,
+.tbar .sbtn {
+  order: 0;
+}
+.tbar .sbtn {
+  margin-left: auto;
+}
+@media (min-width: 761px) {
+  html.embed main {
+    grid-template-rows: auto minmax(0, 1fr);
+    align-items: stretch;
+    gap: 0 20px;
+    padding: 0;
+  }
+  html.embed .tbar {
+    grid-area: 1 / 1;
+  }
+  html.embed .canvas {
+    grid-area: 2 / 1;
+    height: 100%;
+    min-height: 0;
+  }
+  html.embed aside {
+    grid-area: 1 / 2 / 3 / 3;
+    max-height: 100%;
+  }
+}
+@media (max-width: 760px) {
+  html.embed body {
+    padding: 0;
+  }
+  html.embed main {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+  }
+  html.embed .canvas {
+    flex: 1;
+    min-height: 0;
+  }
+  .tbar {
+    flex: none;
+    height: 40px;
+    padding-inline: 12px;
+  }
+}

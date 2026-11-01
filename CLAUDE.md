@@ -43,6 +43,9 @@ node src/cli.ts build /path/to/repo --fresh --default   # diagram without the Cl
 node src/cli.ts build /path/to/repo --default --title "Name"   # the map's name in place of the folder name
 ```
 
+## Viewer guard
+`npm run guardbase` checks the viewer's structure against `test/baselines/viewer-structure.json`: every board's fit view (1280x800 and 390x844), every wire's route and the drill-in and drill-out animations (tolerance half a board unit; durations and easings exactly). CI runs it with `npm run motioncheck` as the `viewer guard` job for PRs touching `src/viewer/**` or `src/build/**`, and the `test, typecheck, build` check fails when it fails. Pixels (colors, radii, type) may change freely. A deliberate change to fit, routing or timing re-records the baseline in the same PR with `npm run guardbase -- --update` (refused under `CI`); the JSON diff is part of review and the PR says why. Screenshot comparison stays local (`npm run shots -- --compare`, `npm run design -- --compare`).
+
 ## Pull requests
 - Every PR passes `npm test` and `npm run typecheck`, and adds tests for new analysis or model behavior. The gallery CI job runs `npm run gallery -- --check` against `gallery/thresholds.json`; a change that makes default groupings worse fails it (`gallery/README.md`).
 - Never commit `plugin/dist/`. The `no-dist` job fails any PR that touches it; a bot rebuilds it on `main` after each release and `Verify bundle` checks it. If you ran `npm run build`, run `git checkout plugin/dist` before committing. A bundle built locally (macOS) will not match CI's, so never compare locally.
