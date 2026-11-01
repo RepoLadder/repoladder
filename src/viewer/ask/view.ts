@@ -71,7 +71,7 @@ export function mount(d: Deps): void {
   function draw() {
     const pinned = panel.scrollTop + panel.clientHeight >= panel.scrollHeight - 8;
     const ph = state.phase, hasTurns = state.turns.length > 0;
-    const showPanel = open && (hasTurns || ph === "no-agent" || (ph === "idle" && starters.length > 0));
+    const showPanel = ph === "no-agent" || (open && (hasTurns || (ph === "idle" && starters.length > 0)));
     panel.hidden = !showPanel;
     root.dataset.phase = ph;
     root.classList.toggle("has-panel", showPanel);

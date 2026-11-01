@@ -122,6 +122,8 @@
   text-decoration: line-through;
 }
 #ask .cite-ok {
+  text-align: left;
+  overflow-wrap: anywhere;
   padding: 0 4px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -160,10 +162,10 @@
 }
 @media (max-width: 760px) {
   #ask {
-    top: 10px;
+    top: 58px;
     bottom: auto;
-    left: 112px;
-    right: 64px;
+    left: 10px;
+    right: 10px;
     width: auto;
     transform: none;
     flex-direction: column;

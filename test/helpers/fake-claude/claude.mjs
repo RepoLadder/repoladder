@@ -23,7 +23,7 @@ else if (mode === "manytools") {
   setInterval(() => {}, 1000);
 } else if (mode === "stream") {
   // for screenshots: deltas with pauses, so loading and streaming can be captured
-  const full = "The database is touched by src/db.ts:1 and by src/invented/ghost.ts.";
+  const full = process.env.FAKE_CLAUDE_TEXT || "The database is touched by src/db.ts:1 and by src/invented/ghost.ts.";
   emit({ type: "system", subtype: "init" });
   const words = full.split(" ");
   let i = 0;
@@ -34,7 +34,7 @@ else if (mode === "manytools") {
     else { emit({ type: "result", subtype: "success", is_error: false, result: full }); process.exit(0); }
   }, wait * 2);
 } else if (mode === "cites") {
-  const text = "It lives in src/lib/cart.ts:1 but not in src/invented/ghost.ts.";
+  const text = process.env.FAKE_CLAUDE_TEXT || "It lives in src/lib/cart.ts:1 but not in src/invented/ghost.ts.";
   emit({ type: "system", subtype: "init" });
   delta(text);
   emit({ type: "result", subtype: "success", is_error: false, result: text });

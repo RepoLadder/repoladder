@@ -25,7 +25,7 @@ function monoSelectors(): Set<string> {
 
 const ALLOWED = [
   "section h2", ".panel h4", ".box > summary", ".ev", ".idrow code", ".cname", ".fname", ".linkbox", ".snip", ".sbtn kbd", ".captions .cap", ".mono",
-  ".node.file .ex", ".node .sub", ".node .glyph", ".wire .n",
+  ".node.file .ex", ".node .sub", ".node .glyph", ".wire .n", "#ask .cite",
 ];
 
 test("mono is used only by the allowed selectors", () => {
