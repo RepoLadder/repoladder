@@ -14,6 +14,7 @@ import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
+import { REPO_SLUG } from "./npm-package.ts";
 import { diagnoseInstall, waitForDeps } from "./installwait.ts";
 
 const repo = resolve(import.meta.dirname, "..");
@@ -125,7 +126,7 @@ function packCheck(): void {
   const meta = JSON.parse(readFileSync(join(pkgDir, "package.json"), "utf8"));
   if (meta.name !== "repoladder") fail("package.json name is not repoladder");
   if (typeof meta.license !== "string" || !meta.license) fail("package.json has no license");
-  if (!/github\.com\/RepoLadder\/repoladder/.test(meta.repository?.url ?? "")) fail("package.json repository is not repoladder/repoladder");
+  if (meta.repository?.url !== `git+https://github.com/${REPO_SLUG}.git`) fail("package.json repository.url does not match REPO_SLUG in scripts/npm-package.ts");
   if (meta.publishConfig?.provenance !== true || meta.publishConfig?.access !== "public") fail("package.json publishConfig is not { access: public, provenance: true }");
   for (const need of ["package.json", "dist/lib.mjs", "dist/types/lib.d.ts", "bin/repoladder.mjs"]) if (!paths.includes(need)) fail(`tarball is missing ${need}`);
 

@@ -1,0 +1,49 @@
+/* Phone layout (max-width 760px) of the floating chrome, top to bottom: the top bar (topbar.css, two rows: icons,
+   then the scrolling crumbs), Back/Forward and the detail dial under it, the map's zoom strip on the right under the bar, the dock (the tour card; the Ask bar will dock here too), the bottom sheet (narrow.css).
+   #dock is empty and takes no room until something is put in it. Phone only: desktop and embedded modes hide it. */
+.dock {
+  display: none;
+}
+@media (max-width: 760px) {
+  html:not(.embed) .dock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    /* above the sheet's resting height; the sheet publishes --sheet-h on the root (sheet.ts) */
+    bottom: calc(var(--sheet-h, 148px) + 8px);
+    z-index: 5;
+    pointer-events: none;
+  }
+  html:not(.embed) .dock:empty {
+    display: none;
+  }
+  html:not(.embed) .dock > * {
+    pointer-events: auto;
+  }
+  /* the top bar's crumbs row scrolls sideways; its icons never wrap under it */
+  html:not(.embed) header {
+    max-width: calc(100vw - 2 * var(--space-2));
+    box-sizing: border-box;
+    padding-top: max(var(--space-2), env(safe-area-inset-top));
+  }
+  html:not(.embed) header .actions {
+    flex: none;
+  }
+  /* the sheet clears the home indicator */
+  aside {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+}
+@media (max-width: 760px) and (pointer: coarse) {
+  html:not(.embed) header .sbtn,
+  html:not(.embed) header .tbact,
+  .grip,
+  .dock .tour-nav button {
+    min-height: 44px;
+    min-width: 44px;
+    box-sizing: border-box;
+  }
+}

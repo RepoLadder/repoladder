@@ -124,14 +124,16 @@ ${body || "<p>No tours.</p>"}`);
 
 type Page = import("playwright").Page;
 const frames = (p: Page) => p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-/** The data-hits of the boxes (`sel`) whose client rects meet the zoom buttons, the dial or Back/Forward. */
-const underButtons = (p: Page, sel: string): Promise<string[]> => p.evaluate((sel) => {
-  const bs = [...document.querySelectorAll(".zoom, .dial, .canvas > .hist")].map((e) => e.getBoundingClientRect()).filter((b) => b.width);
+/** The floating controls a box must not sit under on a phone: zoom, dial, Back/Forward, the top bar and the dock. (Not the sheet: a board cropped at the readable zoom runs on under it by design, a pan away.) */
+export const FLOATING = ".zoom, .dial, .canvas > .hist, header.topbar, .dock > *";
+/** The data-hits of the boxes (`sel`) whose client rects meet a floating control (FLOATING). */
+const underButtons = (p: Page, sel: string): Promise<string[]> => p.evaluate(([sel, floating]) => {
+  const bs = [...document.querySelectorAll(floating)].map((e) => e.getBoundingClientRect()).filter((b) => b.width);
   return [...document.querySelectorAll<SVGGElement>(sel)].filter((g) => {
     const r = g.getBoundingClientRect();
     return bs.some((b) => r.left < b.right && r.right > b.left && r.top < b.bottom && r.bottom > b.top);
   }).map((g) => g.dataset.hit!);
-}, sel);
+}, [sel, FLOATING] as const);
 
 /** Plays every tour of one diagram a step at a time, a shot per step and one after Done, and checks Done lands on the board's own fit. */
 async function shootTours(p: Page, name: string, outDir: string, rows: TourRow[], base: Baseline): Promise<number> {
