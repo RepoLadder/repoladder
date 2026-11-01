@@ -5,7 +5,7 @@ import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
-const FILES = ["README.md", "docs/install.md", "docs/how-it-works.md", "docs/export.md", "docs/development.md", "CONTRIBUTING.md"];
+const FILES = ["README.md", "docs/install.md", "docs/how-it-works.md", "docs/export.md", "docs/badge.md", "docs/development.md", "CONTRIBUTING.md"];
 
 /** GitHub's heading anchor: lowercase, no markdown, only letters, digits, spaces, - and _. Duplicates are numbered by headingsOf. */
 export function githubSlug(heading: string): string {

@@ -4,8 +4,9 @@ import assert from "node:assert/strict";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
-import { dtsClosure, libDependencies, packageJson, packageVersion, stamp, typeImports } from "../scripts/npm-package.ts";
+import { dtsClosure, libDependencies, packageJson, REPO_SLUG, packageVersion, stamp, typeImports } from "../scripts/npm-package.ts";
 
 const json = (rel: string) => JSON.parse(readFileSync(fileURLToPath(new URL(rel, import.meta.url)), "utf8"));
 const root = json("../package.json"), plugin = json("../plugin/package.json"), lock = json("../package-lock.json");
@@ -20,7 +21,7 @@ test("packageJson: the publishable shape", () => {
   assert.deepEqual(p.files, ["bin", "dist", "LICENSE", "NOTICE", "THIRD-PARTY-NOTICES.txt", "LICENSE-Geist.txt"]);
   assert.deepEqual(p.bin, { repoladder: "bin/repoladder.mjs" });
   assert.equal(p.homepage, "https://repoladder.com");
-  assert.equal((p.repository as { url: string }).url, "git+https://github.com/RepoLadder/repoladder.git");
+  assert.equal((p.repository as { url: string }).url, `git+https://github.com/${REPO_SLUG}.git`);
   assert.equal((p.engines as { node: string }).node, ">=20.6");
   assert.equal(p.license, root.license);
   assert.equal(p.license, "Apache-2.0");
@@ -80,4 +81,32 @@ test("stamp: semver+commit, the bare semver when too long for the ping's check",
   assert.equal(stamp("0.12.3", "dev"), "0.12.3+dev");
   assert.equal(stamp("10.200.3000-rc.1.xx", "a1b2c3d"), "10.200.3000-rc.1.xx");
   assert.equal(stamp("10.200.3000-rc.1.beta.longer", "a1b2c3d"), "dev");
+});
+
+function actualSlug(): string | null {
+  const env = process.env.GITHUB_REPOSITORY;
+  if (env) return env;
+  try {
+    const url = execFileSync("git", ["remote", "get-url", "origin"], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return url.match(/^(?:https:\/\/github\.com\/|git@github\.com:)([^/]+\/[^/]+?)(?:\.git)?$/)?.[1] ?? null;
+  } catch { return null; }
+}
+
+test("package metadata matches the repository", (t) => {
+  const p = packageJson({ version: "1.2.3", rootPkg: root, dependencies: {} }) as Record<string, unknown>;
+  assert.match(p.homepage as string, /^https:\/\//);
+  const actual = actualSlug();
+  if (!actual) return t.skip("no GITHUB_REPOSITORY and no github origin remote");
+  if (actual.toLowerCase() !== REPO_SLUG.toLowerCase()) return t.skip(`fork (${actual}): metadata legitimately differs`);
+  assert.equal(REPO_SLUG, actual, "REPO_SLUG casing must match the repository (npm provenance is case-sensitive)");
+  assert.equal((p.repository as { url: string }).url, `git+https://github.com/${actual}.git`);
+  assert.equal(p.bugs, `https://github.com/${actual}/issues`);
+});
+
+test("the repository slug is defined once", () => {
+  const read = (f: string) => readFileSync(fileURLToPath(new URL(`../scripts/${f}`, import.meta.url)), "utf8");
+  const count = (s: string) => s.split("RepoLadder/repoladder").length - 1;
+  const installcheck = read("installcheck.ts");
+  assert.equal(count(read("npm-package.ts")) + count(installcheck), 1);
+  assert.match(installcheck, /import \{[^}]*\bREPO_SLUG\b[^}]*\} from "\.\/npm-package\.ts"/);
 });
