@@ -65,6 +65,22 @@ gh api -X PATCH repos/OWNER/REPO -F allow_squash_merge=true -F allow_merge_commi
   -F allow_auto_merge=true
 ```
 
+**Settings, Environments**
+
+Publishing to npm uses two environments, chosen by `publish.yml` from the release type:
+
+- `npm-publish`: no required reviewer. Minor, patch, prerelease and first publishes run here.
+- `npm-publish-major`: the required reviewer. A major release (compared with the latest version on npm)
+  pauses here until approved. An unreadable npm lookup counts as major.
+
+A major is the one human-approved step of a release. The other guards stay on every publish: main-only
+commit, public repo, provenance, installcheck and the already-on-npm short-circuit.
+
+The npm trusted publisher for `repoladder` is bound to the workflow file `publish.yml` and an environment
+name, so the npm-side configuration must accept both names. npm's trusted-publisher form takes one
+environment name: leave it blank to accept any environment of `publish.yml`, otherwise a major publish
+fails at the npm step.
+
 ## Phase 2: the ruleset on `main`
 
 Settings, Rules, Rulesets, New branch ruleset. Enforcement: Active (`ruleset-active`). Target: the default
