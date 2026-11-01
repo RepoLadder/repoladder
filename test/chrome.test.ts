@@ -45,7 +45,7 @@ test("shape tokens exist and the chrome uses them", () => {
   const t = tokenCss();
   assert.ok(t.includes("--radius:12px") && t.includes("--pill:999px"));
   const css = viewerAssets().css;
-  const radius = (sel: string) => css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?border-radius:([^;}]+)`))?.[1];
+  const radius = (sel: string) => css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?border-radius:([^;}]+)`))?.[1] ?? css.match(new RegExp(`(?:^|[},])(?:[^{}]*,)?${sel.replace(/[.\[\]]/g, "\\$&")}(?:,[^{}]*)?\\{[^}]*?border-radius:([^;}]+)`))?.[1];
   for (const s of [".zoom", ".hist", ".sbox", ".fbar", ".crumbmenu", ".dial", ".copy", ".panel"]) assert.equal(radius(s), "var(--radius)", s);
   assert.match(css, /#insp\{[^}]*?border-radius:var\(--radius\)/);
   for (const s of [".sw", ".sbtn kbd", ".crumbs button.more"]) assert.equal(radius(s), "var(--pill)", s);
