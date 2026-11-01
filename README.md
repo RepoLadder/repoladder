@@ -19,7 +19,8 @@
 <p align="center">
   <a href="https://repoladder.com/browse">Live demo</a> ·
   <a href="docs/install.md">Install</a> ·
-  <a href="#documentation">Documentation</a>
+  <a href="#documentation">Documentation</a> ·
+  <a href="#is-it-safe-to-install">Safe to install</a>
 </p>
 
 **Run one command on your TypeScript or JavaScript repo. In a few minutes you get a diagram a newcomer can click through and understand, and every box and arrow comes from the code.**
@@ -70,6 +71,19 @@ In Claude Code:
 ```
 
 Then open your repo and run `/map`. You need Node.js 20.6 or newer. Requirements, what gets installed, updating and uninstalling are in [docs/install.md](docs/install.md).
+
+## Is it safe to install?
+
+Short answers, each with the file that backs it:
+
+- **What it reads:** your repo's files, from disk. It runs `git` locally to list them ([`src/analyze/files.ts`](src/analyze/files.ts)).
+- **What it writes:** a `.repoladder/` folder inside your repo, and your usage-stats answer in `~/.config/repoladder/`. Nothing else ([PRIVACY.md](PRIVACY.md#where-things-run)).
+- **The analyzer never touches the network.** The code that reads your repo, builds the model and lays out the diagram makes no network calls, and a test fails if one appears ([`test/no-network.test.ts`](test/no-network.test.ts)).
+- **Usage stats are off unless you say yes.** The default answer is no, and nothing is sent without a yes ([PRIVACY.md](PRIVACY.md#usage-stats-off-unless-you-say-yes)).
+- **The npm package is published with provenance.** It is built and published by a GitHub Actions workflow with no stored token, so npm can show where each release came from ([`.github/workflows/publish.yml`](.github/workflows/publish.yml), [package page](https://www.npmjs.com/package/repoladder)). Its dependencies are pinned to exact versions and the package declares no scripts of its own.
+- **The plugin installs from a pinned lockfile with no install scripts.** It adds two packages, the TypeScript parser and the D2 layout engine, with `npm ci --ignore-scripts` ([`plugin/package-lock.json`](plugin/package-lock.json), [docs/install.md](docs/install.md)).
+
+Two honest edges: Claude sees the repo summary through your own Claude account, and the first run downloads those two packages from npm. Full detail: [PRIVACY.md](PRIVACY.md) and [docs/install.md](docs/install.md). These claims are about installing the plugin or the package; working on RepoLadder itself (`npm install` in this repo) also installs git hooks and dev tools, see [docs/development.md](docs/development.md).
 
 ## Why you can trust the arrows
 
