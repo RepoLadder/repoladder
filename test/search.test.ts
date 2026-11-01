@@ -1,5 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { analyze } from "../src/analyze/index.ts";
 import { assign, defaultGrouping } from "../src/model/grouping.ts";
@@ -59,6 +60,12 @@ test("search: index covers groups, files, endpoints, services and collections an
   const c = st.filter((h) => h[0] === "collection");
   assert.ok(c.length > 0 && c.every(([, , , node, board]) => node.startsWith("store-") && board));
   assert.equal(new Set(c.map((h) => h[3] + h[1])).size, c.length, "one hit per collection");
+});
+
+test("the search trigger keeps its class, popup hint and the / hint, with an icon and a label", () => {
+  const src = readFileSync(new URL("../src/viewer/search.ts", import.meta.url), "utf8");
+  assert.ok(src.includes('class="sbtn"') && src.includes('aria-haspopup="dialog"') && src.includes('aria-keyshortcuts="/"') && src.includes("<kbd>/</kbd>"));
+  assert.ok(src.includes("ICONS.search") && src.includes('class="lbl"'));
 });
 
 test("the viewer bundle includes search", () => {

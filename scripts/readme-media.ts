@@ -1,7 +1,7 @@
 // Records the README's demo GIF, and per-tour clips: plays tours on the repoladder map in Playwright Chromium
 // and encodes the frames as a GIF (gifenc, in the browser, so no ffmpeg is needed) or records a WebM
 // (Playwright's own bundled ffmpeg: `npx playwright install ffmpeg`). Re-run it whenever the viewer changes
-// how a tour looks or moves (e.g. the up/across/down transition, #194).
+// how a tour looks or moves (e.g. the up/across/down transition, #194). The re-record steps are in docs/development.md.
 //
 //   REPOLADDER_BRAND_NAME=RepoLadder npm run gallery -- --only repoladder --title RepoLadder   # builds .gallery/out/repoladder/diagram.html
 //   npm run readme-media                                           # writes docs/media/tour.gif

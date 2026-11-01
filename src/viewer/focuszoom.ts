@@ -7,7 +7,9 @@
 // phone the fit leaves room for the bottom sheet.
 // The owner picked it on every board asked: "zoom to fit, but free to nav and zoom on my own" (round 2).
 // localStorage "repoladder.zoom" = "off" turns it off (screenshots of "stays put" use it).
+import { dock } from "./dock.ts";
 import { topEdge } from "./embed.ts";
+import { openRegion } from "./region.ts";
 import { settled, shuffleOn } from "./transition.ts";
 import type { Box4 } from "./corner.ts";
 import { clearOfButtons, cornerButtons } from "./focuscorner.ts";
@@ -78,7 +80,8 @@ function target(): View | null {
   const hidden = narrow() ? Math.max(0, r.bottom - (innerHeight - heights(innerHeight, topEdge()).half)) : 0;
   const kBase = Math.min(r.width / st.base[2], r.height / st.base[3]), u = union(bs);
   const fit = (a: Box) => focusView(u, r.width, r.height, a, Math.max(kBase, MAX_NAME_PX / NAME_PX));
-  const area = { x: 0, y: 0, w: r.width, h: Math.max(r.height - hidden, r.height * 0.35) };
+  // the part of the canvas the floating header, the panel and the sheet leave open (region.ts)
+  const area = openRegion(r.width, r.height, dock(), Math.min(hidden, r.height * 0.65));
   // on a phone the corner buttons leave no free room at the top: frame the selection below them (#152)
   if (!narrow()) return fit(area);
   // a hair over the floor, so panzoom.ts's clamp leaves the view as framed

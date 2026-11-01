@@ -11,12 +11,18 @@ const publishJob = block(/^ {2}publish:[\s\S]*?(?=^ {2}release:)/m);
 const releaseJob = block(/^ {2}release:[\s\S]*$/m);
 const checkJob = block(/^ {2}check:[\s\S]*?(?=^ {2}publish:)/m);
 
-test("publish.yml: triggers are only main (package.json changes), v* tags and workflow_dispatch", () => {
+test("publish.yml: triggers are only main (package.json or package generator changes), v* tags and workflow_dispatch", () => {
   const on = block(/^on:[\s\S]*?(?=^permissions:)/m);
-  assert.match(on, /^ {2}push:\n {4}branches: \[main\]\n {4}paths: \[package\.json\]\n {4}tags: \["v\*"\]/m);
+  assert.match(on, /^ {2}push:\n {4}branches: \[main\]\n {4}paths: \[package\.json, scripts\/npm-package\.ts, scripts\/installcheck\.ts, scripts\/npm-readme\.md\]\n {4}tags: \["v\*"\]/m);
   assert.match(on, /^ {2}workflow_dispatch:/m);
   assert.deepEqual([...on.matchAll(/^ {2}(\w+):/gm)].map((m) => m[1]), ["push", "workflow_dispatch"]);
   for (const bad of ["pull_request", "pull_request_target", "workflow_run"]) assert.ok(!code.includes(bad), bad);
+});
+
+test("publish.yml: a real manual run is allowed from main or its tag, with the same guards", () => {
+  for (const s of ['"$REF_NAME" = "main"', "require('./package.json').version", 'v$VERSION', "a real publish runs on main", "merge-base --is-ancestor", "repoladder/repoladder", "REPO_PRIVATE"]) assert.ok(checkJob.includes(s), s);
+  assert.match(checkJob, /\[ "\$PKG" = "\$VERSION" \]/);
+  assert.ok(!code.includes("a real publish must run on the tag"));
 });
 
 test("publish.yml: no token or secret, OIDC only", () => {
@@ -31,9 +37,13 @@ test("publish.yml: id-token: write only in the publish job; default is contents:
   assert.ok(!checkJob.includes("id-token"));
 });
 
-test("publish.yml: publish is gated behind check and the npm-publish environment, with provenance", () => {
+test("publish.yml: publish is gated behind check, picks its environment from the bump, and uses provenance", () => {
   assert.match(publishJob, /needs: check/);
-  assert.match(publishJob, /environment: npm-publish/);
+  assert.ok(publishJob.includes("environment: ${{ needs.check.outputs.bump == 'major' && 'npm-publish-major' || 'npm-publish' }}"));
+  assert.equal(code.match(/npm-publish-major/g)?.length, 1);
+  assert.equal(code.match(/npm-publish(?!-major)/g)?.length, 1);
+  assert.match(checkJob, /^ {6}bump: \$\{\{ steps\.decide\.outputs\.bump \}\}$/m);
+  assert.match(checkJob, /node scripts\/versionbump\.ts/);
   assert.match(publishJob, /needs\.check\.outputs\.dry == 'false'/);
   assert.match(publishJob, /npm publish [^\n]*--provenance/);
   assert.match(checkJob, /npm publish --dry-run/);

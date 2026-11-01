@@ -13,8 +13,12 @@ import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { THEMES, type ThemeName } from "@repoladder/brand";
 import { esc } from "../src/viewer/esc.ts";
+import { ELEVATION, SHAPE, SPACE, THEMES as VIEWER } from "../src/viewer/theme.ts";
 import { MODES, planCompare, renderCompare, shotFile, type CompareRow, type Manifest, type ModeId, type ShotBoard, type ShotRepo } from "./shots.ts";
 import { shellTokens } from "./shellstyle.ts";
+import { clipped, FLOATERS, overlaps, report } from "./phonecheck.ts";
+
+export { clipped, overlaps };
 
 type Page = import("playwright").Page;
 
@@ -28,12 +32,20 @@ export const SEL = {
   sheet: "aside[data-sheet]",
   grip: "aside .grip",
   walkCard: ".walk-card",
+  inspectorToggle: "#insp",
   zoom: ".zoom",
+  topbar: "header.topbar",
+  actions: "#actions",
+  tourMenu: ".bmenu",
+  tbtours: "#tbtours",
+  tbfilters: "#tbfilters",
   dial: ".dial",
   copyRow: "p.idrow",
   filterBar: "#fbar",
   legendToggle: "button.lgt[data-filter]",
   filterReset: "#fbar [data-freset]",
+  dock: "#dock",
+  topFloaters: FLOATERS.topbar,
 } as const;
 
 export const DESIGN_MODES = ["desktop", "phone", "all"] as const;
@@ -91,6 +103,11 @@ const first = (c: Ctx, prefix: string) => c.hits.find((h) => h.startsWith(prefix
 
 export const STATES: State[] = [
   { id: "overview", label: "Overview (nothing selected)", mode: "all", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-closed", label: "Inspector closed (the default)", mode: "desktop", fixture: "tourapp", run: async () => undefined },
+  { id: "inspector-open-overview", label: "Inspector opened by the toggle, nothing selected", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.inspectorToggle).click();
+    await c.page.waitForTimeout(400);
+  } },
   { id: "selected-node", label: "A box selected", mode: "all", fixture: "tourapp", run: async (c) => {
     const h = nodeHit(c); if (!h) return "no part box on the root board";
     await pick(c.page, h);
@@ -131,9 +148,22 @@ export const STATES: State[] = [
     await c.page.locator(SEL.searchOpen).click();
     await c.page.locator(SEL.searchInput).fill(c.fixture.query);
   } },
+  { id: "topbar-tours", label: "Top bar, Tours menu open", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.tbtours).click();
+    if (!(await c.page.waitForSelector(SEL.tourMenu, { timeout: 2000 }).then(() => true, () => false))) return "the Tours menu did not open";
+  } },
+  { id: "topbar-filters", label: "Top bar, Filters menu open", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.tbfilters).click();
+    if (!(await c.page.waitForSelector(SEL.tourMenu, { timeout: 2000 }).then(() => true, () => false))) return "the Filters menu did not open";
+  } },
   { id: "story-overview", label: "Story board overview", mode: "all", fixture: "checkin", run: async (c) => {
     if (!c.boards.includes(STORY)) return "this map has no story board";
     await c.page.evaluate((id) => (window as any).__repoladder.show(id), STORY);
+  } },
+  { id: "phone-overview", label: "Phone overview (nothing selected)", mode: "phone", fixture: "tourapp", run: async () => undefined },
+  { id: "phone-inspector-open", label: "Phone inspector open (sheet at half)", mode: "phone", fixture: "tourapp", run: async (c) => {
+    const h = nodeHit(c); if (!h) return "no part box on the root board";
+    await pick(c.page, h);
   } },
   { id: "sheet-peek", label: "Phone sheet: peek", mode: "phone", fixture: "tourapp", run: async (c) => {
     const h = nodeHit(c); if (!h) return "no part box on the root board";
@@ -188,6 +218,7 @@ export function pixelsDiffer(a: Uint8Array, b: Uint8Array): boolean {
 
 const SHEET_CSS = `
 ${shellTokens()}
+${floatTokens()}
 body{margin:0;background:var(--ground);color:var(--ink);font:14px/1.45 var(--font-ui);padding:16px;box-sizing:border-box}
 a{color:var(--accent)}h1{font-size:18px;margin:0 0 4px}h2{font-size:15px;margin:28px 0 8px}h3{font-size:13px;margin:0 0 8px;font-weight:600}
 .muted,.sub{color:var(--muted)}.sub{margin:0 0 12px;font-size:13px}code{font-family:var(--font-mono);font-size:12px}
@@ -204,8 +235,21 @@ img{max-width:100%;height:auto;display:block;border:1px solid var(--line);border
 .b{font:600 13px var(--font-ui);padding:6px 12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}
 .b.primary{background:var(--accent);border-color:var(--accent);color:var(--ground)}.b.ghost{background:transparent}
 .skip{color:var(--muted);font-size:12px}
+.fl{display:flex;flex-wrap:wrap;gap:var(--space-4);padding:var(--space-5);background:var(--ground);border:1px solid var(--line);border-radius:var(--radius)}
+.fl div{min-width:120px;padding:var(--space-4);border:1px solid var(--line);border-radius:var(--radius);color:var(--ink);font:12px var(--font-mono)}
+.fl .t1{background:var(--float);box-shadow:var(--shadow-1)}.fl .t2{background:var(--float);box-shadow:var(--shadow-2)}.fl .t3{background:var(--float-raised);box-shadow:var(--shadow-3)}
+.fl .t1.r{background:var(--float-raised)}.fl .in{display:block;margin-top:var(--space-2);padding:var(--space-2);border-radius:var(--radius-sm);background:var(--line)}
+.ruler{display:flex;flex-direction:column;gap:var(--space-2);margin-top:var(--space-4)}.ruler span{display:flex;align-items:center;gap:var(--space-3);font:12px var(--font-mono)}.ruler i{display:block;height:var(--space-3);background:var(--accent)}
 @media (max-width:760px){.modes,.modes.desktop{grid-template-columns:1fr}}
 `;
+
+/** The viewer's floating-chrome tokens (not in the shell tokens), so the "Floating surfaces" specimen uses the real values. */
+function floatTokens(): string {
+  const c = (t: ThemeName) => `--shadow:${VIEWER[t].shadow};--float:${VIEWER[t].float};--float-raised:${VIEWER[t]["float-raised"]};`;
+  const kv = (o: Record<string, string>) => Object.entries(o).map(([k, v]) => `--${k}:${v};`).join("");
+  return `:root{${kv(SHAPE)}${kv(SPACE)}${kv(ELEVATION)}${c("light")}}\n`
+    + `@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){${c("dark")}}}\n:root[data-theme="dark"]{${c("dark")}}`;
+}
 
 const themeSwatches = (t: ThemeName) => `<div class="sw">${Object.entries(THEMES[t]).map(([k, v]) => `<div><i style="background:${esc(v)}"></i><span>${esc(k)}</span></div>`).join("")}</div>`;
 
@@ -230,6 +274,8 @@ export function renderDesignSheet(m: Manifest, ref: Reference, skipped: string[]
 <section class="ref"><h3>Theme tokens (${Object.keys(THEMES.light).length} per theme, from <code>@repoladder/brand</code>)</h3>
 <p class="sub">Light</p>${themeSwatches("light")}<p class="sub">Dark</p>${themeSwatches("dark")}</section>
 <section class="ref"><h3>Shape</h3><div class="btns"><span class="b" style="border-radius:${esc(ref.radius)};padding:18px 28px">--radius ${esc(ref.radius)}</span><span class="b" style="border-radius:${esc(ref.pill)};padding:10px 28px">--pill ${esc(ref.pill)}</span></div></section>
+<section class="ref"><h3>Floating surfaces</h3><div class="fl"><div class="t1">--float<br>--shadow-1<span class="in">--radius-sm</span></div><div class="t1 r">--float-raised<br>--shadow-1</div><div class="t2">--float<br>--shadow-2</div><div class="t3">--float-raised<br>--shadow-3</div></div>
+<div class="ruler">${[1, 2, 3, 4, 5, 6].map((n) => `<span><i style="width:var(--space-${n})"></i>--space-${n}</span>`).join("")}</div></section>
 <section class="ref">${type}</section>
 <section class="ref"><h3>The viewer's controls</h3>${controls}<h3 style="margin-top:14px">Plain-HTML approximation of the site's buttons (approximation, not the site)</h3>${approx}
 <p class="sub">Built from the brand tokens above. A live side-by-side with the site is deferred to the site redesign tickets.</p></section>`;
@@ -342,6 +388,9 @@ async function main() {
         mkdirSync(join(outDir, "controls"), { recursive: true });
         const crops: [string, string, string][] = [["zoom", "Zoom and fit", SEL.zoom], ["dial", "Detail dial", SEL.dial], ["copy", "Copy pills", SEL.copyRow], ["search", "Search button", SEL.searchOpen], ["filters", "Filter chips", SEL.filterBar]];
         // the chips card shows only while a filter is on (remembered in localStorage, so it is reset after the crop)
+        // the legend sits in the overview's More, inside the inspector: open both first
+        if ((await p.locator(SEL.inspectorToggle).isVisible()) && (await p.locator(SEL.inspectorToggle).getAttribute("aria-pressed")) !== "true") { await p.locator(SEL.inspectorToggle).click(); await p.waitForTimeout(400); }
+        await p.evaluate(() => document.querySelectorAll<HTMLDetailsElement>("details.more").forEach((d) => { d.open = true; }));
         const toggle = p.locator(SEL.legendToggle).first();
         if (await toggle.count()) await toggle.click();
         for (const [id, label, sel] of crops) {
@@ -355,6 +404,26 @@ async function main() {
       }
       await ctx.close();
     }
+
+    // the phone overlap detector: floating elements must not collide or leave the viewport, at two sizes in both themes
+    let phoneBad = 0;
+    for (const [w, h] of [[390, 844], [320, 568]] as const) {
+      for (const scheme of ["light", "dark"] as const) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme, hasTouch: true, reducedMotion: "reduce" });
+        const p = await ctx.newPage();
+        for (const st of STATES.filter((x) => ["phone-overview", "phone-inspector-open", "tour-step", "search-open"].includes(x.id))) {
+          const fixture = FIXTURES.find((f) => f.id === st.fixture)!;
+          await p.goto(pages.get(fixture.id)!);
+          await settle(p);
+          const c: Ctx = { page: p, phone: true, fixture, hits: await p.evaluate((s) => [...document.querySelectorAll<SVGGElement>(s)].map((g) => g.dataset.hit!), SEL.hit), boards: await p.evaluate(() => (window as any).__repoladder.boards), tours: (await p.evaluate(() => (window as any).__repoladder.tours())).map((t: { id: string }) => t.id) };
+          if (await st.run(c)) continue;
+          await settle(p);
+          phoneBad += await report(p, `${st.id}@${w}x${h}-${scheme}`, w, h, (l) => process.stdout.write(l));
+        }
+        await ctx.close();
+      }
+    }
+    if (phoneBad && argv.includes("--strict")) process.exitCode = 1;
 
     const sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
     const repos: ShotRepo[] = FIXTURES.map((f) => ({ name: f.id, boards: boards.get(f.id)! })).filter((r) => r.boards.length);
