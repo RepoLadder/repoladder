@@ -48,49 +48,22 @@ Every box and arrow is traced to the code: imports, runtime calls by function na
 
 Claude only names and groups. Arrows always come from the facts, so a grouping can't invent a connection. The build rejects a grouping that leaves a file out or assigns one ambiguously, and Claude fixes it and retries.
 
-## How it works
-
-```
-/map
-  repoladder summary   analyze the repo (files, imports, calls, services, endpoints) and print a digest
-  Claude             groups the files into named parts and writes tours → .repoladder/grouping.json
-  repoladder build     validate the grouping against the facts, roll edges up to every rung,
-                     lay out each rung with D2, write .repoladder/diagram.html
-  Artifact           publish the page (private until you share it)
-```
-
-Commit `.repoladder/grouping.json` to keep the same boxes across runs and teammates. Ignore the rest of `.repoladder/`.
-
 Everything runs on your machine, and the website only ever reads public repos. Usage stats are off unless you say yes; see [where things run](PRIVACY.md#where-things-run) in PRIVACY.md.
 
-## Export images
+How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 
-The viewer's Export button saves or copies the current view (SVG, PNG); a published Artifact may block downloads, in which case it shows the image to save by hand. After a build, the CLI exports whole boards for READMEs, docs and slides:
+## Documentation
 
-```bash
-npx repoladder export REPO [--board id] [--format svg|png] [--theme light|dark]
-```
-
-It writes one standalone SVG per board to `REPO/.repoladder/export/<board>-<theme>.svg`, which renders as a plain `<img>` on GitHub. `--format png` also writes 2x PNGs when Playwright with Chromium is installed.
-
-## Develop
-
-```bash
-npm install
-npm test               # analyzer, grouping and rollup tests against test/fixtures
-npm run typecheck      # tsc --noEmit
-npm run build          # bundle src/ into plugin/dist/repoladder.mjs
-node src/cli.ts build ../some-repo --default   # folder-based diagram, no Claude step (--title "My App" names the map)
-```
-
-Source layout: `src/analyze` (facts), `src/model` (grouping, validation, rollup, tours), `src/build` (D2 layout, HTML), `src/viewer` (the in-page app). Branches, releases and what a PR needs are in [CONTRIBUTING.md](CONTRIBUTING.md). Don't commit `plugin/dist/`; a bot rebuilds it after each release.
-
-To re-record the GIF above after a viewer change, build the map from `gallery/groupings/repoladder.json` and record it:
-
-```bash
-REPOLADDER_BRAND_NAME=RepoLadder npm run gallery -- --only repoladder --title RepoLadder
-npm run readme-media   # dark, 15 fps → docs/media/tour.gif (options are listed at the top of scripts/readme-media.ts)
-```
+| Page | What it covers |
+|---|---|
+| [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, and using the CLI without Claude Code. |
+| [How it works](docs/how-it-works.md) | The steps behind `/map`: facts, grouping, validation, layout and publishing. |
+| [Export images](docs/export.md) | Saving boards as SVG or PNG for READMEs, docs and slides. |
+| [Reliability](docs/reliability.md) | The 15-repo sweep, build time and token cost by repo size, and known limits. |
+| [Tours: data](docs/tours-data.md) | Building a tour from a page's data. |
+| [Tours: design](docs/tours-v2.md) | Design notes for multi-depth tours. |
+| [Detail dial: design](docs/detail-dial-v2.md) | Design notes for the detail dial. |
+| [Develop](docs/development.md) | Running the tests, source layout and re-recording the README GIF. |
 
 ## Community
 

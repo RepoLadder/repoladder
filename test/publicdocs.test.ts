@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { test } from "node:test";
 
-const FILES = ["README.md", "docs/install.md", "PRIVACY.md", "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md"];
+const FILES = ["README.md", "docs/install.md", "docs/how-it-works.md", "docs/export.md", "docs/development.md", "PRIVACY.md", "CONTRIBUTING.md", "SECURITY.md", "CODE_OF_CONDUCT.md"];
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 
 test("public docs carry no ticket refs in HTML comments", () => {
