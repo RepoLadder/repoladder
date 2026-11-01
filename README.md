@@ -14,6 +14,7 @@
   <a href="https://www.npmjs.com/package/repoladder"><img alt="npm version" src="https://img.shields.io/npm/v/repoladder"></a>
   <a href="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://www.npmjs.com/package/repoladder"><img alt="Node.js version" src="https://img.shields.io/node/v/repoladder"></a>
+  <a href="https://repoladder.com/browse"><img alt="RepoLadder map" src="https://img.shields.io/badge/RepoLadder-map-12805F"></a>
 </p>
 
 <p align="center">
@@ -138,6 +139,7 @@ How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 |---|---|
 | [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, and using the CLI without Claude Code. |
 | [How it works](docs/how-it-works.md) | The steps behind `/map`: facts, grouping, validation, layout and publishing. |
+| [Add a map badge](docs/badge.md) | A badge to paste into your README that links to a hosted map. |
 | [Export images](docs/export.md) | Saving boards as SVG or PNG for READMEs, docs and slides. |
 | [Reliability](docs/reliability.md) | The 15-repo sweep, build time and token cost by repo size, and known limits. |
 | [Tours: data](docs/tours-data.md) | Building a tour from a page's data. |
