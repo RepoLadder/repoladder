@@ -13,6 +13,8 @@ const ts: typeof TS = createRequire(import.meta.url)("typescript");
 // Scanned recursively. src/viewer is browser code shipped inside the output page, not the engine.
 const ENGINE_DIRS = ["src/analyze", "src/build", "src/model"];
 const NETWORK_MODULES = ["http", "https", "http2", "net", "tls", "dns", "dgram"];
+// src/serve listens on loopback only (PRIVACY.md): it may import named entries of node:http, nothing else network-capable.
+const SERVE_DIR = "src/serve";
 const NETWORK_GLOBALS = ["fetch", "XMLHttpRequest", "WebSocket", "EventSource", "sendBeacon"];
 // "<file>" -> why it may reach the network. These files are skipped entirely.
 const ALLOW: Record<string, string> = {
@@ -21,12 +23,14 @@ const ALLOW: Record<string, string> = {
 };
 const CHILD_PROCESS_OK: Record<string, string> = {
   "src/analyze/files.ts": "runs git locally (ls-files, rev-parse) to list the repo's files; no network",
+  "src/serve/open.ts": "spawns the platform's browser opener with an argv array and the local URL; no network code of its own",
   "src/install.ts": "runs npm install for the plugin's runtime deps on the explicit install command, outside the engine",
 };
 const DYNAMIC_IMPORT_OK: Record<string, string> = {
   "src/build/export.ts": "import(name) loads optional playwright to render local SVGs to PNG with page.setContent; it never navigates",
 };
 const NETWORK_CAPABLE = ["src/usage.ts", "src/cli.ts"];
+const SERVE_HTTP_NAMES = ["createServer", "STATUS_CODES"];
 
 const bareName = (spec: string) => spec.replace(/^node:/, "");
 const isNetworkModule = (spec: string) => {
@@ -40,15 +44,23 @@ export function scanSource(file: string, text: string): string[] {
   const out: string[] = [];
   const handled = new Set<TS.Node>();
   const inEngine = ENGINE_DIRS.some((d) => file.startsWith(`${d}/`));
+  const inServe = file.startsWith(`${SERVE_DIR}/`);
   const report = (n: TS.Node, what: string) => out.push(`${file}:${sf.getLineAndCharacterOfPosition(n.getStart(sf)).line + 1}: ${what}`);
 
+  // only `import { createServer, STATUS_CODES } from "node:http"`: named, from http itself
+  const serveHttpOk = (n: TS.Node, spec: string) => {
+    if (bareName(spec) !== "http" || !ts.isImportDeclaration(n)) return false;
+    const b = n.importClause?.namedBindings;
+    return !n.importClause?.name && !!b && ts.isNamedImports(b) && b.elements.every((e) => e.isTypeOnly || n.importClause!.isTypeOnly || SERVE_HTTP_NAMES.includes((e.propertyName ?? e.name).text));
+  };
   const checkSpec = (n: TS.Node, lit: TS.Node, spec: string, verb: string) => {
     handled.add(lit);
-    if (isNetworkModule(spec)) report(n, `${verb} ${spec}`);
+    if (isNetworkModule(spec) && !(inServe && serveHttpOk(n, spec))) report(n, `${verb} ${spec}`);
     if (isChildProcess(spec) && !(file in CHILD_PROCESS_OK)) report(n, "uses child_process");
-    if (inEngine && /\/(usage|cli)\.ts$/.test(spec) && spec.startsWith(".")) {
+    if (spec.startsWith(".")) {
       const resolved = posix.normalize(posix.join(posix.dirname(file), spec));
-      if (NETWORK_CAPABLE.includes(resolved)) report(n, `imports ${resolved} (network-capable)`);
+      if (inEngine && NETWORK_CAPABLE.includes(resolved)) report(n, `imports ${resolved} (network-capable)`);
+      if (!inServe && file !== "src/cli.ts" && resolved.startsWith(`${SERVE_DIR}/`)) report(n, `imports ${resolved} (network-capable)`);
     }
   };
   const isKey = (n: TS.Identifier) => {
@@ -90,6 +102,11 @@ export function scanTree(root: string): string[] {
     if (!existsSync(join(root, dir))) continue;
     for (const f of readdirSync(join(root, dir), { recursive: true, encoding: "utf8" })) {
       if (f.endsWith(".ts")) files.push(`${dir}/${f.replaceAll("\\", "/")}`);
+    }
+  }
+  if (existsSync(join(root, SERVE_DIR))) {
+    for (const f of readdirSync(join(root, SERVE_DIR), { recursive: true, encoding: "utf8" })) {
+      if (f.endsWith(".ts")) files.push(`${SERVE_DIR}/${f.replaceAll("\\", "/")}`);
     }
   }
   if (existsSync(join(root, "src"))) {
@@ -152,6 +169,39 @@ test("the scanner catches network code and skips comments, strings and keys", ()
     const hit = `src/analyze/bad.ts:${i + 1}: ${what}`;
     assert.ok(found.includes(hit), `not caught: ${line} (expected "${hit}")`);
   });
+});
+
+test("src/serve may listen on loopback via named node:http imports and nothing else", () => {
+  const root = mkdtempSync(join(tmpdir(), "cw-nonet-serve-"));
+  mkdirSync(join(root, "src/serve"), { recursive: true });
+  mkdirSync(join(root, "src/analyze"), { recursive: true });
+  mkdirSync(join(root, "src/build"), { recursive: true });
+  const bad: [string, string][] = [
+    ['import http from "node:http";', "imports node:http"],
+    ['import * as http from "node:http";', "imports node:http"],
+    ['import { request } from "node:http";', "imports node:http"],
+    ['import { get } from "http";', "imports http"],
+    ['import https from "node:https";', "imports node:https"],
+    ['import net from "node:net";', "imports node:net"],
+    ['import { spawn } from "node:child_process";', "uses child_process"],
+    ['fetch("x");', "uses fetch"],
+  ];
+  writeFileSync(join(root, "src/serve/bad.ts"), bad.map(([l]) => l).join("\n") + "\n");
+  writeFileSync(join(root, "src/serve/good.ts"), ['import { createServer, STATUS_CODES } from "node:http";', 'import { createServer as cs } from "http";', 'import { createServer as c2, type IncomingMessage } from "node:http";', 'import { join } from "node:path";'].join("\n") + "\n");
+  writeFileSync(join(root, "src/serve/open.ts"), 'import { spawn } from "node:child_process";\n');
+  writeFileSync(join(root, "src/analyze/imp.ts"), 'import { startServer } from "../serve/index.ts";\n');
+  writeFileSync(join(root, "src/build/imp2.ts"), 'export { x } from "../serve/open.ts";\n');
+  writeFileSync(join(root, "src/lib.ts"), 'import { startServer } from "./serve/index.ts";\n');
+  writeFileSync(join(root, "src/cli.ts"), 'import { startServer } from "./serve/index.ts";\n');
+  const found = scanTree(root);
+  assert.deepEqual(found.filter((f) => f.includes("good.ts") || f.startsWith("src/serve/open.ts") || f.startsWith("src/cli.ts")), []);
+  bad.forEach(([line, what], i) => {
+    const hit = `src/serve/bad.ts:${i + 1}: ${what}`;
+    assert.ok(found.includes(hit), `not caught: ${line} (expected "${hit}")`);
+  });
+  assert.ok(found.includes("src/analyze/imp.ts:1: imports src/serve/index.ts (network-capable)"));
+  assert.ok(found.includes("src/build/imp2.ts:1: imports src/serve/open.ts (network-capable)"));
+  assert.ok(found.includes("src/lib.ts:1: imports src/serve/index.ts (network-capable)"));
 });
 
 test("analyze, build and model make no network calls", () => {
