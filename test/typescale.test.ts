@@ -30,7 +30,7 @@ function sizes(css: string): Array<[string, string]> {
 
 test("every chrome font size uses the type scale", () => {
   let seen = 0;
-  for (const f of ["styles.css", "walk.css", "dial.css"]) {
+  for (const f of ["styles.css", "walk.css", "dial.css", "edgecue.css"]) {
     for (const [sel, size] of sizes(read(f))) {
       seen++;
       if (ALLOW.has(sel)) continue;

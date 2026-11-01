@@ -3,6 +3,7 @@
 @import "./walk.css";
 @import "./stops.css";
 @import "./dial.css";
+@import "./edgecue.css";
 g.sel .body,
 g.sel .line {
   stroke: var(--accent) !important;
