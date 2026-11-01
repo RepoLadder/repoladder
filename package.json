@@ -26,6 +26,7 @@
     "tourcheck": "node scripts/tourcheck.ts",
     "npm:pack": "node scripts/npm-package.ts",
     "readme-media": "node scripts/readme-media.ts",
+    "readme-shots": "node scripts/readme-shots.ts",
     "legal": "node scripts/legal.ts",
     "leakguard": "node scripts/leakguard.ts",
     "hooks": "node scripts/githooks.ts",

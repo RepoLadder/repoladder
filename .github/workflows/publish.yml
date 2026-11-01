@@ -1,8 +1,9 @@
 # Publishes the `repoladder` npm package (the CLI and the library) with provenance.
 #
-# Triggers: a push to main that changes package.json (a real publish of the version in package.json,
-# unless npm already has it), a pushed `v*` tag (a real publish of that version), or a manual run (dry
-# run by default). Never runs for pull requests. A real publish runs on a commit reachable from
+# Triggers: a push to main that changes package.json or the package generator files (a real publish of
+# the version in package.json, unless npm already has it), a pushed `v*` tag (a real publish of that
+# version), or a manual run (dry run by default; a real manual run is allowed from main when the version
+# equals package.json's, or from the tag v<version>). Never runs for pull requests. A real publish runs on a commit reachable from
 # origin/main, in the public RepoLadder/repoladder repo, approved at the `npm-publish` environment.
 # A tag pushed anywhere else publishes nothing. After a publish, `release` tags v<version> and creates
 # the GitHub Release from CHANGELOG.md. The version bump itself comes from release.yml (Changesets).
@@ -15,13 +16,14 @@ name: Publish to npm
 on:
   push:
     branches: [main]
-    # the version lands in package.json (release.yml's Version Packages PR); other main pushes publish nothing
-    paths: [package.json]
+    # the version lands in package.json (release.yml's Version Packages PR); a change to the package generator
+    # re-runs the publish too, which is a no-op when npm already has the version
+    paths: [package.json, scripts/npm-package.ts, scripts/installcheck.ts, scripts/npm-readme.md]
     tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
-        description: Version to publish, e.g. 0.1.0 (a real publish must run on the tag v<version>)
+        description: Version to publish, e.g. 0.1.0 (a real run: on main, equal to package.json's version, or on the tag v<version>)
         required: true
         type: string
       dry-run:
@@ -79,8 +81,14 @@ jobs:
             VERSION="$(node -p "require('./package.json').version")"; DRY=false
           else
             VERSION="$INPUT_VERSION"; DRY="$INPUT_DRY"
-            if [ "$DRY" = "false" ] && { [ "$REF_TYPE" != "tag" ] || [ "$REF_NAME" != "v$VERSION" ]; }; then
-              echo "::error::a real publish must run on the tag v$VERSION"; exit 1
+            if [ "$DRY" = "false" ]; then
+              if [ "$REF_TYPE" = "tag" ] && [ "$REF_NAME" = "v$VERSION" ]; then :
+              elif [ "$REF_TYPE" = "branch" ] && [ "$REF_NAME" = "main" ]; then
+                PKG="$(node -p "require('./package.json').version")"
+                [ "$PKG" = "$VERSION" ] || { echo "::error::version input $VERSION is not package.json's version $PKG on main"; exit 1; }
+              else
+                echo "::error::a real publish runs on main (the version must equal package.json) or on the tag v$VERSION"; exit 1
+              fi
             fi
           fi
           if [ "$DRY" = "false" ]; then
