@@ -52,8 +52,26 @@ const SPECIAL = new Set(["layout", "loading", "error", "global-error", "not-foun
 
 /** `"use client"` / `"use server"` at the top of a module: the React server/client boundary. */
 export function directiveOf(text: string): "client" | "server" | null {
-  const m = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*(['"])use (client|server)\1/.exec(text);
-  return m ? (m[2] as "client" | "server") : null;
+  // one left-to-right pass over whitespace and comments; every step moves the cursor forward, so cost is O(n)
+  let i = 0;
+  for (;;) {
+    if (i >= text.length) return null;
+    if (/\s/.test(text[i])) i++;
+    else if (text.startsWith("//", i)) {
+      const nl = text.indexOf("\n", i + 2);
+      if (nl < 0) return null;
+      i = nl + 1;
+    } else if (text.startsWith("/*", i)) {
+      const end = text.indexOf("*/", i + 2);
+      if (end < 0) return null;
+      i = end + 2;
+    } else break;
+  }
+  const q = text[i];
+  if (q !== "'" && q !== '"') return null;
+  if (text.startsWith(`use client${q}`, i + 1)) return "client";
+  if (text.startsWith(`use server${q}`, i + 1)) return "server";
+  return null;
 }
 
 export interface NextContext {
