@@ -26,6 +26,7 @@ import { encodeWire } from "../viewer/wire.ts";
  * Both together: 93KB.
  * 2026-10: the hosted fidelity profile's arrow budgeting shared with the viewer's file boards (rollrules.ts, #449): 94KB, the page was 72 bytes over 93KB.
  * 2026-10: the +, - and F zoom keys and the upward export popover (zoomkeys.ts, anchor.ts): 95KB, the page was a few bytes over 94KB.
+ * 2026-10: the full-window canvas's open region (#78) merged with the phone's edge cue (#76): 95KB, the page was 110 bytes over 94KB.
  */
 export const VIEWER_KB = 95;
 /**

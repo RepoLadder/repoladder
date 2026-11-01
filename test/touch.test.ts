@@ -9,6 +9,12 @@ test("readableView keeps the whole board when names stay readable", () => {
   near(readableView([0, 0, 400, 300], 800, 600), [0, 0, 400, 300]);
 });
 
+test("readableView crops a wide board on a phone so names stay at the minimum size (the edge cue marks the clip)", () => {
+  const v = readableView([0, 0, 2400, 800], 390, 844);
+  assert.ok(v[2] < 2400);
+  assert.ok(Math.abs(Math.min(390 / v[2], 844 / v[3]) * NAME_PX - MIN_NAME_PX) < 1e-6);
+});
+
 test("readableView stops at the minimum readable zoom, from the board's top left", () => {
   const v = readableView([0, 0, 2000, 1500], 390, 600);
   const scale = Math.min(390 / v[2], 600 / v[3]);
