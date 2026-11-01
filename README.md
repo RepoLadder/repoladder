@@ -14,22 +14,61 @@
   <a href="https://www.npmjs.com/package/repoladder"><img alt="npm version" src="https://img.shields.io/npm/v/repoladder"></a>
   <a href="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/RepoLadder/repoladder/actions/workflows/ci.yml/badge.svg?branch=main"></a>
   <a href="https://www.npmjs.com/package/repoladder"><img alt="Node.js version" src="https://img.shields.io/node/v/repoladder"></a>
+  <a href="https://repoladder.com/browse"><img alt="RepoLadder map" src="https://img.shields.io/badge/RepoLadder-map-12805F"></a>
 </p>
 
 <p align="center">
   <a href="https://repoladder.com/browse">Live demo</a> ·
   <a href="docs/install.md">Install</a> ·
   <a href="#documentation">Documentation</a> ·
-  <a href="#is-it-safe-to-install">Safe to install</a>
+  <a href="#is-it-safe-to-install">Safe to install</a> ·
+  <a href="#faq">FAQ</a>
 </p>
 
 **Run one command on your TypeScript or JavaScript repo. In a few minutes you get a diagram a newcomer can click through and understand, and every box and arrow comes from the code.**
 
-It starts with the big pieces in plain language. Open any box to go one rung deeper and one step more technical, down to the files. Tours walk a real flow through the code, moving up, across and down the rungs as the flow does.
-
 ![A tour on RepoLadder's own map, in the dark theme: it starts on the overview, follows "Reading a repo" down through the rungs, climbs back out, and follows the command line into "Laying out a board"](docs/media/tour.gif)
 
 <sub>A tour on RepoLadder's map of its own code, in the dark theme, recorded from the real viewer.</sub>
+
+## Why RepoLadder
+
+Architecture diagrams drawn by hand go stale, or leave things out. RepoLadder reads the code instead, so every box and arrow is traced back to it. A newcomer starts with the big pieces in plain language and goes as deep as they need, one rung at a time, down to the files.
+
+## What you get
+
+### The map
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/map-dark.png">
+  <img src="docs/media/map-light.png" alt="The top board of RepoLadder's own map: six named parts as boxes, with arrows between them">
+</picture>
+
+`/map` turns your repo into boxes and arrows named in plain language. Every box and arrow is traced to the code: imports, runtime calls, database access and outside services.
+
+### Drill in
+
+<img src="docs/media/drill-in.png" alt="The Command line box opened one rung down, showing its files as boxes with the arrows between them">
+
+Double-click a box to open it one rung deeper, down to the files. Each board is kept small enough to take in at once.
+
+### Trace an arrow to the code
+
+<img src="docs/media/trace-arrow.png" alt="An arrow selected on the map, with a side panel listing the file and line of each import behind it">
+
+Click an arrow to see the evidence behind it. It shows the file and line where the import or call happens.
+
+### Tours
+
+<img src="docs/media/tour-step.png" alt="A tour paused on its second step, with the matching boxes and arrows highlighted and a Back and Next strip underneath">
+
+A tour walks one real flow through the code, moving up, across and down the rungs as the flow does. Every step lands on boxes and arrows the diagram actually draws.
+
+### Export
+
+<img src="docs/media/export-board.svg" alt="A board exported as a standalone SVG: named boxes joined by arrows">
+
+Save a board as SVG or PNG from the viewer, or export every board from the command line. The SVG renders as a plain image on GitHub, so it drops straight into a README or slide deck.
 
 ## See it on a real repo
 
@@ -63,14 +102,42 @@ Measured on 15 public repos; the details are in [docs/reliability.md](docs/relia
 
 ## Install
 
-In Claude Code:
+Both paths need Node.js 20.6 or newer.
+
+**In Claude Code (plugin, recommended).**
 
 ```
 /plugin marketplace add repoladder/repoladder
 /plugin install repoladder@repoladder
 ```
 
-Then open your repo and run `/map`. You need Node.js 20.6 or newer. Requirements, what gets installed, updating and uninstalling are in [docs/install.md](docs/install.md).
+Then open your repo and run `/map`.
+
+**Without Claude Code (CLI).** This groups by folders instead of asking Claude, and still draws every arrow from your code.
+
+```
+npx repoladder build . --default
+npx repoladder export . --format svg
+```
+
+`build` writes `.repoladder/diagram.html`; open it in a browser. `export` writes images. Requirements, what gets installed, updating and uninstalling are in [docs/install.md](docs/install.md).
+
+## Quick start
+
+1. **Run the first command.** `/map` in your repo, or `npx repoladder build . --default` without Claude Code.
+2. **See the map.** `/map` replies with a link to the diagram and the main parts in one line. Click a box or arrow for the evidence; double-click a box to open it. The CLI writes the same diagram to `.repoladder/diagram.html`.
+3. **First-run notes.** The plugin's first `/map` asks once whether to share anonymous usage stats (default no; see [PRIVACY.md](PRIVACY.md#usage-stats-off-unless-you-say-yes)). The CLI's first run downloads about 25MB and asks the same question once on an interactive terminal, never in CI or when piped.
+
+Things to try:
+
+| Try | What it does |
+|---|---|
+| `/map` | Maps the repo you are in and publishes the diagram as a private Artifact. |
+| `/map path/to/repo` | Maps another folder. |
+| `/map` again after changes | Keeps the same boxes and names; commit `.repoladder/grouping.json` so teammates get them too. |
+| Ask Claude: "regroup this map from scratch" | Rewrites the grouping instead of keeping it. |
+| Ask Claude: "export the diagram as SVG" | Writes one SVG per board to `.repoladder/export/`. |
+| Ask Claude: "turn off RepoLadder usage stats" | Stores your no and removes the install id. |
 
 ## Is it safe to install?
 
@@ -101,6 +168,7 @@ How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 |---|---|
 | [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, and using the CLI without Claude Code. |
 | [How it works](docs/how-it-works.md) | The steps behind `/map`: facts, grouping, validation, layout and publishing. |
+| [Add a map badge](docs/badge.md) | A badge to paste into your README that links to a hosted map. |
 | [Export images](docs/export.md) | Saving boards as SVG or PNG for READMEs, docs and slides. |
 | [Reliability](docs/reliability.md) | The 15-repo sweep, build time and token cost by repo size, and known limits. |
 | [Tours: data](docs/tours-data.md) | Building a tour from a page's data. |
@@ -108,8 +176,42 @@ How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 | [Detail dial: design](docs/detail-dial-v2.md) | Design notes for the detail dial. |
 | [Develop](docs/development.md) | Running the tests, source layout and re-recording the README GIF. |
 
-## Community
+## Privacy
 
-- [Contributing](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md)
-- [Security policy](SECURITY.md) and [privacy](PRIVACY.md)
-- See [LICENSE](LICENSE) for the terms
+RepoLadder runs on your machine and reads your repo from disk. It writes a `.repoladder/` folder inside the repo, and nothing else except your usage-stats answer. Usage stats are off unless you say yes. As in any Claude Code session, Claude sees the repo summary through your own Claude account, and the website only reads public repos. See [where things run](PRIVACY.md#where-things-run), the [full privacy policy](PRIVACY.md) and [Is it safe to install?](#is-it-safe-to-install).
+
+## FAQ
+
+### Does it send my code anywhere?
+
+Not by itself: the analysis, layout and output run locally, and usage stats are off unless you opt in. Claude sees the summary of the repo, and the diagram is published as a private Artifact, both through your own Claude account. Details: [where things run](PRIVACY.md#where-things-run).
+
+### Which languages does it read?
+
+TypeScript and JavaScript only. A repo with no such files stops with a message. See [what it does and doesn't do](#what-it-does-and-doesnt-do).
+
+### Does it cost tokens?
+
+`/map` uses Claude: roughly 6K input tokens for a small repo and 16K for a large one, plus the grouping it writes. `npx repoladder build . --default` uses none. See [docs/reliability.md](docs/reliability.md).
+
+### Can I use it without Claude Code?
+
+Yes: `npx repoladder build . --default` groups by folders and still draws every arrow from the code. See [Without Claude Code](docs/install.md#without-claude-code-npm).
+
+### Can I commit the grouping file?
+
+Yes. Commit `.repoladder/grouping.json` to keep the same boxes across runs and teammates, and ignore the rest of `.repoladder/`. See [How it works](docs/how-it-works.md).
+
+### Why did my build fail?
+
+The build checks Claude's grouping against the code and says what is wrong, for example a file left out. Claude fixes it and retries up to three times, and `--default` skips the grouping step by grouping by folders. Otherwise open a [bug report](https://github.com/repoladder/repoladder/issues/new?template=bug.yml). See [docs/reliability.md](docs/reliability.md).
+
+## Contributing
+
+Want to help? [CONTRIBUTING.md](CONTRIBUTING.md) covers setup, branches and what a pull request needs; please follow the [Code of Conduct](CODE_OF_CONDUCT.md), and report vulnerabilities privately as described in [SECURITY.md](SECURITY.md).
+
+Questions or ideas: use the [feedback form](https://github.com/repoladder/repoladder/issues/new?template=feedback.yml).
+
+## License
+
+Apache-2.0. See [LICENSE](LICENSE), [NOTICE](NOTICE) and [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt).

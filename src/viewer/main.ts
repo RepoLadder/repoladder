@@ -15,6 +15,7 @@ import { installExport, type ExportKind } from "./exportui.ts";
 import { installHistory, unrecorded } from "./history.ts";
 import { here, installNavigation, restore, select, show } from "./navigate.ts";
 import { installPanZoom } from "./panzoom.ts";
+import { installZoomKeys } from "./zoomkeys.ts";
 import { installStory } from "./story.ts";
 import { installSearch } from "./search.ts";
 import { installBarMenuKeys } from "./barmenu.ts";
@@ -49,6 +50,7 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   installCrumbs();
   installFilters();
   installPanZoom();
+  installZoomKeys();
   installFullscreen();
   installDock();
   installFit();

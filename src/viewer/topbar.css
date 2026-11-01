@@ -58,10 +58,6 @@
   max-width: min(320px, calc(100vw - 8px));
   overflow: auto;
   padding: 4px;
-  background: var(--float-raised);
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-2);
   color: var(--ink);
   font: var(--text-small) var(--font-ui);
 }

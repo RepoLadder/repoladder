@@ -1,0 +1,36 @@
+/* The one popover look: the tour card, the crumb, top-bar and export menus, the export note, the filter bar and the search box.
+   Each keeps only its layout in its own rule. Listed last so it wins over `.panel`; closing is instant (the element is removed). */
+.tour-card,
+.crumbmenu,
+.bmenu,
+.xmenu,
+.xnote,
+.fbar,
+.sbox {
+  background: var(--float);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  animation: pop-in .15s ease-out;
+}
+/* the tour card's one distinguishing mark */
+.tour-card {
+  border-color: var(--accent);
+}
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-card,
+  .crumbmenu,
+  .bmenu,
+  .xmenu,
+  .xnote,
+  .fbar,
+  .sbox {
+    animation: none;
+  }
+}

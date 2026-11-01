@@ -26,7 +26,7 @@ Each file starts with a comment saying what it is for; read it before editing.
 ## Conventions
 - Node 22 runs the `.ts` sources directly (type stripping): use `.ts` import extensions and erasable syntax only (no enums, no parameter properties).
 - Output must be deterministic: the same repo gives byte-identical facts, model and HTML. Sort everything.
-- Keep the page self-contained and small: under `VIEWER_KB` (90KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
+- Keep the page self-contained and small: under `VIEWER_KB` (95KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
   - The only external scripts allowed are from cdnjs, jsdelivr or unpkg, pinned to an exact version.
   - Light and dark themes are defined through color tokens (`test/colors.test.ts` keeps colors out of other files).
   - It works at phone width.
