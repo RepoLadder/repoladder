@@ -136,7 +136,10 @@ function card(): string {
   return `<div id="tour" class="panel tour-card walk-card" aria-live="polite"><div class="tour-dots" aria-hidden="true">${dots}</div><p class="num">Step ${i + 1} of ${n} · ${esc(tour.title)}<span class="rd-tap"> · tap for next</span></p><p class="tour-text">${esc(s.caption)}</p>${undrawn}${notes}<div class="tour-nav"><button data-tour-step="-1"${i === 0 ? " disabled" : ""}>‹ Back</button><button data-tour-step="1" class="primary">${i === n - 1 ? "Done" : "Next ›"}</button><button data-tour-exit aria-label="Leave the tour">✕</button></div></div>`;
 }
 
-/** The card: below the canvas on a wide screen (#164); on a phone, a strip on the canvas under the board (round 3). */
+/** Whether the card sits on the canvas: always, except embedded mode and full screen (a framed canvas, the card below it, #164). */
+const onCanvas = (): boolean => phone() || !(document.documentElement.classList.contains("embed") || document.fullscreenElement);
+
+/** The card: a strip on the canvas under the board, floating over the full-window canvas (embedded: below it). */
 function sync(): void {
   document.querySelectorAll<HTMLElement>("[data-tour]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.tour === now?.tour.id)));
   const c = $("canvas"), html = card();
@@ -144,8 +147,8 @@ function sync(): void {
   document.querySelector(".walk-card")?.remove();
   c.classList.toggle("walking", !!html);
   if (!html) return;
-  c.insertAdjacentHTML(phone() ? "beforeend" : "afterend", html);
-  if (phone()) c.style.setProperty("--walk-h", `${c.querySelector<HTMLElement>(".walk-card")!.offsetHeight}px`);
+  c.insertAdjacentHTML(onCanvas() ? "beforeend" : "afterend", html);
+  if (onCanvas()) c.style.setProperty("--walk-h", `${c.querySelector<HTMLElement>(".walk-card")!.offsetHeight}px`);
 }
 
 /**

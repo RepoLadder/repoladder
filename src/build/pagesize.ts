@@ -25,8 +25,9 @@ import { encodeWire } from "../viewer/wire.ts";
  * 2026-10: wire separation on the Everything stops (outline.ts separateWires, #497): about 0.9KB packed (CI packs about 0.5KB bigger).
  * Both together: 93KB.
  * 2026-10: the hosted fidelity profile's arrow budgeting shared with the viewer's file boards (rollrules.ts, #449): 94KB, the page was 72 bytes over 93KB.
+ * 2026-10: the full-window canvas's open region (#78) merged with the phone's edge cue (#76): 95KB, the page was 110 bytes over 94KB.
  */
-export const VIEWER_KB = 94;
+export const VIEWER_KB = 95;
 /**
  * The embedded Geist and Geist Mono subsets with their licence (#337): a packed blob of about 58KB, a separate
  * line outside the VIEWER_KB ratchet (the fonts change when the font files do, not with viewer code).

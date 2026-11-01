@@ -1,9 +1,9 @@
 // The initial view of a board and the pinch math. Fitting a whole board into a phone-width canvas
 // shrinks box names below legibility, so the fit stops at a readable zoom and the rest is a pan away.
-import { topEdge } from "./embed.ts";
+import { dock } from "./dock.ts";
 import { clearCorner, slideCap, type Box4 } from "./corner.ts";
 import { zoomClass } from "./focus.ts";
-import { heights } from "./sheet.ts";
+import { atRegion, coveredBottom, openRegion } from "./region.ts";
 import { STORY, actorOf, st } from "./state.ts";
 import type { BoardLayout } from "../build/layout.ts";
 import { onEvery } from "./everydraw.ts";
@@ -53,10 +53,7 @@ export function pinchView(v0: View, r: { left: number; top: number; width: numbe
  * View v, framed for the top `open` px of a cw×ch canvas, as a view of the whole canvas: same zoom,
  * v's center at the open part's center. The rest of the canvas is under the phone's raised sheet.
  */
-export function atTop(v: View, cw: number, ch: number, open: number): View {
-  const s = Math.min(cw / v[2], open / v[3]);
-  return [v[0] + v[2] / 2 - cw / s / 2, v[1] + v[3] / 2 - open / s / 2, cw / s, ch / s];
-}
+export const atTop = (v: View, cw: number, ch: number, open: number): View => atRegion(v, cw, ch, { x: 0, y: 0, w: cw, h: open });
 
 /**
  * Where a window `w` long starts on axis k (0 = x, 1 = y) to show rects rs with a 24 margin: centered
@@ -84,19 +81,21 @@ const size = () => [st.svgEl.clientWidth, st.svgEl.clientHeight] as const;
  * that is still worth seeing, and cropping it would hide edges for little gain.
  */
 const fitFor = (cw: number, ch: number) => {
-  const open = cw < 760 ? openHeight(ch) : ch;
+  // the open part of the canvas: the floating header, the wide-window panel and the phone's sheet are not in it
+  const r = openRegion(cw, ch, dock(), coveredBottom(ch)), w = r.w, open = r.h;
   // A narrow canvas opens at the readable zoom, cropped; the rest is a pan away and edgecue.ts marks each clipped side.
-  let v = cw < 760 && !onEvery() ? readableView(whole, cw, open, undefined, boxes()) : [...whole];
+  let v = w < 760 && !onEvery() ? readableView(whole, w, open, undefined, boxes()) : [...whole];
   const cropped = v[2] < whole[2] - 0.5 || v[3] < whole[3] - 0.5;
   // a cropped story opens on its first sentence, not on actors with arrows leaving the screen (#288)
   const n = lit ? st.data.layout[STORY].n.filter((r) => lit!.has(r[0])) : [], rs = n.map(rect);
   const at = cropped && n.length;
-  if (at) v = readableView(whole, cw, open, undefined, rs, spanStart(rs, 0, v[2], Math.max(...n.filter((r) => actorOf(r[0])).map((r) => r[1] + r[3])) - 24));
-  // off the canvas's left edge counts as covered too, so a slide never pushes the first column out of view.
+  if (at) v = readableView(whole, w, open, undefined, rs, spanStart(rs, 0, v[2], Math.max(...n.filter((r) => actorOf(r[0])).map((r) => r[1] + r[3])) - 24));
+  // off the region's left edge counts as covered too, so a slide never pushes the first column out of view.
   // The story's opening clears only the sentence's boxes it shows whole: the actor it leaves off the left
   // edge, or a part cut by the right one, would push the sentence under the sheet
-  const c = clearCorner(v, at ? rs.filter((r) => r[0] >= v[0] && r[0] + r[2] <= v[0] + v[2]) : boxes(), cw, open, [buttons(".zoom"), buttons(".canvas > .hist"), buttons(".dial"), [-cw, 0, cw, open]], cropped, slideFor(v, cw, open));
-  return open < ch ? atTop(c, cw, ch, open) : c;
+  const btn = (sel: string): Box4 => { const b = buttons(sel); return b[2] ? [b[0] - r.x, b[1] - r.y, b[2], b[3]] : b; };
+  const c = clearCorner(v, at ? rs.filter((r) => r[0] >= v[0] && r[0] + r[2] <= v[0] + v[2]) : boxes(), w, open, [btn(".zoom"), btn(".canvas > .hist"), btn(".dial"), [-w, 0, w, open]], cropped, slideFor(v, w, open));
+  return r.w < cw || r.h < ch || r.y ? atRegion(c, cw, ch, r) : c;
 };
 
 /** How far cropped view v may slide sideways to clear the dial (corner.ts slideCap); no dial, no slide. */
@@ -104,14 +103,6 @@ export const slideFor = (v: View, cw: number, ch: number): number => slideCap(v,
 
 /** The board's fit for the canvas as it is now (the board's own extent, no walk framing). */
 export const boardFit = (): View => fitFor(...size());
-
-/** The canvas height left open above the phone's sheet: the story level opens with it half up (sheet.ts). */
-function openHeight(ch: number): number {
-  if (st.cur !== STORY) return ch;
-  const head = topEdge();
-  const covered = document.getElementById("canvas")!.getBoundingClientRect().bottom -(innerHeight - heights(innerHeight, head).half);
-  return Math.max(ch * 0.4, ch - Math.max(0, covered));
-}
 
 const boxes = (): Box4[] => {
   const l = st.data.layout[st.cur], out = (l?.n ?? []).map(rect);
@@ -162,13 +153,16 @@ export function setRefitter(f: ((fit: View) => void) | null): void {
 /** A rotation, a resized pane or the header settling (web fonts) refits the board, unless the reader has moved it. */
 export function installFit(): void {
   let was = "";
-  new ResizeObserver(() => {
+  const again = (moved = false) => {
     const now = size().join();
-    if (!st.svgEl || now === was) return;
+    if (!st.svgEl || (now === was && !moved)) return;
     was = now;
     if (refitter) return refitter(fitFor(...size()));
     if (!atFit()) return;
     refit();
     zoomClass();
-  }).observe(document.getElementById("canvas")!);
+  };
+  new ResizeObserver(() => again()).observe(document.getElementById("canvas")!);
+  // the floating header or panel changed size (dock.ts) without the canvas doing so
+  window.addEventListener("dockchange", () => again(true));
 }

@@ -3,6 +3,7 @@
 import { installCrumbs } from "./crumbs.ts";
 import { installEmbed } from "./embed.ts";
 import { openHash } from "./deeplink.ts";
+import { installDock } from "./dock.ts";
 import { installDeselect } from "./deselect.ts";
 import { installFilters } from "./filterui.ts";
 import { installFit } from "./fit.ts";
@@ -46,6 +47,7 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   installFilters();
   installPanZoom();
   installFullscreen();
+  installDock();
   installFit();
   installSheet();
   installFocus();

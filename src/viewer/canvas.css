@@ -1,0 +1,78 @@
+/* The diagram is the page: a full-window canvas with a quiet dot grid, and the header, the side panel and the tour card
+   float over it. dock.ts measures the floating chrome into --dock-top / --dock-right; the controls and the fit (region.ts)
+   read them. The dot grid is CSS on the canvas only, never in the svg, so exports have none. Embedded mode keeps its frame. */
+html:not(.embed) body {
+  padding: 0;
+}
+html:not(.embed) .stage:not(:fullscreen) {
+  position: fixed;
+  inset: 0;
+  display: block;
+}
+html:not(.embed) .stage:not(:fullscreen) .canvas {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+  background-color: var(--paper);
+  background-image: radial-gradient(circle, var(--line) 1px, transparent 1.5px);
+  background-size: 24px 24px;
+}
+html:not(.embed) header {
+  position: fixed;
+  top: var(--space-3);
+  left: var(--space-3);
+  right: var(--space-3);
+  z-index: 6;
+  background: var(--float);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-2) var(--space-4);
+}
+html:not(.embed) .stage:not(:fullscreen) .hist {
+  top: calc(var(--dock-top, 0px) + 10px);
+}
+html:not(.embed) .stage:not(:fullscreen) .zoom {
+  top: calc(var(--dock-top, 0px) + 10px);
+  right: calc(var(--dock-right, 0px) + 10px);
+}
+html:not(.embed) .stage:not(:fullscreen) .dial {
+  top: calc(var(--dock-top, 0px) + 66px);
+  right: calc(var(--dock-right, 0px) + 10px);
+}
+html:not(.embed) .canvas > .walk-card {
+  right: calc(var(--dock-right, 0px) + 12px);
+}
+@media (min-width: 761px) {
+  html:not(.embed) main > aside {
+    position: fixed;
+    top: calc(var(--dock-top, 64px) + var(--space-3));
+    right: var(--space-3);
+    bottom: var(--space-3);
+    width: 316px;
+    max-height: none;
+    z-index: 5;
+    padding: var(--space-3);
+    box-sizing: border-box;
+    background: var(--float);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-2);
+    overflow: auto;
+  }
+}
+@media (max-width: 760px) {
+  html:not(.embed) header {
+    top: var(--space-2);
+    left: var(--space-2);
+    right: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+  }
+  /* the canvas runs under the bottom sheet; the fit reserves the sheet's peek (region.ts) */
+  html:not(.embed) main {
+    padding: 0;
+  }
+}
