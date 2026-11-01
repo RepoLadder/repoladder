@@ -18,10 +18,10 @@ const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
 
 test("the header keeps its one-line shell and carries one brand link; the title is over the canvas", () => {
   const html = page();
-  assert.equal(count(html, /^<header>$/gm), 1);
+  assert.equal(count(html, /^<header class="topbar">$/gm), 1);
   assert.equal(count(html, /^<\/header>$/gm), 1);
   assert.equal(count(html, /<title>[\s\S]*?<\/title>/g), 1);
-  const head = html.slice(html.indexOf("<header>"), html.indexOf("</header>"));
+  const head = html.slice(html.indexOf("<header "), html.indexOf("</header>"));
   const links = head.match(/<a class="brand"[^>]*>/g) ?? [];
   assert.equal(links.length, 1);
   assert.ok(!head.includes("<h1>"));
@@ -48,21 +48,22 @@ test("shape tokens exist and the chrome uses them", () => {
   const t = tokenCss();
   assert.ok(t.includes("--radius:12px") && t.includes("--pill:999px"));
   const css = viewerAssets().css;
-  const radius = (sel: string) => css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?border-radius:([^;}]+)`))?.[1];
+  const radius = (sel: string) => css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?border-radius:([^;}]+)`))?.[1] ?? css.match(new RegExp(`(?:^|[},])(?:[^{}]*,)?${sel.replace(/[.\[\]]/g, "\\$&")}(?:,[^{}]*)?\\{[^}]*?border-radius:([^;}]+)`))?.[1];
   for (const s of [".zoom", ".hist", ".sbox", ".fbar", ".crumbmenu", ".dial", ".copy", ".panel"]) assert.equal(radius(s), "var(--radius)", s);
   for (const s of [".sw", ".sbtn kbd", ".crumbs button.more"]) assert.equal(radius(s), "var(--pill)", s);
   assert.ok(css.includes(".mk-l") && css.includes(".mk-d") && /\[data-theme=dark\] \.brand \.mk-l/.test(css));
 });
 
-test("the zoom row holds five buttons, the last one the export menu", () => {
+test("the zoom row holds four buttons; Export sits in the top bar's actions", () => {
   const html = page();
   const row = html.match(/<div class="zoom">([\s\S]*?)<\/div>/)![1];
-  assert.equal(count(row, /<button /g), 5);
-  assert.deepEqual([...row.matchAll(/<button id="(\w+)"/g)].map((m) => m[1]), ["zfs", "zfit", "zin", "zout", "zexp"]);
+  assert.equal(count(row, /<button /g), 4);
+  assert.deepEqual([...row.matchAll(/<button id="(\w+)"/g)].map((m) => m[1]), ["zfs", "zfit", "zin", "zout"]);
   const fs = row.match(/<button id="zfs"[^>]*>/)![0], fit = row.match(/<button id="zfit"[^>]*>/)![0];
   assert.ok(/ hidden[ >]/.test(fs) && fs.includes('aria-label="Full screen"') && fs.includes('aria-pressed="false"'));
   assert.ok(/ hidden[ >]/.test(fit) && fit.includes('aria-label="Reframe"'));
-  const exp = row.match(/<button id="zexp"[^>]*>/)![0];
+  const bar = html.match(/<div class="actions" id="actions"[^>]*>([\s\S]*?)<\/div>/)![1];
+  const exp = bar.match(/<button [^>]*id="zexp"[^>]*>/)![0];
   assert.ok(exp.includes('aria-label="Export this view"') && exp.includes('aria-haspopup="menu"'));
 });
 
