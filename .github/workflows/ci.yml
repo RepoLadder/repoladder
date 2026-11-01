@@ -29,6 +29,7 @@ jobs:
     outputs:
       code: ${{ steps.f.outputs.code }}
       windows: ${{ steps.f.outputs.windows }}
+      viewer: ${{ steps.f.outputs.viewer }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -105,7 +106,7 @@ jobs:
     # The required status check. Runs even when a leg fails, so a failed or cancelled leg fails this job instead of leaving it
     # skipped (a skipped required check counts as passing).
     name: test, typecheck, build
-    needs: [changes, unit, typecheck-build]
+    needs: [changes, unit, typecheck-build, viewer-guard]
     if: ${{ always() && needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -113,7 +114,33 @@ jobs:
       - env:
           UNIT: ${{ needs.unit.result }}
           BUILD: ${{ needs.typecheck-build.result }}
-        run: '[ "$UNIT" = success ] && [ "$BUILD" = success ] || { echo "unit=$UNIT typecheck-build=$BUILD"; exit 1; }'
+          GUARD: ${{ needs.viewer-guard.result }}
+        run: '[ "$UNIT" = success ] && [ "$BUILD" = success ] && { [ "$GUARD" = success ] || [ "$GUARD" = skipped ]; } || { echo "unit=$UNIT typecheck-build=$BUILD viewer-guard=$GUARD"; exit 1; }'
+
+  viewer-guard:
+    # Structure guard for the restyle: per-board fit, wire geometry and drill-in timing against
+    # test/baselines/viewer-structure.json, plus the motion check. Runs for PRs touching the viewer or the build (cichanges.ts).
+    name: viewer guard
+    needs: changes
+    if: needs.changes.outputs.code == 'true' && needs.changes.outputs.viewer == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-1.64.1
+      - run: npx playwright install --with-deps chromium
+      - run: npm run guardbase
+      - run: npm run motioncheck
 
   gallery-default:
     # Default-grouping gate (#361): clones the pinned gallery repos and runs analyze + score only (no layout),
