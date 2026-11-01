@@ -13,13 +13,14 @@ import { tourGraph } from "../src/model/chaintours.ts";
 import { deriveTours } from "../src/model/derivedtours.ts";
 import { tourStepIssues } from "../src/model/coverage.ts";
 import { auditStep, litMarks, shownArrows } from "../src/viewer/tourstep.ts";
+import { viewerCss } from "./helpers/viewercss.ts";
 
 const src = (f: string) => readFileSync(new URL(`../src/viewer/${f}`, import.meta.url), "utf8");
 const step = (edges: [string, string][]) => ({ board: "b", stop: "default", lit: { boxes: edges.flat(), edges }, caption: "" });
 
 test("the tour player draws nothing of its own (#394)", () => {
   assert.ok(!existsSync(new URL("../src/viewer/tourwire.ts", import.meta.url)));
-  assert.doesNotMatch(src("styles.css"), /tour-tmp/);
+  assert.doesNotMatch(viewerCss(), /tour-tmp/);
   for (const f of ["tour.ts", "travel.ts", "tourstep.ts"]) {
     assert.doesNotMatch(src(f), /createElementNS|drawTourWire|clearTourWire|tour-tmp/, f);
   }

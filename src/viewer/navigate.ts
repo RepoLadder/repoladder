@@ -1,6 +1,8 @@
 // Moving between boards and selections: show, breadcrumbs, select, and the click/keyboard handlers.
+import { syncInspector } from "./inspector.ts";
 import { renderTrail } from "./crumbs.ts";
 import { renderRepoTitle } from "./repotitle.ts";
+import { syncTopActions } from "./topactions.ts";
 import { metaHtml } from "./mono.ts";
 import { writeHash } from "./deeplink.ts";
 import { onEscape } from "./deselect.ts";
@@ -88,6 +90,7 @@ function renderCrumbs(): void {
   $("meta").innerHTML = metaHtml(plain, !onStoreBoard() && st.cur === home() && st.data.sha ? st.data.sha : null);
   renderTrail(st.cur);
   renderRepoTitle();
+  syncTopActions();
 }
 
 export function select(hit: string | null): void {
@@ -97,6 +100,11 @@ export function select(hit: string | null): void {
 }
 
 function pick(hit: string | null): void {
+  pickPanel(hit);
+  syncInspector();
+}
+
+function pickPanel(hit: string | null): void {
   st.selected = hit;
   st.svgEl.querySelectorAll("g.sel").forEach((g) => g.classList.remove("sel"));
   if (onStoreBoard()) applyFilters();

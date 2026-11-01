@@ -73,6 +73,34 @@ test("nextjs: the use client / use server boundary is recorded per file", () => 
   assert.deepEqual(serverActions("a.ts", `"use server";\nexport default async function save() {}`), [{ name: "default", line: 2 }]);
 });
 
+test("nextjs: directiveOf scans the prologue in linear time and matches the old regex", () => {
+  const OLD = /^(?:\s|\/\/[^\n]*\n|\/\*[\s\S]*?\*\/)*(['"])use (client|server)\1/;
+  const oracle = (s: string) => { const m = OLD.exec(s); return m ? m[2] : null; };
+  const cases = [
+    `"use client";`, `'use server'`, `\uFEFF"use client"`, ` \n\t "use server"`,
+    `// a\n"use client"`, `// a\n// b\n'use client'`, `/* a */"use client"`, `/* a */ /* b */\n"use server"`,
+    `// a\n/* b */\n"use client"`, `"use client'`, `'use  client'`, `"use Client"`, `"use strict"`,
+    `import x from "y";\n"use client";`, `// no newline "use client"`, `/* unterminated "use client"`,
+    `/*/ "use client"`, ``,
+  ];
+  for (const s of cases) assert.equal(directiveOf(s), oracle(s), JSON.stringify(s));
+  // the one deliberate difference: a prologue cannot start after code
+  assert.equal(directiveOf('/* a */ x = 1; /* b */ "use client"'), null);
+
+  const time = (s: string) => { const t0 = performance.now(); const r = directiveOf(s); return { r, ms: performance.now() - t0 }; };
+  const forty = `${"/* c */\n".repeat(40)}foo();\n`;
+  assert.ok(time(forty).ms < 1000);
+  const big = `/* header\n${"/* line */ foo();\n".repeat(45000)}`;
+  assert.ok(big.length > 800_000);
+  const a = time(big);
+  assert.equal(a.r, null);
+  assert.ok(a.ms < 1000, `${a.ms} ms`);
+  assert.equal(time(`"use client";\n${big}`).r, "client");
+  const b = time("// x\n".repeat(40000) + "// end");
+  assert.equal(b.r, null);
+  assert.ok(b.ms < 1000);
+});
+
 test("nextjs: route regexes for dynamic segments", () => {
   assert.ok(routeRegex("/api/users/[id]")!.test("/api/users/:_"));
   assert.ok(!routeRegex("/api/users/[id]")!.test("/api/users/a/b"));

@@ -76,7 +76,6 @@ main > aside {
   grid-template-columns: 1fr auto;
   column-gap: 18px;
   align-items: center;
-  animation: walk-strip-in .25s ease-out;
 }
 .walk-card .tour-dots {
   grid-column: 1 / -1;
@@ -101,17 +100,6 @@ main > aside {
 .canvas.walking .fbar {
   bottom: calc(var(--walk-h, 0px) + 20px);
 }
-@keyframes walk-strip-in {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .canvas > .walk-card {
-    animation: none;
-  }
-}
 @media (max-width: 760px) {
   /* a compact strip; a tap on it steps on, so Next goes */
   .walk-card .rd-note {
@@ -120,18 +108,17 @@ main > aside {
   .rd-tap {
     display: inline;
   }
-  .canvas > .walk-card {
+  /* in #dock (phone.css), which places it */
+  .dock > .walk-card {
     display: block;
-    left: 8px;
-    right: 8px;
-    bottom: 16px;
+    position: relative;
     padding: 8px 12px 10px;
     cursor: pointer;
   }
   .walk-card .tour-dots,
   .walk-card .num {
     margin: 0 0 6px;
-    padding-right: 116px;
+    padding-right: 132px;
   }
   /* the step and the tour's title on one line, clear of the buttons */
   .walk-card .num {
@@ -140,7 +127,7 @@ main > aside {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .canvas > .walk-card p.tour-text {
+  .dock > .walk-card p.tour-text {
     margin: 2px 0 0;
     font-size: var(--text-small);
   }

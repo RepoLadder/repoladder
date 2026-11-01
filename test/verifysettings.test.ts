@@ -25,7 +25,7 @@ const rs = (over: Record<string, unknown> = {}) => ({
 function green(): Record<string, Read> {
   return {
     [`repos/${R}`]: { status: 200, body: {
-      allow_squash_merge: true, allow_merge_commit: true, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true,
+      allow_squash_merge: true, allow_merge_commit: true, allow_rebase_merge: false, delete_branch_on_merge: true, has_discussions: true, allow_auto_merge: true,
       security_and_analysis: {
         secret_scanning: { status: "enabled" }, secret_scanning_push_protection: { status: "enabled" }, dependabot_security_updates: { status: "enabled" },
       },
@@ -62,6 +62,7 @@ test("each OFF condition is reported OFF", () => {
   const repo = (o: Record<string, unknown>) => ({ ...g, [`repos/${R}`]: { status: 200, body: { ...(g[`repos/${R}`].body as object), ...o } } });
   assert.equal(by(run(repo({ allow_rebase_merge: true })).results, "merge-methods").status, "OFF");
   assert.equal(by(run(repo({ delete_branch_on_merge: false })).results, "delete-branch-on-merge").status, "OFF");
+  assert.equal(by(run(repo({ allow_auto_merge: false })).results, "auto-merge").status, "OFF");
   assert.equal(by(run(repo({ security_and_analysis: { secret_scanning: { status: "enabled" }, secret_scanning_push_protection: { status: "disabled" }, dependabot_security_updates: { status: "enabled" } } })).results, "push-protection").status, "OFF");
   assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "write", can_approve_pull_request_reviews: true } } }).results, "read-only-token").status, "OFF");
   assert.equal(by(run({ ...g, [`repos/${R}/actions/permissions/workflow`]: { status: 200, body: { default_workflow_permissions: "read", can_approve_pull_request_reviews: false } } }).results, "actions-create-prs").status, "OFF");
@@ -109,7 +110,7 @@ test("what the token cannot read is CANNOT-VERIFY, never OFF", () => {
     [`repos/${R}/rulesets?includes_parents=false`]: { status: 403, body: {} },
   };
   const { results } = run(m);
-  for (const id of ["secret-scanning", "push-protection", "dependabot-updates", "fork-pr-approval", "dependabot-alerts", "private-vuln-reporting", ...CHECK_IDS.filter((i) => i.startsWith("ruleset-"))]) {
+  for (const id of ["auto-merge", "secret-scanning", "push-protection", "dependabot-updates", "fork-pr-approval", "dependabot-alerts", "private-vuln-reporting", ...CHECK_IDS.filter((i) => i.startsWith("ruleset-"))]) {
     assert.equal(by(results, id).status, "CANNOT-VERIFY", id);
   }
   assert.equal(results.filter((r) => r.status === "OFF").length, 0);

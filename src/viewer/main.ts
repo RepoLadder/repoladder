@@ -3,6 +3,7 @@
 import { installCrumbs } from "./crumbs.ts";
 import { installEmbed } from "./embed.ts";
 import { openHash } from "./deeplink.ts";
+import { installDock } from "./dock.ts";
 import { installDeselect } from "./deselect.ts";
 import { installFilters } from "./filterui.ts";
 import { installFit } from "./fit.ts";
@@ -13,9 +14,13 @@ import { installDial } from "./dial.ts";
 import { installExport, type ExportKind } from "./exportui.ts";
 import { installHistory, unrecorded } from "./history.ts";
 import { here, installNavigation, restore, select, show } from "./navigate.ts";
+import { installInspector } from "./inspector.ts";
 import { installPanZoom } from "./panzoom.ts";
+import { installZoomKeys } from "./zoomkeys.ts";
 import { installStory } from "./story.ts";
 import { installSearch } from "./search.ts";
+import { installBarMenuKeys } from "./barmenu.ts";
+import { installTopActions } from "./topactions.ts";
 import { installSheet } from "./sheet.ts";
 import { installTours, playTour } from "./tour.ts";
 import { installTourLinks } from "./tourlink.ts";
@@ -41,13 +46,17 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   st.data = data;
   installNavigation();
   const exportView = installExport(decode, fonts);
+  installBarMenuKeys();
   installHistory(here, restore);
   installCrumbs();
   installFilters();
   installPanZoom();
+  installZoomKeys();
   installFullscreen();
+  installDock();
   installFit();
   installSheet();
+  installInspector();
   installFocus();
   installFocusZoom();
   installDeselect(select);
@@ -57,6 +66,7 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   installTourLinks();
   installStory();
   installSearch();
+  installTopActions();
   // turning the detail dial isn't a history step
   installStops((id, back, hit) => unrecorded(() => show(id, back, hit)));
   installCut((id) => unrecorded(() => show(id, undefined, null, true)));
