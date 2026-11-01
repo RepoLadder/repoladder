@@ -1,0 +1,185 @@
+/* Story level. */
+/* Story level (story.ts) */
+.at-story svg.board .wire:not(.story) .pill,
+.at-story svg.board .wire:not(.story) .n {
+  display: none;
+}
+.at-story svg.board .wire:not(.story) {
+  opacity: .7;
+}
+svg.board g[data-hit] {
+  transition: opacity .18s;
+}
+svg.board.telling g[data-hit]:not(.told) {
+  opacity: .14;
+}
+svg.board.telling g.told.node .body {
+  stroke-width: 2.5;
+}
+svg.board.telling g.told.wire .line {
+  stroke-width: 2.4;
+}
+.beats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.beat {
+  display: flex;
+  gap: 10px;
+  padding: 7px 8px;
+  margin-inline: -8px;
+  border-radius: var(--radius);
+  cursor: default;
+}
+.beat:hover,
+.beat.on {
+  background: var(--soft);
+}
+.beat:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.beat .bn {
+  flex: none;
+  font: 500 var(--text-micro)/22px var(--font-ui);
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  width: 14px;
+}
+.panel .beat p {
+  margin: 0;
+  color: var(--ink);
+  font-size: var(--text-body);
+  line-height: 1.5;
+}
+.ref {
+  all: unset;
+  cursor: pointer;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--part-line);
+}
+.ref:hover {
+  color: var(--accent);
+}
+.ref:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+.ref.r-actor {
+  text-decoration-color: var(--ink);
+  text-decoration-style: dotted;
+}
+.ref.r-web {
+  text-decoration-color: var(--web-line);
+}
+.ref.r-backend {
+  text-decoration-color: var(--backend-line);
+}
+.ref.r-library {
+  text-decoration-color: var(--library-line);
+}
+.ref.r-scripts {
+  text-decoration-color: var(--scripts-line);
+}
+.ref.r-svc {
+  text-decoration-color: var(--svc-line);
+}
+.ref.r-store {
+  text-decoration-color: var(--store-line);
+}
+.panel p.hint {
+  margin: 10px 0 0;
+  font-size: var(--text-small);
+}
+.medal {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  overflow: visible;
+}
+.medal .body {
+  fill: var(--surface);
+  stroke: var(--ink);
+  stroke-width: 1.3;
+}
+.medal .glyph {
+  fill: var(--ink);
+}
+.legend .medal {
+  width: 30px;
+  height: 22px;
+}
+.actor-row {
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+.actor-row > span {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.actor-row b {
+  font-weight: 600;
+}
+.actor-row small {
+  color: var(--muted);
+  font-size: var(--text-small);
+  line-height: 1.35;
+}
+.actor-h {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.says {
+  margin: 4px 0 6px;
+  padding-left: 18px;
+  color: var(--ink);
+}
+.wire.story .say {
+  pointer-events: none;
+}
+/* D2 measured box labels at 16px; the story level uses all of it, since it is read from further back */
+.at-story svg.board .node .name {
+  font-size: 16px;
+}
+.captions .cap {
+  font: 600 13px var(--font-mono);
+  letter-spacing: .12em;
+  fill: var(--muted);
+}
+g.sel.wire.story .pill {
+  stroke-opacity: 1;
+  stroke-width: 1.5;
+}
+g.sel.w3 .line {
+  stroke-width: 3 !important;
+}
+g.sel.w4 .line {
+  stroke-width: 4.5 !important;
+}
+.lgi.lgw .line {
+  stroke-width: 1.5;
+}
+.lgi.lgw .line.thick {
+  stroke-width: 5;
+}
+.canvas svg.board,
+.canvas svg.ghost {
+  transform-origin: 0 0;
+}
+.canvas svg.ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}

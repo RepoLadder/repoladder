@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { back, backTitle, push, stack } from "../src/viewer/history.ts";
 import { jumpOf, type JumpPage } from "../src/viewer/jump.ts";
+import { viewerCss } from "./helpers/viewercss.ts";
 
 // Shaped like a large app: root > web > web-billing, root > functions > fn-email / fn-billing.
 const nodes: JumpPage["nodes"] = {
@@ -44,7 +45,7 @@ test("jump: the canvas's ← is the only way back, one press from where you jump
   // open() jumps through a plain show(), which records the board it leaves, so one Back returns there
   assert.match(src("navigate.ts"), /if \(!back && st\.svgEl && from !== id\) leaving\(here\(\)\)/);
   assert.match(src("navigate.ts"), /show\(j\.board, undefined, j\.hit \?\? null\)/);
-  for (const f of ["jump.ts", "navigate.ts", "history.ts", "focuscorner.ts", "styles.css"]) assert.doesNotMatch(src(f), /jumpback/, `${f} has no back chip`);
+  for (const f of ["jump.ts", "navigate.ts", "history.ts", "focuscorner.ts", "styles.css"]) assert.doesNotMatch(f === "styles.css" ? viewerCss() : src(f), /jumpback/, `${f} has no back chip`);
   const s = stack<{ board: string; hit: string | null }>();
   const name = (id: string) => ({ "fn-email": "Email" })[id] ?? id;
   assert.equal(backTitle(s, name), "Back (Alt+←)");
