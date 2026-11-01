@@ -1,6 +1,6 @@
 // Usage: npm run titlecheck
-// Playwright check for the header repo name (#499): on a deep board it is a button, a click shows the overview, and
-// there it is plain text; a hash jump returns to the deep board with the button again. Needs `npx playwright install chromium`.
+// Playwright check for the board title over the canvas (#44): plain text on every board, the level label follows, the Overview crumb goes home, no overflow at 390px
+// Needs `npx playwright install chromium`.
 // Prints TITLECHECK_OK or TITLECHECK_FAILED <reason> (exit 1).
 import { execFileSync } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
@@ -21,19 +21,20 @@ try {
     const url = pathToFileURL(join(tmp, "diagram.html")).href;
     const ok = async (cond: boolean, what: string) => { if (!cond && !failed) failed = what; };
     await p.goto(`${url}#invoices~`);
-    const btn = p.locator("header h1 button");
-    await ok((await btn.count()) === 1, "deep board: title is not a button");
-    await btn.focus();
-    await p.keyboard.press("Enter");
-    await p.waitForTimeout(500);
-    await ok((await btn.count()) === 0, "overview: title still a button after click");
-    await ok(((await p.locator("header h1").textContent()) ?? "").trim().length > 0, "overview: title empty");
+    const h1 = p.locator(".board-title h1");
+    await ok((await p.locator("header h1").count()) === 0 && (await p.locator("h1").count()) === 1, "the page must have one h1, in the board title");
+    await ok((await h1.locator("button").count()) === 0, "overview: title is not plain text");
+    await ok(((await h1.textContent()) ?? "").trim().length > 0, "overview: title empty");
     await p.evaluate(() => { location.hash = "#invoices~"; });
     await p.waitForTimeout(500);
-    await ok((await btn.count()) === 1, "hash jump: title is not a button on the deep board");
+    await ok((await h1.locator("button").count()) === 0, "deep board: title is not plain text");
+    await ok(((await p.locator(".bt-level").textContent()) ?? "").includes("down"), "deep board: no level label");
+    await p.locator("#crumbs button").first().click();
+    await p.waitForTimeout(500);
+    await ok(((await p.locator(".bt-level").textContent()) ?? "") === "Overview", "the Overview crumb does not go home");
     await p.setViewportSize({ width: 390, height: 844 });
-    const over = await p.evaluate(() => {  const h = document.querySelector("h1")!.parentElement!; return h.scrollWidth > h.clientWidth + 1; });
-    await ok(!over, "phone width: header overflows");
+    const over = await p.evaluate(() => {  const h = document.querySelector(".board-title")!; return h.scrollWidth > h.clientWidth + 1; });
+    await ok(!over, "phone width: board title overflows");
   } finally { await browser.close(); }
 } catch (e) { failed = (e as Error).message.split("\n")[0]; } finally { rmSync(tmp, { recursive: true, force: true }); }
 if (failed) { console.log(`TITLECHECK_FAILED ${failed}`); process.exit(1); }

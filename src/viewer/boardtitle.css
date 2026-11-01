@@ -1,0 +1,106 @@
+/* The board title (repotitle.ts): level label, name and a two-line summary as plain text over the grid, top left of the canvas, below Back/Forward. */
+.board-title {
+  position: absolute;
+  top: calc(var(--dock-top, 0px) + 54px);
+  left: 14px;
+  z-index: 2;
+  width: min(26rem, calc(100% - 28px));
+  pointer-events: none;
+}
+html.embed .board-title {
+  display: none;
+}
+.bt-level {
+  margin: 0;
+  color: var(--muted);
+  font: var(--text-micro) / var(--lh-micro) var(--font-ui);
+  font-variant-numeric: tabular-nums;
+}
+.board-title h1 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bt-sum {
+  margin: var(--space-1) 0 0;
+  color: var(--muted);
+  font: var(--text-small) / var(--lh-small) var(--font-ui);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+.bt-sum:empty {
+  display: none;
+}
+.bt-more {
+  all: unset;
+  pointer-events: auto;
+  cursor: pointer;
+  color: var(--muted);
+  font: var(--text-micro) / var(--lh-micro) var(--font-ui);
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 4px;
+}
+.bt-more[hidden] {
+  display: none;
+}
+.bt-more:hover {
+  color: var(--ink);
+  text-decoration-color: currentColor;
+}
+.bt-more:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+.bt-gauge:empty {
+  display: none;
+}
+.bt-gauge {
+  display: block;
+  margin-top: var(--space-2);
+  color: var(--muted);
+}
+.bt-pop {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: var(--space-2);
+  width: 100%;
+  max-height: 50vh;
+  overflow: auto;
+  box-sizing: border-box;
+  padding: var(--space-3);
+  pointer-events: auto;
+  background: var(--float-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-3);
+  color: var(--ink);
+  font: var(--text-small) / var(--lh-small) var(--font-ui);
+}
+.bt-pop p {
+  margin: 0;
+}
+.bt-pop:focus-visible {
+  outline: 2px solid var(--accent);
+}
+@media (max-width: 760px) {
+  .board-title {
+    top: calc(var(--dock-top, 0px) + 50px);
+    left: 12px;
+    width: calc(100% - 24px);
+  }
+  .bt-sum {
+    display: none;
+  }
+}

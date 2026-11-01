@@ -28,3 +28,8 @@ test("embed CSS hides the title bar and the footer", () => {
   const rule = css.match(/html\.embed header,\s*html\.embed \.made\s*\{([^}]*)\}/);
   assert.ok(rule && /display:\s*none/.test(rule[1]));
 });
+
+test("embed CSS hides the board title overlay", () => {
+  const rule = viewerCss().match(/html\.embed \.board-title\s*\{([^}]*)\}/);
+  assert.ok(rule && /display:\s*none/.test(rule[1]));
+});

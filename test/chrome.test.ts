@@ -16,7 +16,7 @@ const page = () => {
 };
 const count = (s: string, re: RegExp) => (s.match(re) ?? []).length;
 
-test("the header keeps its one-line shell and carries one brand link before the title", () => {
+test("the header keeps its one-line shell and carries one brand link; the title is over the canvas", () => {
   const html = page();
   assert.equal(count(html, /^<header>$/gm), 1);
   assert.equal(count(html, /^<\/header>$/gm), 1);
@@ -24,7 +24,10 @@ test("the header keeps its one-line shell and carries one brand link before the 
   const head = html.slice(html.indexOf("<header>"), html.indexOf("</header>"));
   const links = head.match(/<a class="brand"[^>]*>/g) ?? [];
   assert.equal(links.length, 1);
-  assert.ok(head.indexOf("<a class=\"brand\"") < head.indexOf("<h1>"));
+  assert.ok(!head.includes("<h1>"));
+  const title = html.slice(html.indexOf('<div class="board-title"'), html.indexOf("</div>", html.indexOf('<div class="board-title"')));
+  assert.equal(count(html, /<h1>/g), 1);
+  assert.ok(title.includes("<h1>") && title.includes('class="bt-more" hidden'));
   assert.ok(links[0]!.includes(`href="${madeWithUrl().replaceAll("&", "&amp;")}"`) && links[0]!.includes('target="_blank" rel="noopener"') && links[0]!.includes('aria-label="RepoLadder"') && links[0]!.includes('title="RepoLadder"'));
   assert.equal(count(head, /<svg class='mk mk-l'/g), 1);
   assert.equal(count(head, /<svg class='mk mk-d'/g), 1);

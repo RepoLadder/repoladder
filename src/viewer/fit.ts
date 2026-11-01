@@ -94,7 +94,7 @@ const fitFor = (cw: number, ch: number) => {
   // The story's opening clears only the sentence's boxes it shows whole: the actor it leaves off the left
   // edge, or a part cut by the right one, would push the sentence under the sheet
   const btn = (sel: string): Box4 => { const b = buttons(sel); return b[2] ? [b[0] - r.x, b[1] - r.y, b[2], b[3]] : b; };
-  const c = clearCorner(v, at ? rs.filter((r) => r[0] >= v[0] && r[0] + r[2] <= v[0] + v[2]) : boxes(), w, open, [btn(".zoom"), btn(".canvas > .hist"), btn(".dial"), [-w, 0, w, open]], cropped, slideFor(v, w, open));
+  const c = clearCorner(v, at ? rs.filter((r) => r[0] >= v[0] && r[0] + r[2] <= v[0] + v[2]) : boxes(), w, open, [btn(".zoom"), btn(".canvas > .hist"), btn(".dial"), btn(".board-title"), [-w, 0, w, open]], cropped, slideFor(v, w, open));
   return r.w < cw || r.h < ch || r.y ? atRegion(c, cw, ch, r) : c;
 };
 
@@ -150,6 +150,10 @@ export function setRefitter(f: ((fit: View) => void) | null): void {
   syncReframe();
 }
 
+let refitNow: (() => void) | null = null;
+/** Something floating over the canvas changed size (the board title): refit, but only while the view is still at the fit. */
+export const refitIfAtFit = (): void => refitNow?.();
+
 /** A rotation, a resized pane or the header settling (web fonts) refits the board, unless the reader has moved it. */
 export function installFit(): void {
   let was = "";
@@ -162,6 +166,7 @@ export function installFit(): void {
     refit();
     zoomClass();
   };
+  refitNow = () => again(true);
   new ResizeObserver(() => again()).observe(document.getElementById("canvas")!);
   // the floating header or panel changed size (dock.ts) without the canvas doing so
   window.addEventListener("dockchange", () => again(true));

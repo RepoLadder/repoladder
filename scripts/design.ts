@@ -29,6 +29,7 @@ export const SEL = {
   sheet: "aside[data-sheet]",
   grip: "aside .grip",
   walkCard: ".walk-card",
+  boardTitle: ".board-title",
   zoom: ".zoom",
   dial: ".dial",
   copyRow: "p.idrow",
@@ -122,6 +123,18 @@ export const STATES: State[] = [
     await settle(c.page);
     const h = await c.page.evaluate((s) => [...document.querySelectorAll<SVGGElement>(s)].map((g) => g.dataset.hit!).find((x) => x.startsWith("n:")), SEL.hit);
     if (h) await pick(c.page, h);
+  } },
+  { id: "board-title-long", label: "A board whose summary overflows, More open", mode: "all", fixture: "checkin", run: async (c) => {
+    // the first board whose summary the clamp cuts, so More shows
+    let found = false;
+    for (const id of c.boards) {
+      await c.page.evaluate((id) => (window as any).__repoladder.show(id), id);
+      if (await c.page.locator(".bt-more").isVisible()) { found = true; break; }
+    }
+    if (!found) return "no board has a summary long enough to show More";
+    await settle(c.page);
+    const more = c.page.locator(".bt-more");
+    await more.click();
   } },
   { id: "tour-step", label: "A tour step with its walk card", mode: "all", fixture: "tourapp", run: async (c) => {
     if (!c.tours.length) return "no tour on this map";

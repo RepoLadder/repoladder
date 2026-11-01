@@ -1,6 +1,7 @@
 // Viewer entry. Runs in the browser: esbuild bundles this to an IIFE (see build/viewer.ts)
 // that defines `repoladder`; the page's boot script (boot.ts) unpacks it and calls `repoladder.start(data)`.
 import { installCrumbs } from "./crumbs.ts";
+import { installBoardTitle } from "./repotitle.ts";
 import { installEmbed } from "./embed.ts";
 import { openHash } from "./deeplink.ts";
 import { installDock } from "./dock.ts";
@@ -44,6 +45,7 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   const exportView = installExport(decode, fonts);
   installHistory(here, restore);
   installCrumbs();
+  installBoardTitle();
   installFilters();
   installPanZoom();
   installFullscreen();
