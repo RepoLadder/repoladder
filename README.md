@@ -45,6 +45,21 @@ Live diagrams you can click through, no install needed:
 
 <!-- Rows follow gallery/demos.json (order, names, urls), checked by test/readme.test.ts. Titles and blurbs are copied from the website's demo list; keep them in step. -->
 
+## What it does and doesn't do
+
+| | What to expect |
+|---|---|
+| **Languages** | TypeScript and JavaScript (`.ts .tsx .mts .cts .js .jsx .mjs .cjs`). A repo with no such files stops with a message; other languages are not read. |
+| **Drawn from the code** | Boxes of files, imports, runtime calls by function name or URL, database reads and writes, SDK imports of outside services, server endpoints. Click an arrow for the file and line behind it. |
+| **Only named by the AI** | Claude groups files into parts and gives them names, summaries and tours. It cannot add an arrow: arrows always come from the code facts, and a grouping that leaves a file out is rejected. |
+| **Runs on your machine** | Reading the repo, laying out the diagram and writing `.repoladder/` all run locally. RepoLadder itself sends nothing unless you opt in to anonymous usage stats; as in any Claude Code session, Claude sees the repo summary through your own Claude account. Details: [PRIVACY.md](PRIVACY.md#where-things-run). |
+| **Time** | Analysis and layout take under about 5 seconds up to ~300 files, and about 10 seconds at 500 files. Most of a `/map` run is Claude reading the digest and naming the parts. |
+| **Tokens** | Claude reads the skill and a digest of the repo (capped): roughly 6K input tokens for a small repo and 16K for a large one, plus the grouping it writes. These count against your Claude plan like any other Claude Code turn. |
+| **Without AI** | `npx repoladder build . --default` groups by folders, costs no tokens and still draws every arrow from the code. |
+| **Known limits** | Very large repos use a two-pass grouping and some deep boards stay crowded; names on the busiest boards can be small. Measured on 15 public repos: [docs/reliability.md](docs/reliability.md). |
+
+Measured on 15 public repos; the details are in [docs/reliability.md](docs/reliability.md).
+
 ## Install
 
 In Claude Code:
@@ -55,14 +70,6 @@ In Claude Code:
 ```
 
 Then open your repo and run `/map`. You need Node.js 20.6 or newer. Requirements, what gets installed, updating and uninstalling are in [docs/install.md](docs/install.md).
-
-## What it costs
-
-- **Time:** the analysis and layout take under about 5 seconds up to ~300 files, and about 10 seconds at 500 files. Most of a `/map` run is Claude reading the digest and naming the parts.
-- **Tokens:** Claude reads the skill (~5K tokens) and a digest of the repo (under 1K tokens for a small library, 2-5K for a typical app, ~11K at 500 files; the digest is capped). Roughly 6K input tokens for a small repo and 16K for a large one, plus the grouping it writes, which counts against your Claude plan like any other Claude Code turn.
-- **No AI at all:** `npx repoladder build . --default` groups by folders instead of asking Claude. It costs no tokens and still draws every arrow from the code.
-
-Measured on 15 public repos; the details are in [docs/reliability.md](docs/reliability.md).
 
 ## Why you can trust the arrows
 
