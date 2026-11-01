@@ -34,6 +34,8 @@ const hs = () => heights(innerHeight, topEdge());
 
 function setH(h: number): void {
   aside.style.setProperty("--sheet-h", `${Math.round(h)}px`);
+  // floating controls (phone.css) ride above the sheet
+  document.documentElement.style.setProperty("--sheet-h", `${Math.round(h)}px`);
 }
 
 export function setSnap(s: Snap): void {
@@ -63,10 +65,11 @@ function reveal(): void {
   if (!rs.length) return;
   const l = Math.min(...rs.map((r) => r.left)), rt = Math.max(...rs.map((r) => r.right));
   const t = Math.min(...rs.map((r) => r.top)), b = Math.max(...rs.map((r) => r.bottom));
-  const c = $("canvas").getBoundingClientRect(), bottom = Math.min(c.bottom, innerHeight - hs()[snap]), m = 20;
-  if (l >= c.left + m && rt <= c.right - m && t >= c.top + m && b <= bottom - m) return;
-  const f = Math.max(1, (rt - l) / (c.width - 2 * m), (b - t) / (bottom - c.top - 2 * m));
-  setView(pinchView(st.view, st.svgEl.getBoundingClientRect(), [(l + rt) / 2, (t + b) / 2], [(c.left + c.right) / 2, (c.top + bottom) / 2], f, 1));
+  // clear of the floating top bar as well as the sheet
+  const c = $("canvas").getBoundingClientRect(), bottom = Math.min(c.bottom, innerHeight - hs()[snap]), m = 20, top = Math.max(c.top, topEdge());
+  if (l >= c.left + m && rt <= c.right - m && t >= top + m && b <= bottom - m) return;
+  const f = Math.max(1, (rt - l) / (c.width - 2 * m), (b - t) / (bottom - top - 2 * m));
+  setView(pinchView(st.view, st.svgEl.getBoundingClientRect(), [(l + rt) / 2, (t + b) / 2], [(c.left + c.right) / 2, (top + bottom) / 2], f, 1));
 }
 
 let last = "";

@@ -54,7 +54,7 @@ async function main() {
             const rect = (e: Element) => e.getBoundingClientRect();
             const c = rect(document.getElementById("canvas")!);
             const hits = [...document.querySelectorAll("svg.board g[data-hit^='n:']")].map((g) => rect(g));
-            const hit = (e: Element) => { const r = rect(e); return !!r.width && hits.some((b) => b.width && b.left < r.right && b.right > r.left && b.top < r.bottom && b.bottom > r.top); };
+            const hit = (e: Element) => { const r = rect(e); return !!r.width && getComputedStyle(e).visibility !== "hidden" && hits.some((b) => b.width && b.left < r.right && b.right > r.left && b.top < r.bottom && b.bottom > r.top); };
             return { canvas: [c.left, c.top, c.width, c.height], covered: over.filter((s) => { const e = document.querySelector(s); return !!e && hit(e); }), win: [innerWidth, innerHeight] };
           }, OVER);
           if (m.name !== "embed") {

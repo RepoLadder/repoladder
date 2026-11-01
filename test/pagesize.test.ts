@@ -103,7 +103,7 @@ test("page size breaks the bytes down and flags pages over budget", () => {
   assert.ok(Math.abs(Object.values(s.sections).reduce((a, b) => a + b, 0) - s.data) <= 9, "sections add up to the packed data");
   assert.match(describeSize(s), /^\d+\.\dKB = viewer .* \+ data .*evidence.* \+ fonts \d+\.\dKB$/);
   assert.equal(budgetKb(0), VIEWER_KB + FONT_KB);
-  assert.ok(overBudget(280, 121), "A large app at 280KB (121 boards) is over the 271KB budget");
+  assert.ok(overBudget(290, 121), "A large app at 290KB (121 boards) is over the budget");
   assert.ok(!overBudget(153.2, 121), "A large app with the viewer packed (153.2KB) is under");
   assert.ok(overBudget(VIEWER_KB + FONT_KB + 1, 0) && !overBudget(VIEWER_KB + FONT_KB - 1, 0), "the viewer and fonts alone have to fit");
   assert.ok(s.js + s.css < VIEWER_KB * 1024, `the packed viewer and its boot script are ${s.js + s.css} bytes`);

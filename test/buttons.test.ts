@@ -30,6 +30,14 @@ test("coarse pointers get 44px targets for the shared skin", () => {
   assert.ok(tb && /opacity:\s*\.5/.test(tb.body) && /pointer-events:\s*none/.test(tb.body), "top-bar actions share the disabled look");
 });
 
+test("the inspector toggle is 44px for coarse pointers", () => {
+  assert.match(css, /pointer:\s*coarse\)\s*\{html:not\(\.embed\) #insp\{width:\s*44px;height:\s*44px/);
+});
+
+test("the phone's top bar, grip and dock buttons are 44px for coarse pointers", () => {
+  assert.match(css, /max-width:\s*760px\)\s*and\s*\(pointer:\s*coarse\)\s*\{html:not\(\.embed\) header \.sbtn,html:not\(\.embed\) header \.tbact,\.grip,\.dock \.tour-nav button\{min-height:\s*44px;min-width:\s*44px/);
+});
+
 test("the skin block uses tokens only", () => {
   const skin = rules.filter((r) => /^\.tour-nav button[,:]/.test(r.sel.replace(/\s+/g, " ")));
   assert.ok(skin.length >= 3);
