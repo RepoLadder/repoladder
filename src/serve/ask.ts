@@ -3,6 +3,8 @@ import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { askArgv, childEnv, explainFailure, parseStreamLine, type Failure } from "./claude.ts";
+import { segments } from "../model/cite.ts";
+import { loadCiteContext } from "./facts.ts";
 import { stageAgentCommand, type Staged } from "./stage.ts";
 
 export type AskConfig = {
@@ -164,7 +166,10 @@ export function createAsk(cfg: AskConfig): Ask {
       if (result?.ok) {
         const text = result.text || deltas;
         if (!deltas && text) send({ type: "text", text });
-        return end({ type: "done", text, conversation: id });
+        // verified here, from the facts on disk: the browser never supplies or alters segments
+        let segs: unknown = null;
+        try { const c = loadCiteContext(cfg.out); if (c) segs = segments(text, c.facts, c.boxes); } catch { segs = null; }
+        return end({ type: "done", text, segments: segs, conversation: id });
       }
       fail(explainFailure({ exitCode: code, stderr, resultError: result?.error }));
     });
