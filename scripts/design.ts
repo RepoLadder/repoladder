@@ -365,6 +365,9 @@ async function main() {
         mkdirSync(join(outDir, "controls"), { recursive: true });
         const crops: [string, string, string][] = [["zoom", "Zoom and fit", SEL.zoom], ["dial", "Detail dial", SEL.dial], ["copy", "Copy pills", SEL.copyRow], ["search", "Search button", SEL.searchOpen], ["filters", "Filter chips", SEL.filterBar]];
         // the chips card shows only while a filter is on (remembered in localStorage, so it is reset after the crop)
+        // the legend sits in the overview's More, inside the inspector: open both first
+        if ((await p.locator(SEL.inspectorToggle).isVisible()) && (await p.locator(SEL.inspectorToggle).getAttribute("aria-pressed")) !== "true") { await p.locator(SEL.inspectorToggle).click(); await p.waitForTimeout(400); }
+        await p.evaluate(() => document.querySelectorAll<HTMLDetailsElement>("details.more").forEach((d) => { d.open = true; }));
         const toggle = p.locator(SEL.legendToggle).first();
         if (await toggle.count()) await toggle.click();
         for (const [id, label, sel] of crops) {

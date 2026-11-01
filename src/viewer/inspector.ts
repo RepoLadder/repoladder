@@ -44,7 +44,7 @@ export function syncInspector(): void {
   a.inert = !on;
   b.setAttribute("aria-expanded", String(on));
   b.setAttribute("aria-pressed", String(on));
-  if (was !== a.dataset.inspector) { window.dispatchEvent(new Event("dockchange")); refitIfAtFit(); }
+  if (st.svgEl && was !==a.dataset.inspector) { window.dispatchEvent(new Event("dockchange")); refitIfAtFit(); }
 }
 
 export function toggleInspector(): void {
