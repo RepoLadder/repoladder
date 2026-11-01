@@ -30,8 +30,9 @@ import { encodeWire } from "../viewer/wire.ts";
  * 2026-10: the +, - and F zoom keys and the upward export popover (zoomkeys.ts, anchor.ts): 95KB, the page was a few bytes over 94KB.
  * 2026-10: the full-window canvas's open region (#78) merged with the phone's edge cue (#76): 95KB, the page was 110 bytes over 94KB.
  * 2026-10: the phone layout stacked on the floating UI changes before them, and the phone's dock: 100KB.
+ * 2026-11: the zoom strip kept at the lower right with the top bar and inspector merged in: 101KB, the page was 48 bytes over 100KB on CI.
  */
-export const VIEWER_KB = 100;
+export const VIEWER_KB = 101;
 /**
  * The embedded Geist and Geist Mono subsets with their licence (#337): a packed blob of about 58KB, a separate
  * line outside the VIEWER_KB ratchet (the fonts change when the font files do, not with viewer code).

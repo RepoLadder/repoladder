@@ -68,11 +68,11 @@ async function main() {
     await p.keyboard.press("Escape");
     const z = await p.evaluate(() => { const r = document.querySelector(".zoom")!.getBoundingClientRect(), c = document.getElementById("canvas")!.getBoundingClientRect(); return { r, c }; });
     ok(z.r.top > z.c.top + z.c.height / 2 && z.r.right <= z.c.right, "the strip is not at the lower right on a wide window");
-    const side = await p.evaluate(() => { const a = document.querySelector("main > aside")!.getBoundingClientRect(), r = document.querySelector(".zoom")!.getBoundingClientRect(); return a.width > 0 && getComputedStyle(document.querySelector("main > aside")!).display !== "none" ? r.right <= a.left + 1 : true; });
+    const side = await p.evaluate(() => { const a = document.querySelector("main > aside")!.getBoundingClientRect(), r = document.querySelector(".zoom")!.getBoundingClientRect(); return a.width > 0 && (document.querySelector("main > aside") as HTMLElement).dataset.inspector !== "closed" && getComputedStyle(document.querySelector("main > aside")!).display !== "none" ? r.right <= a.left + 1 : true; });
     ok(side, "the strip sits under the inspector");
     await p.click("#zexp"); await frame(p);
-    const m = await p.evaluate(() => { const r = document.querySelector(".xmenu")!.getBoundingClientRect(), b = document.getElementById("zexp")!.getBoundingClientRect(), c = document.getElementById("canvas")!.getBoundingClientRect(); return r.top >= c.top && r.bottom <= b.top + 1 && r.right <= c.right + 1; });
-    ok(m, "the export menu does not open upward inside the canvas");
+    const m = await p.evaluate(() => { const r = document.querySelector(".xmenu")!.getBoundingClientRect(), b = document.getElementById("zexp")!.getBoundingClientRect(); return r.top >= b.bottom - 1 && r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1 && r.left >= 0; });
+    ok(m, "the export menu does not hang under the top-bar button inside the window");
     await p.keyboard.press("Escape");
     const tour = await p.evaluate(() => { const t = document.querySelector<HTMLElement>("[data-tour]"); if (t) (window as any).__repoladder.tour(t.dataset.tour, 0); return !!t; });
     if (tour && await p.waitForSelector(".walk-card", { timeout: 3000 }).then(() => true, () => false)) {
