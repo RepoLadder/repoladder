@@ -52,7 +52,7 @@
   html:not(.embed) .stage:fullscreen #insp {
     display: none;
   }
-  /* below the button; the zoom and dial stay left of the panel, level with it */
+  /* below the button; the dial sits below the toggle; the zoom keeps its bottom-right corner */
   html:not(.embed) main > aside {
     top: calc(var(--dock-top, 64px) + 54px);
     max-height: calc(100vh - var(--dock-top, 64px) - 54px - var(--space-3));
@@ -65,9 +65,6 @@
     transition: opacity .18s ease, transform .18s ease, visibility 0s .18s;
     pointer-events: none;
   }
-  html:not(.embed) .stage:not(:fullscreen) .zoom {
-    top: calc(var(--dock-top, 0px) + 54px);
-  }
   html:not(.embed) .stage:not(:fullscreen) .dial {
     top: calc(var(--dock-top, 0px) + 110px);
   }
@@ -76,9 +73,6 @@
   html:not(.embed) #insp {
     width: 44px;
     height: 44px;
-  }
-  html:not(.embed) .stage:not(:fullscreen) .zoom {
-    top: calc(var(--dock-top, 0px) + 62px);
   }
   html:not(.embed) .stage:not(:fullscreen) .dial {
     top: calc(var(--dock-top, 0px) + 118px);
