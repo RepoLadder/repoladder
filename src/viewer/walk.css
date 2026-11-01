@@ -108,11 +108,10 @@ main > aside {
   .rd-tap {
     display: inline;
   }
-  .canvas > .walk-card {
+  /* in #dock (phone.css), which places it */
+  .dock > .walk-card {
     display: block;
-    left: 8px;
-    right: 8px;
-    bottom: 16px;
+    position: relative;
     padding: 8px 12px 10px;
     cursor: pointer;
   }
@@ -128,7 +127,7 @@ main > aside {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  .canvas > .walk-card p.tour-text {
+  .dock > .walk-card p.tour-text {
     margin: 2px 0 0;
     font-size: var(--text-small);
   }

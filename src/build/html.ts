@@ -95,7 +95,10 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   <div class="stage" id="stage">
   <div class="canvas" id="canvas">
     <div class="board-title" id="boardtitle"><p class="bt-level"></p><h1>${esc(model.repo)}</h1><p class="bt-sum"></p><button class="bt-more" hidden aria-haspopup="dialog" aria-expanded="false">More</button><span class="bt-gauge"></span></div>
+    <button id="insp" aria-label="Inspector" title="Inspector (I)" aria-controls="details" aria-expanded="false" aria-pressed="false">${INSPECTOR_ICON}</button>
     <div class="zoom"><button id="zfs" hidden aria-label="Full screen" aria-pressed="false">${FS_ICON}</button><button id="zfit" hidden aria-label="Reframe" title="Reframe (F)">${REFRAME_ICON}</button><button id="zin" aria-label="Zoom in" title="Zoom in (+)">+</button><button id="zout" aria-label="Zoom out" title="Zoom out (-)">−</button></div>
+    <!-- the bottom dock (phone.css): the tour card sits in it on a phone; the Ask bar will dock here too -->
+    <div class="dock" id="dock"></div>
   </div>
   </div>
   <aside><section id="details" aria-live="polite"></section>${madeWith()}</aside>
@@ -111,6 +114,7 @@ repoladderBoot(${viewer},${packed},${inlineJson(assets.fonts)});
 // states; styles.css shows the corners out or in by aria-pressed. Reframe is a viewfinder.
 const ICON = (d: string) => `<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">${d}</svg>`;
 const FS_ICON = ICON('<path class="fs-out" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/><path class="fs-in" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/>');
+const INSPECTOR_ICON = ICON('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M10 2.5v11"/>');
 const REFRAME_ICON = ICON('<path d="M2 5V2h3M11 2h3v3M14 11v3h-3M5 14H2v-3"/><circle cx="8" cy="8" r="1.2"/>');
 
 // Plain links in the shell, not viewer code: an Artifact frame blocks window.open, and the

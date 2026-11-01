@@ -16,12 +16,14 @@ let last: Dock = { top: 0, right: 0 };
 /** The last measured dock. */
 export const dock = (): Dock => last;
 
+const closed = () => document.querySelector<HTMLElement>("main > aside")?.dataset.inspector === "closed";
+
 /** Measures now, publishes the variables, and returns whether anything changed. */
 function measure(): boolean {
   const canvas = document.getElementById("canvas"), root = document.documentElement;
   if (!canvas) return false;
   const rect = (s: string) => document.querySelector(s)?.getBoundingClientRect() ?? null;
-  const d = dockOf(canvas.getBoundingClientRect(), rect("header"), rect("main > aside"), matchMedia("(max-width: 760px)").matches, !!document.fullscreenElement);
+  const d = dockOf(canvas.getBoundingClientRect(), rect("header"), closed() ? null : rect("main > aside"), matchMedia("(max-width: 760px)").matches, !!document.fullscreenElement);
   const same = d.top === last.top && d.right === last.right;
   last = d;
   root.style.setProperty("--dock-top", `${d.top}px`);
@@ -33,6 +35,11 @@ function measure(): boolean {
 export function installDock(): void {
   measure();
   const again = () => { if (measure()) window.dispatchEvent(new Event("dockchange")); };
+  // the bottom dock (phone.css) publishes its height on the canvas, for the zoom strip riding above it
+  const bottom = document.getElementById("dock");
+  const canvas = document.getElementById("canvas");
+  const dockH = new ResizeObserver(() => { canvas?.style.setProperty("--dock-h", `${Math.round(bottom?.getBoundingClientRect().height ?? 0)}px`); });
+  if (bottom) dockH.observe(bottom);
   const ro = new ResizeObserver(again);
   for (const s of ["header", "main > aside", "#canvas"]) { const e = document.querySelector(s); if (e) ro.observe(e); }
   addEventListener("resize", again);

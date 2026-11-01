@@ -134,6 +134,9 @@ function refit(): void {
   syncReframe();
 }
 
+/** Refits only a view still at the fit: a reader who panned or zoomed is never moved. */
+export function refitIfAtFit(): void { if (atFit()) refit(); }
+
 /** The current board's zoom and pan bounds on the canvas as it is now (zoomlimits.ts). */
 export function limits(): Limits {
   return limitsFor(whole, st.base, ...size());
@@ -150,10 +153,6 @@ export function setRefitter(f: ((fit: View) => void) | null): void {
   syncReframe();
 }
 
-let refitNow: (() => void) | null = null;
-/** Something floating over the canvas changed size (the board title): refit, but only while the view is still at the fit. */
-export const refitIfAtFit = (): void => refitNow?.();
-
 /** A rotation, a resized pane or the header settling (web fonts) refits the board, unless the reader has moved it. */
 export function installFit(): void {
   let was = "";
@@ -166,7 +165,6 @@ export function installFit(): void {
     refit();
     zoomClass();
   };
-  refitNow = () => again(true);
   new ResizeObserver(() => again()).observe(document.getElementById("canvas")!);
   // the floating header or panel changed size (dock.ts) without the canvas doing so
   window.addEventListener("dockchange", () => again(true));

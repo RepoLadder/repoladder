@@ -1,0 +1,89 @@
+/* The inspector as a floating panel: closed until a selection, toggled by #insp and the I key (inspector.ts). Wide windows only; the phone keeps its sheet. */
+#insp {
+  display: none;
+}
+.more {
+  margin: 0 0 10px;
+}
+.more > summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: var(--text-small);
+  padding: 2px 0;
+}
+.more-body {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.more-body > .panel {
+  border: 0;
+  padding: 0;
+  background: none;
+}
+@media (min-width: 761px) {
+  html:not(.embed) #insp {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    z-index: 6;
+    top: calc(var(--dock-top, 0px) + 10px);
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    cursor: pointer;
+    color: var(--ink);
+    background: var(--float);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-1);
+  }
+  html:not(.embed) #insp:hover,
+  html:not(.embed) #insp[aria-pressed="true"] {
+    background: var(--soft);
+  }
+  html:not(.embed) #insp svg {
+    width: 16px;
+    height: 16px;
+  }
+  html:not(.embed) .stage:fullscreen #insp {
+    display: none;
+  }
+  /* below the button; the dial stays left of the panel, level with it; the zoom strip sits lower right (canvas.css) */
+  html:not(.embed) main > aside {
+    top: calc(var(--dock-top, 64px) + 54px);
+    max-height: calc(100vh - var(--dock-top, 64px) - 54px - var(--space-3));
+    transition: opacity .18s ease, transform .18s ease, visibility 0s;
+  }
+  html:not(.embed) main > aside[data-inspector="closed"] {
+    opacity: 0;
+    transform: translateX(8px);
+    visibility: hidden;
+    transition: opacity .18s ease, transform .18s ease, visibility 0s .18s;
+    pointer-events: none;
+  }
+  html:not(.embed) .stage:not(:fullscreen) .dial {
+    top: calc(var(--dock-top, 0px) + 110px);
+  }
+}
+@media (min-width: 761px) and (pointer: coarse) {
+  html:not(.embed) #insp {
+    width: 44px;
+    height: 44px;
+  }
+  html:not(.embed) .stage:not(:fullscreen) .dial {
+    top: calc(var(--dock-top, 0px) + 118px);
+  }
+  html:not(.embed) main > aside {
+    top: calc(var(--dock-top, 64px) + 62px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html:not(.embed) main > aside,
+  html:not(.embed) main > aside[data-inspector="closed"] {
+    transition: none;
+  }
+}

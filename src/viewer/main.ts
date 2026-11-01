@@ -15,6 +15,7 @@ import { installDial } from "./dial.ts";
 import { installExport, type ExportKind } from "./exportui.ts";
 import { installHistory, unrecorded } from "./history.ts";
 import { here, installNavigation, restore, select, show } from "./navigate.ts";
+import { installInspector } from "./inspector.ts";
 import { installPanZoom } from "./panzoom.ts";
 import { installZoomKeys } from "./zoomkeys.ts";
 import { installStory } from "./story.ts";
@@ -57,6 +58,7 @@ export async function start(packed: ViewerData | string, decode?: typeof decode9
   installDock();
   installFit();
   installSheet();
+  installInspector();
   installFocus();
   installFocusZoom();
   installDeselect(select);
