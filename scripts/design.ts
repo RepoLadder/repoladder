@@ -16,6 +16,9 @@ import { esc } from "../src/viewer/esc.ts";
 import { ELEVATION, SHAPE, SPACE, THEMES as VIEWER } from "../src/viewer/theme.ts";
 import { MODES, planCompare, renderCompare, shotFile, type CompareRow, type Manifest, type ModeId, type ShotBoard, type ShotRepo } from "./shots.ts";
 import { shellTokens } from "./shellstyle.ts";
+import { clipped, FLOATERS, overlaps, report } from "./phonecheck.ts";
+
+export { clipped, overlaps };
 
 type Page = import("playwright").Page;
 
@@ -41,6 +44,8 @@ export const SEL = {
   filterBar: "#fbar",
   legendToggle: "button.lgt[data-filter]",
   filterReset: "#fbar [data-freset]",
+  dock: "#dock",
+  topFloaters: FLOATERS.topbar,
 } as const;
 
 export const DESIGN_MODES = ["desktop", "phone", "all"] as const;
@@ -154,6 +159,11 @@ export const STATES: State[] = [
   { id: "story-overview", label: "Story board overview", mode: "all", fixture: "checkin", run: async (c) => {
     if (!c.boards.includes(STORY)) return "this map has no story board";
     await c.page.evaluate((id) => (window as any).__repoladder.show(id), STORY);
+  } },
+  { id: "phone-overview", label: "Phone overview (nothing selected)", mode: "phone", fixture: "tourapp", run: async () => undefined },
+  { id: "phone-inspector-open", label: "Phone inspector open (sheet at half)", mode: "phone", fixture: "tourapp", run: async (c) => {
+    const h = nodeHit(c); if (!h) return "no part box on the root board";
+    await pick(c.page, h);
   } },
   { id: "sheet-peek", label: "Phone sheet: peek", mode: "phone", fixture: "tourapp", run: async (c) => {
     const h = nodeHit(c); if (!h) return "no part box on the root board";
@@ -394,6 +404,26 @@ async function main() {
       }
       await ctx.close();
     }
+
+    // the phone overlap detector: floating elements must not collide or leave the viewport, at two sizes in both themes
+    let phoneBad = 0;
+    for (const [w, h] of [[390, 844], [320, 568]] as const) {
+      for (const scheme of ["light", "dark"] as const) {
+        const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: scheme, hasTouch: true, reducedMotion: "reduce" });
+        const p = await ctx.newPage();
+        for (const st of STATES.filter((x) => ["phone-overview", "phone-inspector-open", "tour-step", "search-open"].includes(x.id))) {
+          const fixture = FIXTURES.find((f) => f.id === st.fixture)!;
+          await p.goto(pages.get(fixture.id)!);
+          await settle(p);
+          const c: Ctx = { page: p, phone: true, fixture, hits: await p.evaluate((s) => [...document.querySelectorAll<SVGGElement>(s)].map((g) => g.dataset.hit!), SEL.hit), boards: await p.evaluate(() => (window as any).__repoladder.boards), tours: (await p.evaluate(() => (window as any).__repoladder.tours())).map((t: { id: string }) => t.id) };
+          if (await st.run(c)) continue;
+          await settle(p);
+          phoneBad += await report(p, `${st.id}@${w}x${h}-${scheme}`, w, h, (l) => process.stdout.write(l));
+        }
+        await ctx.close();
+      }
+    }
+    if (phoneBad && argv.includes("--strict")) process.exitCode = 1;
 
     const sha = execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim();
     const repos: ShotRepo[] = FIXTURES.map((f) => ({ name: f.id, boards: boards.get(f.id)! })).filter((r) => r.boards.length);
