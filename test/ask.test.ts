@@ -92,7 +92,7 @@ test("status reports the CLI, or a plain reason when it is missing", { skip }, a
   const e = await boot(t);
   e.extra.FAKE_CLAUDE_MODE = "version";
   const ok = JSON.parse((await call(e.s, "GET", "/api/ask/status")).body);
-  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)" });
+  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)", starters: [] });
 
   const e2 = await boot(t);
   process.env.REPOLADDER_CLAUDE_BIN = "/nonexistent/claude-nope";

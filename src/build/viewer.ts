@@ -16,12 +16,34 @@ import { packFonts } from "./filepack.ts";
 export interface ViewerAssets { js: string; css: string; boardCss: string; boot: string; fonts: string }
 
 declare const __REPOLADDER_VIEWER__: ViewerAssets | undefined;
+declare const __REPOLADDER_ASK__: { js: string; css: string } | undefined;
 
 let cached: ViewerAssets | undefined;
 
 export function viewerAssets(): ViewerAssets {
   if (typeof __REPOLADDER_VIEWER__ !== "undefined") return __REPOLADDER_VIEWER__;
   return (cached ??= buildViewer());
+}
+
+let askCached: { js: string; css: string } | undefined;
+
+/** The served-only Ask bundle (global `repoladderAsk`, `start()`) and its CSS, appended to the page by `repoladder serve`. Never part of ViewerAssets. */
+export function askAssets(): { js: string; css: string } {
+  if (typeof __REPOLADDER_ASK__ !== "undefined") return __REPOLADDER_ASK__;
+  return (askCached ??= buildAsk());
+}
+
+export function buildAsk(): { js: string; css: string } {
+  const esbuild: typeof import("esbuild") = createRequire(import.meta.url)("esbuild");
+  const dir = fileURLToPath(new URL("../viewer/", import.meta.url));
+  const out = (f: string, o: Record<string, unknown>) => esbuild.buildSync({
+    entryPoints: [dir + f], bundle: true, minify: true, target: "es2020", write: false, legalComments: "none", charset: "utf8", ...o,
+  }).outputFiles[0].text.trim();
+  // the page already carries the tokens; a `</script` or `</style` can't close the tag early
+  return {
+    js: out("ask/main.ts", { format: "iife", globalName: "repoladderAsk" }).replace(/<\/(script|style)/gi, "<\\/$1"),
+    css: out("ask.css", {}).replace(/<\/(script|style)/gi, "<\\/$1"),
+  };
 }
 
 /** Bundles src/viewer to an IIFE defining the global `repoladder` (with `start(data)`), plus its CSS. */
