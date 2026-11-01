@@ -1,6 +1,7 @@
 // The Export button (#355): a menu on the zoom row to save the current view as SVG or PNG, or copy the PNG.
 // Downloads and the clipboard can be blocked inside an Artifact frame, and a blocked download fails silently, so
 // every save offers "Show image": the picture to right-click or long-press by hand.
+import { anchorFor, place } from "./anchor.ts";
 import type { decode91 } from "./base91.ts";
 import { boardLabel, boardSlug, fontUrls, pngScale, toPng, viewSvg, type FontUrls } from "./exportsvg.ts";
 import { $, esc, st } from "./state.ts";
@@ -37,9 +38,7 @@ export function installExport(decode?: typeof decode91, fonts?: string): (kind: 
     note = el("p", "xnote", `${esc(msg)}${blob ? ` · <button>Show image</button>` : ""} <button aria-label="Dismiss">✕</button>`, "status");
     note.querySelector<HTMLElement>("[aria-label=Dismiss]")!.onclick = () => { note?.remove(); note = null; };
     if (blob) note.querySelector<HTMLElement>("button:not([aria-label])")!.onclick = () => look(blob, "");
-    const r = btn.getBoundingClientRect(), c = canvas.getBoundingClientRect();
-    note.style.top = `${r.bottom - c.top + 4}px`;
-    note.style.right = `${c.right - r.right}px`;
+    place(note, anchorFor(btn.getBoundingClientRect(), canvas.getBoundingClientRect()));
   };
   const nope = () => say("Could not build the image.");
   const look = (blob: Blob, msg: string) => {
@@ -77,9 +76,7 @@ export function installExport(decode?: typeof decode91, fonts?: string): (kind: 
     clear();
     const r = st.svgEl.getBoundingClientRect(), big = pngScale(r.width, r.height) < 1, d = big ? " disabled" : "";
     menu = el("div", "xmenu", `<button role="menuitem" data-k="svg">Save SVG</button><button role="menuitem" data-k="png"${d}>Save PNG</button><button role="menuitem" data-k="copy"${d}>Copy PNG</button>${big ? "<p>Too large for a PNG here: save it as SVG.</p>" : ""}`, "menu");
-    const b = btn.getBoundingClientRect(), c = canvas.getBoundingClientRect();
-    menu.style.top = `${b.bottom - c.top + 4}px`;
-    menu.style.right = `${c.right - b.right}px`;
+    place(menu, anchorFor(btn.getBoundingClientRect(), canvas.getBoundingClientRect()));
     btn.setAttribute("aria-expanded", "true");
     items()[0].focus();
     menu.onclick = (e) => {
