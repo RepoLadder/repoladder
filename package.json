@@ -20,6 +20,7 @@
     "stability": "node scripts/stability.ts",
     "installcheck": "node scripts/installcheck.ts",
     "verify:settings": "node scripts/verifysettings.ts",
+    "barcheck": "node scripts/barcheck.ts",
     "clearcheck": "node scripts/clearcheck.ts",
     "zoomcheck": "node scripts/zoomcheck.ts",
     "edgecheck": "node scripts/edgecheck.ts",

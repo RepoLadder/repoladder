@@ -25,6 +25,9 @@ test("disabled buttons share one look and no .4 variant remains", () => {
 
 test("coarse pointers get 44px targets for the shared skin", () => {
   assert.match(css, /@media\s*\(pointer:\s*coarse\)\s*\{[^@]*?\.hist button\{min-height:\s*44px/);
+  assert.match(css, /@media\s*\(pointer:\s*coarse\)\s*\{[^@]*?\.tbact,[^{}]*\.hist button\{min-height:\s*44px/);
+  const tb = rules.find((r) => r.sel === ".tbact:disabled");
+  assert.ok(tb && /opacity:\s*\.5/.test(tb.body) && /pointer-events:\s*none/.test(tb.body), "top-bar actions share the disabled look");
 });
 
 test("the inspector toggle is 44px for coarse pointers", () => {
