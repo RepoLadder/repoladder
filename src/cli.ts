@@ -333,6 +333,7 @@ switch (cmd) {
     const stop = async () => { await running.close(); console.log("SERVE_STOPPED"); process.exit(0); };
     process.on("SIGINT", stop);
     process.on("SIGTERM", stop);
+    process.on("SIGHUP", stop); // the agent runs in its own process group, so a closed terminal must stop it here
     break;
   }
   default:

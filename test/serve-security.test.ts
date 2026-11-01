@@ -284,8 +284,11 @@ test("timeout, disconnect and close kill the child and everything it started", {
 test("tool-call cap kills the whole tree", { skip }, async (t) => {
   const e = await boot(t);
   e.extra.FAKE_CLAUDE_MODE = "manytools";
+  e.extra.FAKE_CLAUDE_KID = "1";
   assert.match((await call(e.s, "POST", "/api/ask", { body: q("hi") })).body, /TOO_MANY_STEPS/);
   assert.ok(await until(() => !alive(logs(e)[0].pid), 2500));
+  const kid = logs(e).find((x) => x.childPid)?.childPid as number;
+  assert.ok(kid && (await until(() => !alive(kid), 2500)), "grandchild survived the cap");
 });
 
 test("a throwing route returns a generic 500 with no internals", { skip }, async (t) => {
