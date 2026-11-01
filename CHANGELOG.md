@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.6.0
+
+### Minor Changes
+
+- 0653820: Add an Ask bar to the map when it is served with `repoladder serve`: type a question or pick a starter, watch the answer arrive, and click its checked citations to open them in the map. Published and exported maps are unchanged.
+- 1488f17: Add an Ask endpoint to `repoladder serve` that answers questions with your own signed-in Claude Code, read-only.
+- b65280d: Add `repoladder serve`, which hosts the built map on localhost behind a per-run token.
+- 28e2ec9: Ask answers are checked against the code facts: files, lines, names and boxes they cite come back verified (and can open in the map) or marked as not found.
+
+### Patch Changes
+
+- a2ff652: The board's level, title and summary now sit over the canvas at its top left, with a "More" popover for a long summary, instead of in the header.
+- aa59b44: Diagram boxes get softer corners, a lighter border and a subtle shadow in the viewer. Names and colors are unchanged.
+- d89f87e: Harden `repoladder serve` and Ask: cross-origin requests are refused, questions and request bodies are size-limited, one question runs at a time, a stopped question stops everything Claude started, and the privacy and security model is written down.
+
 ## 0.5.0
 
 ### Minor Changes
