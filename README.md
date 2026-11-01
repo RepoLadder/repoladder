@@ -25,11 +25,48 @@
 
 **Run one command on your TypeScript or JavaScript repo. In a few minutes you get a diagram a newcomer can click through and understand, and every box and arrow comes from the code.**
 
-It starts with the big pieces in plain language. Open any box to go one rung deeper and one step more technical, down to the files. Tours walk a real flow through the code, moving up, across and down the rungs as the flow does.
-
 ![A tour on RepoLadder's own map, in the dark theme: it starts on the overview, follows "Reading a repo" down through the rungs, climbs back out, and follows the command line into "Laying out a board"](docs/media/tour.gif)
 
 <sub>A tour on RepoLadder's map of its own code, in the dark theme, recorded from the real viewer.</sub>
+
+## Why RepoLadder
+
+Architecture diagrams drawn by hand go stale, or leave things out. RepoLadder reads the code instead, so every box and arrow is traced back to it. A newcomer starts with the big pieces in plain language and goes as deep as they need, one rung at a time, down to the files.
+
+## What you get
+
+### The map
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/media/map-dark.png">
+  <img src="docs/media/map-light.png" alt="The top board of RepoLadder's own map: six named parts as boxes, with arrows between them">
+</picture>
+
+`/map` turns your repo into boxes and arrows named in plain language. Every box and arrow is traced to the code: imports, runtime calls, database access and outside services.
+
+### Drill in
+
+<img src="docs/media/drill-in.png" alt="The Command line box opened one rung down, showing its files as boxes with the arrows between them">
+
+Double-click a box to open it one rung deeper, down to the files. Each board is kept small enough to take in at once.
+
+### Trace an arrow to the code
+
+<img src="docs/media/trace-arrow.png" alt="An arrow selected on the map, with a side panel listing the file and line of each import behind it">
+
+Click an arrow to see the evidence behind it. It shows the file and line where the import or call happens.
+
+### Tours
+
+<img src="docs/media/tour-step.png" alt="A tour paused on its second step, with the matching boxes and arrows highlighted and a Back and Next strip underneath">
+
+A tour walks one real flow through the code, moving up, across and down the rungs as the flow does. Every step lands on boxes and arrows the diagram actually draws.
+
+### Export
+
+<img src="docs/media/export-board.svg" alt="A board exported as a standalone SVG: named boxes joined by arrows">
+
+Save a board as SVG or PNG from the viewer, or export every board from the command line. The SVG renders as a plain image on GitHub, so it drops straight into a README or slide deck.
 
 ## See it on a real repo
 
