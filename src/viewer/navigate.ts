@@ -1,6 +1,7 @@
 // Moving between boards and selections: show, breadcrumbs, select, and the click/keyboard handlers.
 import { renderTrail } from "./crumbs.ts";
 import { renderRepoTitle } from "./repotitle.ts";
+import { syncTopActions } from "./topactions.ts";
 import { metaHtml } from "./mono.ts";
 import { writeHash } from "./deeplink.ts";
 import { onEscape } from "./deselect.ts";
@@ -88,6 +89,7 @@ function renderCrumbs(): void {
   $("meta").innerHTML = metaHtml(plain, !onStoreBoard() && st.cur === home() && st.data.sha ? st.data.sha : null);
   renderTrail(st.cur);
   renderRepoTitle();
+  syncTopActions();
 }
 
 export function select(hit: string | null): void {

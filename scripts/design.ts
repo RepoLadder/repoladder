@@ -30,6 +30,11 @@ export const SEL = {
   grip: "aside .grip",
   walkCard: ".walk-card",
   zoom: ".zoom",
+  topbar: "header.topbar",
+  actions: "#actions",
+  tourMenu: ".bmenu",
+  tbtours: "#tbtours",
+  tbfilters: "#tbfilters",
   dial: ".dial",
   copyRow: "p.idrow",
   filterBar: "#fbar",
@@ -131,6 +136,14 @@ export const STATES: State[] = [
   { id: "search-open", label: "Search open with results", mode: "all", fixture: "tourapp", run: async (c) => {
     await c.page.locator(SEL.searchOpen).click();
     await c.page.locator(SEL.searchInput).fill(c.fixture.query);
+  } },
+  { id: "topbar-tours", label: "Top bar, Tours menu open", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.tbtours).click();
+    if (!(await c.page.waitForSelector(SEL.tourMenu, { timeout: 2000 }).then(() => true, () => false))) return "the Tours menu did not open";
+  } },
+  { id: "topbar-filters", label: "Top bar, Filters menu open", mode: "desktop", fixture: "tourapp", run: async (c) => {
+    await c.page.locator(SEL.tbfilters).click();
+    if (!(await c.page.waitForSelector(SEL.tourMenu, { timeout: 2000 }).then(() => true, () => false))) return "the Filters menu did not open";
   } },
   { id: "story-overview", label: "Story board overview", mode: "all", fixture: "checkin", run: async (c) => {
     if (!c.boards.includes(STORY)) return "this map has no story board";

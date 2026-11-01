@@ -140,6 +140,7 @@ jobs:
           key: playwright-${{ runner.os }}-1.64.1
       - run: npx playwright install --with-deps chromium
       - run: npm run guardbase
+      - run: npm run barcheck
       - run: npm run clearcheck
       - run: npm run motioncheck
 
