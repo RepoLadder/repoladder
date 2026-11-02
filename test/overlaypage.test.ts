@@ -6,6 +6,8 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { listAllPaths } from "../src/analyze/files.ts";
 import { buildFromFiles } from "../src/lib.ts";
+import { renderHtml } from "../src/build/html.ts";
+import type { BoardLayout } from "../src/build/layout.ts";
 
 const dir = (n: string) => fileURLToPath(new URL(`fixtures/${n}`, import.meta.url));
 const filesOf = (d: string) => new Map(listAllPaths(d).filter((p) => existsSync(join(d, p))).map((p) => [p, readFileSync(join(d, p), "utf8")] as [string, string]));
@@ -54,4 +56,17 @@ test("an overlay page fits its budget, which only an overlay page gets", async (
   const html = await page(overlay), boards = Object.keys(pageData(html).boards).length;
   assert.ok(pageSize(html).total / 1024 < budgetKb(boards, true));
   assert.equal(budgetKb(boards, true) - budgetKb(boards), OVERLAY_KB);
+});
+
+test("renderHtml without marks is the same page as before the option, and only marks add the bundle", async () => {
+  const r = await buildFromFiles(deep, { grouping });
+  assert.ok(r.ok);
+  const layout: Record<string, BoardLayout> = {};
+  for (const [id, b] of Object.entries(r.model.boards)) layout[id] = { n: b.nodes.map((n, i) => [n, i * 100, 0, 80, 40, 0]), e: [] };
+  const plain = renderHtml(r.model, layout), assets = viewerAssets();
+  assert.equal(plain, renderHtml(r.model, layout, undefined, undefined));
+  assert.ok(!plain.includes("repoladderOverlay"));
+  assert.deepEqual(pageViewer(plain), { css: assets.css, js: assets.js });
+  const marked = renderHtml(r.model, layout, undefined, { changed: ["n:api"], added: [], addedEdges: [], removedEdges: [], parts: [] });
+  assert.ok(pageViewer(marked).js.includes("repoladderOverlay.install("));
 });

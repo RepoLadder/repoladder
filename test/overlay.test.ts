@@ -28,7 +28,8 @@ test("the schema rejects a bad id shape, an unknown key and an oversize list", (
   assert.ok(!Overlay.safeParse({ changed: ["e:a>b"] }).success, "a connection id is not a box id");
   assert.ok(!Overlay.safeParse({ addedEdges: ["e:a"] }).success, "a connection id needs both ends");
   assert.ok(!Overlay.safeParse({ addedEdges: ["e:a>b>c"] }).success);
-  assert.ok(!Overlay.safeParse({ changed: ["n:a b"] }).success, "no whitespace in an id");
+  assert.ok(!Overlay.safeParse({ changed: ["n:a b"] }).success, "no whitespace in a box id");
+  assert.ok(Overlay.safeParse({ addedEdges: ["e:src/my file.ts>api"] }).success, "a file path with a space is a fine connection end");
   assert.ok(!Overlay.safeParse({ colour: [] }).success, "unknown keys are refused");
   assert.ok(!Overlay.safeParse({ changed: Array.from({ length: 2001 }, (_, i) => `n:x${i}`) }).success);
   assert.ok(!Overlay.safeParse({ parts: [{ id: "n:a", files: -1 }] }).success);

@@ -9,7 +9,8 @@ import { z } from "zod";
 import type { Model } from "./rollup.ts";
 
 const NodeHit = z.string().regex(/^n:\S{1,200}$/);
-const EdgeHit = z.string().regex(/^e:[^\s>]{1,200}>[^\s>]{1,200}$/);
+// File paths may carry spaces and run long, so a connection end is anything but `>`; an end the model does not know is dropped at resolve time.
+const EdgeHit = z.string().regex(/^e:[^>\n]{1,500}>[^>\n]{1,500}$/);
 
 const Part = z.object({
   id: z.string().regex(/^(?:n:)?\S{1,200}$/),

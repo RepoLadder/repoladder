@@ -2,7 +2,7 @@
 // Checks the `overlay` build option in Playwright Chromium: builds test/fixtures/deep with an overlay (no network, no Claude),
 // then checks that marks show on the root board and, drawn lazily, on a board three rungs down; that they survive going back,
 // that the Marks toggle hides and shows them, that the parts list jumps to its box, that a 390px phone has no horizontal
-// overflow and light and dark both draw the marks. Screenshots go to .gallery/shots/overlay/.
+// overflow and forced colors keeps changed boxes distinct, and light and dark both draw the marks. Screenshots go to .gallery/shots/overlay/.
 // Prints OVERLAYCHECK_OK <n> checks or OVERLAYCHECK_FAILED <why> (exit 1).
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -98,6 +98,17 @@ async function main() {
       ok((await cls(p, "n:api")).some((c) => /\bsel\b/.test(c)), `${scheme}: the parts link does not select its box`);
       ok(errors.length === 0, `${scheme}: page errors ${errors.join(" | ")}`);
       await ctx.close();
+    }
+    // forced colors: the marks take the system highlight color
+    {
+      const fc = await browser.newContext({ viewport: { width: 1280, height: 800 }, forcedColors: "active" });
+      const p = await fc.newPage();
+      await p.goto(pathToFileURL(page).href);
+      await p.waitForFunction(() => (window as any).__repoladder, null, { timeout: 5000 });
+      await p.waitForTimeout(600);
+      ok((await style(p, "n:api", ".body", "stroke")) !== (await style(p, "n:app", ".body", "stroke")), "forced colors: a changed box is not told apart from a plain one");
+      ok((await removed(p)).every((x) => x.dash !== "none" && x.shown) , "forced colors: the removed connection lost its dash");
+      await fc.close();
     }
     // a phone
     const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
