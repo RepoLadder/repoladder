@@ -30,8 +30,8 @@ test("coarse pointers get 44px targets for the shared skin", () => {
   assert.ok(tb && /opacity:\s*\.5/.test(tb.body) && /pointer-events:\s*none/.test(tb.body), "top-bar actions share the disabled look");
 });
 
-test("the inspector toggle is 44px for coarse pointers", () => {
-  assert.match(css, /pointer:\s*coarse\)\s*\{html:not\(\.embed\) #insp\{width:\s*44px;height:\s*44px/);
+test("the inspector toggle shares the top-bar skin: no floating #insp rule remains", () => {
+  assert.ok(!/html:not\(\.embed\) #insp\{width/.test(css));
 });
 
 test("the phone's top bar, grip and dock buttons are 44px for coarse pointers", () => {
