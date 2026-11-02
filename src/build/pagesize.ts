@@ -35,6 +35,7 @@ import { encodeWire } from "../viewer/wire.ts";
  * 2026-11: merged with the board title over the canvas (#44): 102KB, the page was 172 bytes over 101KB on CI.
  * 2026-10: the phone layout stacked on the floating UI changes before them, and the phone's dock: 100KB.
  * 2026-11: the zoom strip kept at the lower right with the top bar and inspector merged in: 101KB, the page was 48 bytes over 100KB on CI.
+ * 2026-11: the overlay option's bundle is a separate allowance (OVERLAY_KB below), counted only for a page that has an overlay.
  */
 export const VIEWER_KB = 102;
 /**
@@ -43,7 +44,12 @@ export const VIEWER_KB = 102;
  */
 export const FONT_KB = 60;
 export const BOARD_KB = 1;
-export const budgetKb = (boards: number) => VIEWER_KB + FONT_KB + BOARD_KB * boards;
+/**
+ * What a page built with the `overlay` option adds (viewer/overlay.ts, its stylesheet and a typical marks list): the
+ * bundle packs to about 2.6KB, rounded up with room for the marks data and CI's bigger deflate. Counted only for a page that has an overlay.
+ */
+export const OVERLAY_KB = 4;
+export const budgetKb = (boards: number, overlay = false) => VIEWER_KB + FONT_KB + BOARD_KB * boards + (overlay ? OVERLAY_KB : 0);
 
 export interface PageSize {
   total: number;
@@ -89,7 +95,7 @@ export function pageSize(html: string): PageSize {
   return { total: bytes(html), js, css, data: bytes(packed), fonts: fonts === undefined ? 0 : bytes(fonts), rawData: bytes(JSON.stringify(data)), sections };
 }
 
-export const overBudget = (kb: number, boards: number) => kb > budgetKb(boards);
+export const overBudget = (kb: number, boards: number, overlay = false) => kb > budgetKb(boards, overlay);
 
 const kb = (n: number) => `${(n / 1024).toFixed(1)}KB`;
 /** One line: "122.0KB = viewer 72.5KB (js 52.9KB, css 19.6KB) + data 50.6KB (248.0KB as JSON: edges …) + fonts 58.1KB". */

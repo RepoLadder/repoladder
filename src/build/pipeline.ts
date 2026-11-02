@@ -16,6 +16,7 @@ import { layoutPasses, type Passes } from "./passes.ts";
 import { stepSync, type OnProgress } from "./progress.ts";
 import { timedSync } from "./timings.ts";
 import { DEFAULT_PROFILE, type Profile } from "../model/profile.ts";
+import { resolveOverlay, type ParsedOverlay, type OverlayReport } from "../model/overlay.ts";
 
 /** A clean failure: `message` is what the CLI prints on stderr; `code` is what a usage ping reports; `status` the CLI's exit code. */
 export class BuildError extends Error {
@@ -69,6 +70,7 @@ export interface DiagramOpts {
   onProgress?: OnProgress; // default: no progress events
   profile?: Profile; // the fidelity profile (model/profile.ts); default: full
   features?: Features; // the launch switches (features.ts); default: launch state
+  overlay?: ParsedOverlay; // marks to draw on the page (model/overlay.ts); default: none, and the page is unchanged
 }
 
 /** The grouping without its story (the same object when it has none). */
@@ -78,7 +80,7 @@ export function withoutStory(g: Grouping): Grouping {
   return rest as Grouping;
 }
 
-export async function buildDiagram(o: DiagramOpts): Promise<Passes & { html: string }> {
+export async function buildDiagram(o: DiagramOpts): Promise<Passes & { html: string; overlay?: OverlayReport }> {
   const usingDefault = o.grouping === null;
   const features = o.features ?? DEFAULT_FEATURES;
   const profile = o.profile ?? DEFAULT_PROFILE;
@@ -92,6 +94,7 @@ export async function buildDiagram(o: DiagramOpts): Promise<Passes & { html: str
     modelOf: (g, first) => modelOf(o.facts, g, { read: o.read, usingDefault, warn: first, log, profile }),
     cacheDir: o.cacheDir, lane: o.lane ?? true, onProgress: o.onProgress,
   });
-  const html = stepSync(o.onProgress, { stage: "render" }, () => timedSync("render", () => renderHtml(passes.model, passes.layout, o.features)));
-  return { ...passes, html };
+  const resolved = o.overlay && resolveOverlay(o.overlay, passes.model);
+  const html = stepSync(o.onProgress, { stage: "render" }, () => timedSync("render", () => renderHtml(passes.model, passes.layout, o.features, resolved?.marks)));
+  return { ...passes, html, ...(resolved ? { overlay: resolved.report } : {}) };
 }
