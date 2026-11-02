@@ -21,8 +21,8 @@ test("the tours menu escapes titles and ids and pluralizes steps", () => {
   assert.equal((html.match(/role="menuitem"/g) ?? []).length, 2);
 });
 
-test("the four bar icons are inline, decorative, currentColor line drawings", () => {
-  assert.deepEqual(Object.keys(ICONS).sort(), ["export", "filter", "search", "tour"]);
+test("the five bar icons are inline, decorative, currentColor line drawings", () => {
+  assert.deepEqual(Object.keys(ICONS).sort(), ["export", "filter", "inspector", "search", "tour"]);
   for (const s of Object.values(ICONS)) {
     assert.ok(s.includes('viewBox="0 0 16 16"') && s.includes('aria-hidden="true"') && s.includes('stroke="currentColor"'));
     assert.ok((s.match(/<(?:path|circle)/g) ?? []).length <= 3);
@@ -38,4 +38,7 @@ test("the legend splits into rows and the panel's key is composed from them", ()
 test("the bar collapses to icons at 760px", () => {
   const css = readFileSync(new URL("../src/viewer/topbar.css", import.meta.url), "utf8");
   assert.ok(css.includes(".bmenu") && css.includes("max-width: 760px") && /\.tbact \.lbl/.test(css));
+  const insp = readFileSync(new URL("../src/viewer/inspector.css", import.meta.url), "utf8");
+  assert.match(insp, /max-width:\s*760px\)\s*\{\s*#insp\s*\{\s*display:\s*none/);
+  assert.match(insp, /html\.embed #insp\s*\{\s*display:\s*none/);
 });
