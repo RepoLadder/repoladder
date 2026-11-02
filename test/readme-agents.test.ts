@@ -55,11 +55,11 @@ test("blank Claude Code result fails", () => {
 });
 
 test("an agent name without a row fails", () => {
-  assert.ok(agentsProblems(install, `${readme}\nWorks with Codex.\n`, npmReadme).length > 0);
+  assert.ok(agentsProblems(install, `${readme}\nWorks with Cursor.\n`, npmReadme).length > 0);
 });
 
 test("an agent name with a row passes", () => {
-  const withRow = install.replace(/(\| No agent \(command line\).*\n)/, "$1| Codex | `x` | No |\n");
+  const withRow = install.replace(/(\| No agent \(command line\).*\n)/, "$1| Cursor | `x` | No |\n");
   assert.notEqual(withRow, install);
-  assert.deepEqual(agentsProblems(withRow, `${readme}\nWorks with Codex.\n`, npmReadme), []);
+  assert.deepEqual(agentsProblems(withRow, `${readme}\nWorks with Cursor.\n`, npmReadme), []);
 });

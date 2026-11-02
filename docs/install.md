@@ -27,6 +27,7 @@ Only what has been tried is listed. Other agents haven't been tried yet, so none
 |---|---|---|
 | Claude Code | `/plugin marketplace add repoladder/repoladder` then `/plugin install repoladder@repoladder`, then run `/map` | Yes |
 | No agent (command line) | `npx repoladder build . --default` | n/a: groups by folders, no AI step |
+| Codex | `npx repoladder serve . --agent codex` (Ask only) | No: only Ask has been tried, not AI grouping |
 
 A row is added here once an agent has been tried, with the result.
 
