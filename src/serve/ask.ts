@@ -161,6 +161,7 @@ export function createAsk(cfg: AskConfig): Ask {
       // no good probe yet (the browser never asked for status): probe once so Ask works anyway
       probe().then((b) => {
         status = { at: Date.now(), body: b };
+        if (res.destroyed) return; // the client left during the probe: start nothing
         if (b.available !== true) {
           res.writeHead(200, { ...HEAD, "Content-Type": "application/x-ndjson; charset=utf-8" });
           return res.end(JSON.stringify({ type: "error", code: b.code, message: b.message }) + "\n");

@@ -33,7 +33,7 @@ const TOOL_ITEMS = new Set(["command_execution", "file_change", "mcp_tool_call",
 
 /** Stateful per child: keeps the last agent message and emits the result when the turn ends. */
 export function codexParser(): (line: string) => AskEvent[] {
-  let last = "";
+  const messages: string[] = [];
   return (line) => {
     let o: any;
     try { o = JSON.parse(line); } catch { return []; }
@@ -44,13 +44,15 @@ export function codexParser(): (line: string) => AskEvent[] {
         const it = o.item;
         if (!it || typeof it !== "object") return [];
         if (it.type === "agent_message" && typeof it.text === "string") {
-          last = it.text;
-          return it.text ? [{ type: "text", text: it.text }] : [];
+          if (!it.text) return [];
+          // several messages are joined by a blank line, in the stream and in the result, so what streamed is what is checked
+          messages.push(it.text);
+          return [{ type: "text", text: messages.length > 1 ? `\n\n${it.text}` : it.text }];
         }
         if (TOOL_ITEMS.has(it.type)) return [{ type: "tool", name: "Bash" }];
         return [];
       }
-      case "turn.completed": return [{ type: "result", ok: true, text: last }];
+      case "turn.completed": return [{ type: "result", ok: true, text: messages.join("\n\n") }];
       case "turn.failed": {
         const m = typeof o.error?.message === "string" ? o.error.message : "";
         return [{ type: "result", ok: false, text: "", error: m || "turn failed" }];
@@ -65,7 +67,7 @@ export function explainFailure(f: FailureInput): Failure {
   const text = `${f.stderr ?? ""}\n${f.resultError ?? ""}`;
   if (f.spawnError === "ENOENT") return { code: "NO_AGENT", message: "Codex isn't installed or isn't on your PATH. Install Codex, then try again." };
   if (f.timedOut) return { code: "TIMEOUT", message: "Codex took too long to answer, so the question was stopped. Try a narrower question." };
-  if (/unexpected argument|unrecognized|unknown option/i.test(text)) return { code: "OLD_CLI", message: "Your Codex is too old for this feature. Update it, then try again." };
+  if (/unexpected argument|unrecognized|unknown option/i.test(text)) return { code: "OLD_CLI", message: "Your Codex is too old for this feature (the flags it needs are `exec --sandbox read-only --json`; no minimum version has been verified). Update it, then try again." };
   if (/not logged in|please (log ?in|run `?codex login)|invalid (or expired )?(api key|credentials)|expired|unauthorized|\b401\b|sign in/i.test(text)) {
     return { code: "SIGNED_OUT", message: "Codex is installed but signed out. Run `codex login` in a terminal, then ask again." };
   }

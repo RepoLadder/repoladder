@@ -325,7 +325,8 @@ switch (cmd) {
     const { chooseAgent } = await import("./serve/engines/index.ts");
     const agentFlag = flags.get("agent");
     const agent = chooseAgent(agentFlag, process.env);
-    if (agent === undefined || (agentFlag !== undefined && agent === "auto")) { console.error("INVALID_OPTIONS: --agent needs claude or codex"); process.exit(2); }
+    if (agentFlag !== undefined && (agent === undefined || agent === "auto")) { console.error("INVALID_OPTIONS: --agent needs claude or codex"); process.exit(2); }
+    if (agent === undefined && !flags.has("no-ask")) { console.error("INVALID_OPTIONS: REPOLADDER_AGENT needs claude or codex"); process.exit(2); }
     const page = join(out, "diagram.html");
     if (!existsSync(page)) {
       console.error(`NO_MAP: no map at ${page}; building one with the folder-based grouping (run /map for a named one)`);

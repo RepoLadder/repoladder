@@ -38,8 +38,8 @@ test("the parser maps each event type and never throws", () => {
   assert.deepEqual(L({ type: "item.completed", item: { id: "i", type: "mcp_tool_call", server: "s", tool: "t", status: "completed" } }), [{ type: "tool", name: "Bash" }]);
   assert.deepEqual(L({ type: "item.completed", item: { id: "i", type: "reasoning", text: "hmm" } }), []);
   assert.deepEqual(L({ type: "item.completed", item: { id: "i", type: "agent_message", text: "first" } }), [{ type: "text", text: "first" }]);
-  assert.deepEqual(L({ type: "item.completed", item: { id: "i", type: "agent_message", text: "final" } }), [{ type: "text", text: "final" }]);
-  assert.deepEqual(L({ type: "turn.completed", usage: {} }), [{ type: "result", ok: true, text: "final" }]);
+  assert.deepEqual(L({ type: "item.completed", item: { id: "i", type: "agent_message", text: "final" } }), [{ type: "text", text: "\n\nfinal" }]);
+  assert.deepEqual(L({ type: "turn.completed", usage: {} }), [{ type: "result", ok: true, text: "first\n\nfinal" }]);
   assert.deepEqual(L({ type: "turn.failed", error: { message: "boom" } }), [{ type: "result", ok: false, text: "", error: "boom" }]);
   assert.deepEqual(L({ type: "error", message: "bad" }), [{ type: "result", ok: false, text: "", error: "bad" }]);
   for (const junk of ["", "not json", '{"type":"item.comp', "null", "[]", "42", '{"type":"item.completed"}', '{"type":"thread.started","thread_id":5}']) assert.deepEqual(p(junk), [], junk);
