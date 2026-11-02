@@ -140,8 +140,9 @@ async function act(page: import("playwright").Page, wait: (ms: number) => Promis
       else await page.evaluate(() => (window as any).__repoladder.show("root"));
       await wait(BACK_MS);
     }
-    // start it from the Tours list on the overview, when it's there
-    const row = page.locator(`[data-tour="${id}"]`).first();
+    // start it from the top bar's Tours menu, when it's there
+    if (await page.locator("#tbtours").isVisible().catch(() => false)) await page.locator("#tbtours").click();
+    const row = page.locator(`.bmenu [data-tour="${id}"]`).first();
     if (await row.isVisible().catch(() => false)) await row.click();
     else await page.evaluate((t) => (window as any).__repoladder.tour(t, 0), id);
     // the strip shows once the first step's travel lands

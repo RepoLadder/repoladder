@@ -141,9 +141,15 @@ async function shootTours(p: Page, name: string, outDir: string, rows: TourRow[]
   // the tours each board's panel lists (a board's own, `@<flow>` and `@read`, played on that board), and each board's hash, to tell which board Done lands on
   const tours = new Map<string, { id: string; board?: string }>(), byHash = new Map<string, string>();
   for (const id of ids) {
-    const seen = await p.evaluate((id) => {
+    const seen = await p.evaluate(async (id) => {
       (window as any).__repoladder.show(id);
-      return { hash: location.hash, tours: [...document.querySelectorAll<HTMLElement>("[data-tour]")].map((e) => e.dataset.tour!) };
+      const hash = location.hash, b = document.getElementById("tbtours");
+      if (!b) return { hash, tours: [] as string[] };
+      b.click();
+      await new Promise((r) => setTimeout(r, 50));
+      const tours = [...document.querySelectorAll<HTMLElement>(".bmenu [data-tour]")].map((e) => e.dataset.tour!);
+      document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+      return { hash, tours };
     }, id);
     if (!byHash.has(seen.hash)) byHash.set(seen.hash, id);
     for (const t of seen.tours) tours.set(t[0] === "@" ? `${id}/${t}` : t, t[0] === "@" ? { id: t, board: id } : { id: t });

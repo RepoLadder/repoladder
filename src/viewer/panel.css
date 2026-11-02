@@ -116,3 +116,34 @@ section h2,
   max-height: 220px;
   overflow: auto;
 }
+/* inside the floating inspector the aside is the card: panels and boxes sit on it with no card of their own,
+   separated by whitespace and a hairline; embedded mode keeps its boxes */
+@media (min-width: 761px) {
+  html:not(.embed) #details .panel,
+  html:not(.embed) #details .more-body > .panel {
+    background: none;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+  }
+  html:not(.embed) #details > .panel + .panel,
+  html:not(.embed) #details > .panel + .more {
+    padding-top: 16px;
+    border-top: 1px solid var(--soft);
+  }
+  html:not(.embed) #details .panel p {
+    margin-bottom: 8px;
+  }
+  /* the id row: a quiet mono id with ghost copy buttons */
+  html:not(.embed) #details .idrow code {
+    font-size: var(--text-micro);
+    color: var(--muted);
+  }
+  html:not(.embed) #details .copy {
+    border-color: transparent;
+    color: var(--muted);
+  }
+  html:not(.embed) #details .copy:hover:not(:disabled) {
+    color: var(--ink);
+  }
+}

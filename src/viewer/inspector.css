@@ -5,19 +5,17 @@
 .more > summary {
   cursor: pointer;
   color: var(--muted);
-  font-size: var(--text-small);
+  font-size: var(--text-micro);
   padding: 2px 0;
 }
+.more > summary:hover {
+  color: var(--ink);
+}
 .more-body {
-  margin-top: 8px;
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-.more-body > .panel {
-  border: 0;
-  padding: 0;
-  background: none;
 }
 @media (max-width: 760px) {
   #insp {

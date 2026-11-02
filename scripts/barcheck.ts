@@ -102,12 +102,12 @@ async function main() {
       await p.keyboard.press("Enter");
       check(await p.locator(".xmenu button").count() === 3, `${m.n}: Enter opens Export`);
       await p.keyboard.press("Escape");
-      // the Tours menu lists what the panel's Tours box lists
+      // the Tours menu lists the tours; the overview panel no longer carries a Tours list
       await p.locator("#tbtours").focus();
       await p.keyboard.press("Enter");
       const menuRows = await p.evaluate(() => [...document.querySelectorAll(".bmenu [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
-      const panelRows = await p.evaluate(() => [...document.querySelectorAll("#details .walk-panel [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
-      check(!!menuRows && menuRows === panelRows, `${m.n}: the Tours menu matches the panel's Tours box`);
+      const panelRows = await p.evaluate(() => document.querySelectorAll("#details [data-tour]").length);
+      check(!!menuRows && panelRows === 0, `${m.n}: the Tours menu lists tours and the panel carries none`);
       await p.keyboard.press("Escape");
       // a tour row plays the tour
       await p.locator("#tbtours").focus();
