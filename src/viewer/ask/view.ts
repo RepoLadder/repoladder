@@ -3,8 +3,8 @@
 import type { Target } from "../../model/cite.ts";
 import { answerPlan, renderPlan } from "./answer.ts";
 import { ask, probe, type AskEvent, type Status } from "./api.ts";
-import { keyAction } from "./keys.ts";
-import { busy, initial, reduce, type Ev, type State } from "./state.ts";
+import { keyAction, pointerAction } from "./keys.ts";
+import { busy, initial, placeholderFor, reduce, type Ev, type State } from "./state.ts";
 
 export type Deps = { canvas: HTMLElement; token: string; status: Status; fetch: typeof fetch; locate: (t: Target) => boolean };
 
@@ -76,7 +76,7 @@ export function mount(d: Deps): void {
     root.dataset.phase = ph;
     root.classList.toggle("has-panel", showPanel);
     input.disabled = ph === "no-agent";
-    input.placeholder = ph === "no-agent" ? "Ask is unavailable" : hasTurns ? "Ask a follow-up" : "Ask about this code";
+    input.placeholder = placeholderFor(ph, hasTurns);
     act.textContent = busy(state) ? "Stop" : "Send";
     act.disabled = ph === "no-agent";
     act.onclick = busy(state) ? stop : () => send(input.value);
@@ -122,6 +122,17 @@ export function mount(d: Deps): void {
   });
   input.addEventListener("focus", () => { if (!open) { open = true; draw(); } });
   input.addEventListener("click", () => { if (!open) { open = true; draw(); } });
+  // capture phase: the canvas stops pointer events before they reach document; never stop or prevent, so the click still lands
+  document.addEventListener("pointerdown", (ev) => {
+    if (pointerAction({ open, insideAsk: root.contains(ev.target as Node) }) === "collapse") { open = false; draw(); }
+  }, true);
+  // Escape with focus outside Ask closes the panel first; menus that already took Escape (defaultPrevented) keep winning
+  document.addEventListener("keydown", (ev) => {
+    if (ev.defaultPrevented || root.contains(ev.target as Node)) return;
+    const t = ev.target as Element | null;
+    const a = keyAction({ key: ev.key, typing: !!t?.closest?.("input,textarea,select,[contenteditable]"), inAsk: false, metaKey: ev.metaKey, ctrlKey: ev.ctrlKey, altKey: ev.altKey, hasPanelOpen: open && !panel.hidden && state.phase !== "no-agent", blocked: !!document.fullscreenElement || !!document.querySelector("dialog[open]") });
+    if (a === "collapse") { open = false; draw(); ev.preventDefault(); ev.stopPropagation(); }
+  }, true);
   document.addEventListener("keydown", (ev) => {
     if (root.contains(ev.target as Node)) return;
     const t = ev.target as Element | null;

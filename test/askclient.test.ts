@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ask, probe, readToken, splitLines, TOKEN_HEADER, type AskEvent } from "../src/viewer/ask/api.ts";
-import { keyAction, type KeyIn } from "../src/viewer/ask/keys.ts";
-import { busy, initial, reduce, type Ev, type State } from "../src/viewer/ask/state.ts";
+import { keyAction, pointerAction, type KeyIn } from "../src/viewer/ask/keys.ts";
+import { busy, initial, placeholderFor, reduce, type Ev, type State } from "../src/viewer/ask/state.ts";
 import { dropToken } from "../src/viewer/embed.ts";
 
 const run = (evs: Ev[], from: State = initial()) => evs.reduce(reduce, from);
@@ -156,4 +156,25 @@ test("keyAction: ? focuses, Enter submits, Escape collapses then blurs, / and Cm
   assert.equal(keyAction(k({ key: "Escape" })), null);
   for (const key of ["/", "k"]) for (const inAsk of [false, true]) assert.equal(keyAction(k({ key, inAsk, metaKey: key === "k", typing: inAsk })), null);
   assert.equal(keyAction(k({ key: "a", typing: true })), null);
+});
+
+test("pointerAction: only an open panel and a press outside Ask collapses", () => {
+  assert.equal(pointerAction({ open: true, insideAsk: false }), "collapse");
+  assert.equal(pointerAction({ open: true, insideAsk: true }), null);
+  assert.equal(pointerAction({ open: false, insideAsk: false }), null);
+});
+
+test("keyAction: Escape outside Ask closes an open panel, never while typing elsewhere or when blocked", () => {
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true })), "collapse");
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: false })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, typing: true })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, blocked: true })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, metaKey: true })), null);
+});
+
+test("placeholderFor: tour prompt, follow-up, unavailable (unavailable wins)", () => {
+  assert.equal(placeholderFor("idle", false), "Give me a tour of how this code works");
+  assert.equal(placeholderFor("done", true), "Ask a follow-up");
+  assert.equal(placeholderFor("no-agent", false), "Ask is unavailable");
+  assert.equal(placeholderFor("no-agent", true), "Ask is unavailable");
 });

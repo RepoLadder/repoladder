@@ -142,6 +142,7 @@ jobs:
       - run: npm run guardbase
       - run: npm run barcheck
       - run: npm run clearcheck
+      - run: npm run askcheck
       - run: npm run motioncheck
       - run: npm run zoomcheck
       - run: npm run overlaycheck
