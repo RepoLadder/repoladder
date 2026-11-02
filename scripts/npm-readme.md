@@ -9,7 +9,7 @@ npx repoladder build . --default     # writes .repoladder/diagram.html; open it 
 npx repoladder export . [--board id] [--format svg|png] [--theme light|dark]
 ```
 
-Needs Node.js 20.6 or newer. The first run downloads about 25MB (the D2 layout engine's wasm plus TypeScript). The first `build` from an interactive terminal asks once about anonymous usage stats (default no; never in CI or piped runs): [PRIVACY.md](https://github.com/repoladder/repoladder/blob/main/PRIVACY.md). For AI grouping, use the [Claude Code plugin](https://github.com/repoladder/repoladder). [repoladder.com](https://repoladder.com)
+Needs Node.js 20.6 or newer. The first run downloads about 25MB (the D2 layout engine's wasm plus TypeScript). The first `build` from an interactive terminal asks once about anonymous usage stats (default no; never in CI or piped runs): [PRIVACY.md](https://github.com/repoladder/repoladder/blob/main/PRIVACY.md). AI grouping has been tested in Claude Code only, through the [Claude Code plugin](https://github.com/repoladder/repoladder); other agents haven't been tried yet ([which agents work](https://github.com/repoladder/repoladder/blob/main/docs/install.md#which-agents-work)). [repoladder.com](https://repoladder.com)
 
 ## Library
 
