@@ -168,6 +168,7 @@ How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 |---|---|
 | [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, and using the CLI without Claude Code. |
 | [How it works](docs/how-it-works.md) | The steps behind `/map`: facts, grouping, validation, layout and publishing. |
+| [Map with your coding agent](docs/agent-guide.md) | The steps `/map` runs, written for any coding agent that can run commands and edit files. Not yet tried with agents other than Claude Code. |
 | [Add a map badge](docs/badge.md) | A badge to paste into your README that links to a hosted map. |
 | [Export images](docs/export.md) | Saving boards as SVG or PNG for READMEs, docs and slides. |
 | [Reliability](docs/reliability.md) | The 15-repo sweep, build time and token cost by repo size, and known limits. |
