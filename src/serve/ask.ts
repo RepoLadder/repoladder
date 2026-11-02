@@ -1,8 +1,9 @@
-// The Ask endpoint for `repoladder serve`: runs the user's own signed-in `claude` CLI headless in the repo (argv array, no shell, read-only tools) and streams the answer as NDJSON. See PRIVACY.md.
+// The Ask endpoint for `repoladder serve`: runs the user's own signed-in agent CLI (see engines/) headless in the repo (argv array, no shell, read-only tools) and streams the answer as NDJSON. See PRIVACY.md.
 import { spawn, type ChildProcess } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
-import { askArgv, childEnv, explainFailure, parseStreamLine, type Failure } from "./claude.ts";
+import { ENGINES, engineById, noAgentMessage, type AgentChoice, type Engine, type EngineId } from "./engines/index.ts";
+import type { Failure } from "./engines/types.ts";
 import { segments } from "../model/cite.ts";
 import { loadCiteContext } from "./facts.ts";
 import { starterQuestions } from "../model/starters.ts";
@@ -16,6 +17,8 @@ export type AskConfig = {
   /** Entry point the agent's command runs; defaults to this process's script. */
   cli?: string;
   node?: string;
+  /** Which agent runs Ask: one engine, or `auto` (the default: engines/ order). */
+  agent?: AgentChoice;
   /** Extra environment for the child, set by code (never read from the parent environment). */
   extraEnv?: Record<string, string>;
 };
@@ -57,30 +60,60 @@ const killChild = (c: ChildProcess, group = false) => {
   setTimeout(() => { if (group || !exited(c)) signal(c, "SIGKILL", group); }, 2000).unref();
 };
 
-type Convo = { sessionUuid: string; lastUsed: number };
+type Convo = { engine: EngineId; session?: string; lastUsed: number };
 
 export function createAsk(cfg: AskConfig): Ask {
   const staged: Staged | null = stageAgentCommand({ out: cfg.out, root: cfg.root, node: cfg.node ?? process.execPath, cli: cfg.cli ?? process.argv[1] });
   const convos = new Map<string, Convo>();
   const live = new Set<ChildProcess>();
-  const bin = () => process.env.REPOLADDER_CLAUDE_BIN || "claude";
-  const env = () => ({ ...childEnv(process.env), ...cfg.extraEnv });
+  const choice: AgentChoice = cfg.agent ?? "auto";
+  const candidates: Engine[] = choice === "auto" ? ENGINES : [engineById(choice)];
+  const binOf = (e: Engine) => process.env[e.binEnv] || e.defaultBin;
+  const envOf = (e: Engine) => ({ ...e.env(process.env), ...cfg.extraEnv });
+  let active: Engine | undefined;
   let busy = false;
   let status: { at: number; body: Record<string, unknown> } | undefined;
 
-  const probe = (): Promise<Record<string, unknown>> => new Promise((resolve) => {
-    if (!staged) return resolve({ available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE });
+  const NONE_MESSAGE = () => noAgentMessage(candidates);
+
+  /** Runs `<bin> <args>`; resolves the exit code and stdout, or the spawn error code. */
+  const run = (e: Engine, args: string[]) => new Promise<{ code?: number | null; out: string; error?: string; timedOut?: boolean }>((resolve) => {
     let out = "", done = false;
-    const finish = (b: Record<string, unknown>) => { if (!done) { done = true; clearTimeout(timer); resolve(b); } };
-    const c = spawn(bin(), ["--version"], { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "ignore"], shell: false });
-    const timer = setTimeout(() => { killChild(c); finish({ available: false, code: "AGENT_FAILED", message: "Claude Code did not answer `claude --version` in time." }); }, 5000);
+    const finish = (r: { code?: number | null; out: string; error?: string; timedOut?: boolean }) => { if (!done) { done = true; clearTimeout(timer); resolve(r); } };
+    const c = spawn(binOf(e), args, { cwd: cfg.root, env: envOf(e), stdio: ["ignore", "pipe", "ignore"], shell: false });
+    const timer = setTimeout(() => { killChild(c); finish({ out, timedOut: true }); }, 5000);
     c.stdout!.on("data", (d) => (out += d));
-    c.on("error", (e) => { const f = explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" }); finish({ available: false, ...f }); });
-    c.on("close", (code) => {
-      if (code === 0) finish({ available: true, version: out.trim() });
-      else finish({ available: false, ...explainFailure({ exitCode: code }) });
-    });
+    c.on("error", (err) => finish({ out, error: (err as NodeJS.ErrnoException).code ?? "ERROR" }));
+    c.on("close", (code) => finish({ code, out }));
   });
+
+  const probeOne = async (e: Engine): Promise<Record<string, unknown>> => {
+    const v = await run(e, e.versionArgv);
+    if (v.timedOut) return { available: false, code: "AGENT_FAILED", message: `${e.label} did not answer its version check in time.` };
+    if (v.error) return { available: false, ...e.explainFailure({ spawnError: v.error }) };
+    if (v.code !== 0) return { available: false, ...e.explainFailure({ exitCode: v.code }) };
+    if (e.authArgv) {
+      const a = await run(e, e.authArgv);
+      if (a.timedOut) return { available: false, code: "AGENT_FAILED", message: `${e.label} did not answer its sign-in check in time.` };
+      if (a.error || a.code !== 0) return { available: false, ...e.explainFailure({ stderr: "not logged in" }) };
+    }
+    active = e;
+    return { available: true, version: v.out.trim(), agent: { id: e.id, label: e.label } };
+  };
+
+  const probe = async (): Promise<Record<string, unknown>> => {
+    if (!staged) return { available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE };
+    active = undefined;
+    let first: Record<string, unknown> | undefined;
+    for (const e of candidates) {
+      const r = await probeOne(e);
+      if (r.available === true) return r;
+      first ??= r;
+      // auto moves on when an agent is missing or will not start; a working-but-signed-out or too-old one is reported as it is
+      if (r.code !== "NO_AGENT" && r.code !== "AGENT_FAILED") return r;
+    }
+    return candidates.length === 1 ? first! : { available: false, code: "NO_AGENT", message: NONE_MESSAGE() };
+  };
 
   // starters come from the facts on disk each time, so a rebuild is picked up; the probe result itself is cached
   const withStarters = (body: Record<string, unknown>) => {
@@ -123,16 +156,30 @@ export function createAsk(cfg: AskConfig): Ask {
       if (!question || question.includes("\0")) return bad(res, 400, "BAD_QUESTION", "Ask a question as a non-empty string.");
       if (question.length > MAX_QUESTION) return bad(res, 400, "QUESTION_TOO_LONG", `That question is too long. Keep it under ${MAX_QUESTION} characters.`);
       if (body.conversation !== undefined && (typeof body.conversation !== "string" || !/^[0-9a-f]{16}$/.test(body.conversation))) return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
-      if (busy) return bad(res, 429, "ASK_BUSY", "Claude is still answering the last question. Wait for it to finish or stop it.");
+      if (busy) return bad(res, 429, "ASK_BUSY", "Ask is still answering the last question. Wait for it to finish or stop it.");
+      if (active) return begin(body, question);
+      // no good probe yet (the browser never asked for status): probe once so Ask works anyway
+      probe().then((b) => {
+        status = { at: Date.now(), body: b };
+        if (b.available !== true) {
+          res.writeHead(200, { ...HEAD, "Content-Type": "application/x-ndjson; charset=utf-8" });
+          return res.end(JSON.stringify({ type: "error", code: b.code, message: b.message }) + "\n");
+        }
+        begin(body, question);
+      }, () => { if (!res.headersSent) bad(res, 500, "INTERNAL", "Something went wrong inside repoladder serve."); });
+    }
+    function begin(body: any, question: string) {
+      if (busy) return bad(res, 429, "ASK_BUSY", "Ask is still answering the last question. Wait for it to finish or stop it.");
+      const engine = active!;
       let id: string, convo: Convo, resume: boolean;
       if (body.conversation !== undefined) {
         const found = convos.get(body.conversation);
-        if (!found) return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
+        if (!found || found.engine !== engine.id) return bad(res, 400, "UNKNOWN_CONVERSATION", "That conversation is not known; start a new one.");
         [id, convo, resume] = [body.conversation, found, true];
         convo.lastUsed = Date.now();
       } else {
         id = randomBytes(8).toString("hex");
-        convo = { sessionUuid: randomUUID(), lastUsed: Date.now() };
+        convo = { engine: engine.id, session: engine.sessions === "assigned" ? randomUUID() : undefined, lastUsed: Date.now() };
         resume = false;
         convos.set(id, convo);
         while (convos.size > MAX_CONVERSATIONS) {
@@ -144,11 +191,12 @@ export function createAsk(cfg: AskConfig): Ask {
         if (!resume) convos.delete(id);
         return json(res, 200, { available: false, code: "UNSAFE_PATH", message: UNSAFE_MESSAGE });
       }
-      stream(res, question, id, convo, resume);
+      stream(res, engine, question, id, convo, resume);
     }
   };
 
-  function stream(res: ServerResponse, question: string, id: string, convo: Convo, resume: boolean) {
+  function stream(res: ServerResponse, engine: Engine, question: string, id: string, convo: Convo, resume: boolean) {
+    const parse = engine.parser();
     busy = true;
     const release = () => { busy = false; };
     res.writeHead(200, { ...HEAD, "Content-Type": "application/x-ndjson; charset=utf-8" });
@@ -165,14 +213,15 @@ export function createAsk(cfg: AskConfig): Ask {
       end({ type: "error", code: f.code, message: f.message });
     };
     try {
-      child = spawn(bin(), askArgv({ prompt: question, session: convo.sessionUuid, resume, cmdPrefix: staged!.prefix, guardCmd: staged!.guard }), { cwd: cfg.root, env: env(), stdio: ["ignore", "pipe", "pipe"], shell: false, detached: POSIX });
-    } catch (e) { return fail(explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); }
+      child = spawn(binOf(engine), engine.argv({ prompt: question, session: convo.session, resume, cmdPrefix: staged!.prefix, guardCmd: staged!.guard }), { cwd: cfg.root, env: envOf(engine), stdio: ["ignore", "pipe", "pipe"], shell: false, detached: POSIX });
+    } catch (e) { return fail(engine.explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); }
     live.add(child);
     timer = setTimeout(() => { timedOut = true; killChild(child, true); }, timeoutMs());
     res.on("close", () => { if (!finished) { finished = true; clearTimeout(timer); release(); killChild(child, true); } });
     const line = (l: string) => {
-      for (const ev of parseStreamLine(l)) {
+      for (const ev of parse(l)) {
         if (ev.type !== "result") sessionStarted = true;
+        if (ev.type === "session") { convo.session = ev.id; continue; }
         if (ev.type === "text") { deltas += ev.text; send({ type: "text", text: ev.text }); }
         else if (ev.type === "tool") {
           send({ type: "tool", name: ev.name });
@@ -186,13 +235,13 @@ export function createAsk(cfg: AskConfig): Ask {
       while ((i = buf.indexOf("\n")) >= 0) { line(buf.slice(0, i)); buf = buf.slice(i + 1); }
     });
     child.stderr!.on("data", (d) => { stderr = (stderr + d).slice(-4096); });
-    child.on("error", (e) => { live.delete(child); fail(explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); });
+    child.on("error", (e) => { live.delete(child); fail(engine.explainFailure({ spawnError: (e as NodeJS.ErrnoException).code ?? "ERROR" })); });
     child.on("close", (code) => {
       live.delete(child);
       if (buf.trim()) line(buf);
       if (finished) return;
-      if (tooMany) return fail({ code: "TOO_MANY_STEPS", message: "Claude needed too many steps for that question, so it was stopped. Try a narrower question." });
-      if (timedOut) return fail(explainFailure({ timedOut: true }));
+      if (tooMany) return fail({ code: "TOO_MANY_STEPS", message: `${engine.label} needed too many steps for that question, so it was stopped. Try a narrower question.` });
+      if (timedOut) return fail(engine.explainFailure({ timedOut: true }));
       if (result?.ok) {
         const text = result.text || deltas;
         if (!deltas && text) send({ type: "text", text });
@@ -201,7 +250,7 @@ export function createAsk(cfg: AskConfig): Ask {
         try { const c = loadCiteContext(cfg.out); if (c) segs = segments(text, c.facts, c.boxes); } catch { segs = null; }
         return end({ type: "done", text, segments: segs, conversation: id });
       }
-      fail(explainFailure({ exitCode: code, stderr, resultError: result?.error }));
+      fail(engine.explainFailure({ exitCode: code, stderr, resultError: result?.error }));
     });
   }
 
