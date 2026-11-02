@@ -5,7 +5,7 @@ import { fileURLToPath } from "node:url";
 import { analyze } from "../src/analyze/index.ts";
 import { renderHtml } from "../src/build/html.ts";
 import { pageData, pageParts } from "../src/build/filepack.ts";
-import { FONT_KB, VIEWER_KB, budgetKb, describeSize, overBudget, pageSize } from "../src/build/pagesize.ts";
+import { FONT_KB, OVERLAY_KB, VIEWER_KB, budgetKb, describeSize, overBudget, pageSize } from "../src/build/pagesize.ts";
 import type { BoardLayout } from "../src/build/layout.ts";
 import { assign, defaultGrouping } from "../src/model/grouping.ts";
 import { buildModel } from "../src/model/rollup.ts";
@@ -104,6 +104,9 @@ test("page size breaks the bytes down and flags pages over budget", () => {
   assert.match(describeSize(s), /^\d+\.\dKB = viewer .* \+ data .*evidence.* \+ fonts \d+\.\dKB$/);
   assert.equal(budgetKb(0), VIEWER_KB + FONT_KB);
   assert.ok(overBudget(290, 121), "A large app at 290KB (121 boards) is over the budget");
+  assert.equal(budgetKb(3), VIEWER_KB + FONT_KB + 3, "no overlay: the budget is today's");
+  assert.equal(budgetKb(3, true), VIEWER_KB + FONT_KB + 3 + OVERLAY_KB);
+  assert.ok(overBudget(VIEWER_KB + FONT_KB + 1, 0) && !overBudget(VIEWER_KB + FONT_KB + 1, 0, true));
   assert.ok(!overBudget(153.2, 121), "A large app with the viewer packed (153.2KB) is under");
   assert.ok(overBudget(VIEWER_KB + FONT_KB + 1, 0) && !overBudget(VIEWER_KB + FONT_KB - 1, 0), "the viewer and fonts alone have to fit");
   assert.ok(s.js + s.css < VIEWER_KB * 1024, `the packed viewer and its boot script are ${s.js + s.css} bytes`);

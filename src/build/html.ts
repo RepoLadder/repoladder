@@ -12,12 +12,13 @@ import { usedIcons } from "../viewer/icons.ts";
 import type { CodeData } from "../viewer/codelink.ts";
 import { DEFAULT_FEATURES, bakedFeatures, type Features } from "../features.ts";
 import { PACKAGE, VERSION } from "../version.ts";
+import type { Marks } from "../model/overlay.ts";
 import { STORY, type PageBoard, type PageCollection, type PageEdge, type PageField, type ViewerData } from "../viewer/state.ts";
 
 // Same character class as parseGithubRemote (analyze/files.ts); the code links are dropped when a model carries anything else.
 const GH_REPO = /^[\w.-]+\/[\w.-]+$/, GH_SHA = /^[0-9a-f]{7,64}$/i;
 
-export function renderHtml(model: Model, layout: Record<string, BoardLayout>, features: Features = DEFAULT_FEATURES): string {
+export function renderHtml(model: Model, layout: Record<string, BoardLayout>, features: Features = DEFAULT_FEATURES, overlay?: Marks): string {
   // Paths repeat across file lists and evidence; store each once and refer to it by index.
   const paths: string[] = [];
   const index = new Map<string, number>();
@@ -77,7 +78,11 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   if (model.fgraph) data.fgraph = model.fgraph.map(([a, b, ...r]) => [ref(a), ref(b), ...r]);
   // the Simple stop, as what differs from Default (model/simple.ts); absent without splits
   if (model.simple) data.simple = { nodes: Object.fromEntries(Object.entries(model.simple.nodes).map(([id, n]) => [id, { ...n, files: n.files.map(ref) }])), boards: pageBoards(model.simple.boards) };
-  const assets = viewerAssets();
+  const base = viewerAssets();
+  // With an overlay, its small bundle rides after the viewer (and `install` runs before the viewer starts); without one the assets are used untouched.
+  const assets = overlay && base.overlay
+    ? { ...base, css: base.css + base.overlay.css, js: `${base.js};${base.overlay.js};repoladderOverlay.install(${inlineJson(overlay)})` }
+    : base;
   // The viewer travels packed like the data, at about a third of its size: the boot script
   // unpacks it, adds the stylesheet and starts it, synchronously, before the page first paints.
   const viewer = inlineJson(packViewer(assets)), packed = inlineJson(packData(data));

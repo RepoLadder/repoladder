@@ -1,0 +1,113 @@
+/* Overlay marks (viewer/overlay.ts). Tokens only; every mark has a cue that is not color: weight, dash or a badge. */
+.stage:not(.ov-off) .node.ov-changed .body {
+  stroke: var(--call);
+  stroke-width: 3.5;
+}
+.stage:not(.ov-off) .node.ov-changed {
+  filter: drop-shadow(0 0 5px var(--halo));
+}
+.stage:not(.ov-off) .node.ov-new .body {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.stage:not(.ov-off) .node.ov-new {
+  filter: drop-shadow(0 0 5px var(--halo));
+}
+.stage:not(.ov-off) .ov-tag {
+  fill: var(--accent-ink);
+  stroke: var(--accent);
+  stroke-width: 6;
+  paint-order: stroke;
+  stroke-linejoin: round;
+  font: 700 12px var(--font-ui);
+  pointer-events: none;
+}
+.stage:not(.ov-off) .wire.ov-added .line {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+.stage:not(.ov-off) .ov-removed {
+  fill: none;
+  stroke: var(--svc-line);
+  stroke-width: 2.5;
+  stroke-dasharray: 7 5;
+  pointer-events: none;
+}
+.stage:not(.ov-off) .ov-arw {
+  fill: var(--svc-line);
+}
+.ov-off .ov-removed,
+.ov-off .ov-tag {
+  display: none;
+}
+.ov-ui {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  z-index: 3;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: calc(100% - 16px);
+  font: 12px/1.4 var(--font-ui);
+  color: var(--ink);
+}
+.ov-toggle,
+.ov-legend {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 4px var(--shadow);
+}
+.ov-toggle {
+  min-height: 32px;
+  padding: 0 12px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+.ov-toggle[aria-pressed="true"] {
+  border-color: var(--accent);
+  font-weight: 700;
+}
+.ov-legend {
+  max-width: 100%;
+  max-height: 50vh;
+  overflow: auto;
+  overflow-wrap: anywhere;
+}
+.ov-legend summary {
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+.ov-legend ul,
+.ov-legend p {
+  margin: 0;
+  padding: 0 12px 8px 28px;
+}
+.ov-legend .ov-head {
+  padding: 0 12px 2px;
+  font-weight: 700;
+}
+@media (pointer: coarse), (max-width: 640px) {
+  .ov-toggle,
+  .ov-legend summary {
+    min-height: 44px;
+  }
+}
+@media (forced-colors: active) {
+  .stage:not(.ov-off) .node.ov-changed .body,
+  .stage:not(.ov-off) .node.ov-new .body,
+  .stage:not(.ov-off) .wire.ov-added .line,
+  .stage:not(.ov-off) .ov-removed {
+    stroke: Highlight;
+  }
+  .stage:not(.ov-off) .ov-tag {
+    fill: CanvasText;
+    stroke: Canvas;
+  }
+}

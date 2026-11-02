@@ -27,6 +27,7 @@
     "edgecheck": "node scripts/edgecheck.ts",
     "guardbase": "node scripts/guardbase.ts",
     "motioncheck": "node scripts/motioncheck.ts",
+    "overlaycheck": "node scripts/overlaycheck.ts",
     "tourcheck": "node scripts/tourcheck.ts",
     "npm:pack": "node scripts/npm-package.ts",
     "readme-media": "node scripts/readme-media.ts",
