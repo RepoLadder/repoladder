@@ -12,6 +12,7 @@ import { VERSION } from "./version.ts";
 import { resolveFeatures, type Features } from "./features.ts";
 import { resolveProfile, type Profile } from "./model/profile.ts";
 import type { OnProgress } from "./build/progress.ts";
+import { Overlay, type OverlayReport, type ParsedOverlay } from "./model/overlay.ts";
 
 export interface BuildFromFilesOptions {
   /** Repo name shown in the page and digest; default: the name part of `github.repo`, else "repo". */
@@ -26,6 +27,8 @@ export interface BuildFromFilesOptions {
   features?: Partial<Features>;
   /** Fidelity profile: "full" (default) draws every connection on a file board; "hosted" budgets file-board arrows so a large repo builds within a time limit. Anything else throws INVALID_OPTIONS. */
   profile?: Profile;
+  /** Boxes and connections to mark on the page (model/overlay.ts): changed and new boxes, added and removed connections, and a list of touched parts. Box ids are `n:<box id>`; connection ids are `e:<from>><to>` over box (or service) ids, and an end that is a file path in the model is lifted to the box that owns it (a connection inside one box is dropped). A part is `{ id, files?, filesChanged?, name? }`: `id` is bare or `n:`-prefixed, `filesChanged` aliases `files`, `name` is ignored (the page shows the model's own name); any other key is refused. Ids the model does not know are dropped and counted in `result.overlay`; a malformed overlay throws INVALID_SCHEMA. Without the option the page is unchanged and the result has no `overlay` key. */
+  overlay?: Overlay;
   /** "elsewhere" lane at the board's edge; default true (`--no-lane` is false). */
   lane?: boolean;
   /** Size and shape limits, per field over DEFAULT_LIMITS. A bad value throws RangeError. */
@@ -43,6 +46,8 @@ export type BuildResult =
       coverage: Coverage;
       /** The profile the build used: "full" unless `profile: "hosted"` was passed. */
       profile: Profile;
+      /** What the overlay marked and dropped; present only when an `overlay` option was passed (an engine without the option returns no such key). */
+      overlay?: OverlayReport;
     }
   | BuildFailure;
 
@@ -98,14 +103,26 @@ export async function buildFromFiles(files: Record<string, string> | Map<string,
     }
     grouping = parsed.data;
   }
-  const r = await buildDiagram({ facts, grouping, read: (f) => (src.exists(f) ? src.read(f) : null), lane: opts.lane ?? true, onProgress, profile, features: resolveFeatures({}, opts.features) });
-  return { ok: true, html: r.html, facts, model: r.model, engineVersion: VERSION, coverage: r.report.coverage, profile };
+  let overlay: ParsedOverlay | undefined;
+  if (opts.overlay !== undefined) {
+    const parsed = Overlay.safeParse(opts.overlay);
+    if (!parsed.success) {
+      throw new BuildError("INVALID_SCHEMA", 2, "INVALID overlay\n" + parsed.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n"));
+    }
+    overlay = parsed.data;
+  }
+  const r = await buildDiagram({ facts, grouping, overlay, read: (f) => (src.exists(f) ? src.read(f) : null), lane: opts.lane ?? true, onProgress, profile, features: resolveFeatures({}, opts.features) });
+  return { ok: true, html: r.html, facts, model: r.model, engineVersion: VERSION, coverage: r.report.coverage, profile, ...(r.overlay ? { overlay: r.overlay } : {}) };
 }
+
+/** Optional features of this engine, so a caller can tell an engine that has an option from one that silently ignores it. */
+export const ENGINE_FEATURES = ["overlay"] as const;
 
 export { VERSION } from "./version.ts";
 export type { AnalyzeOptions, GitMode };
 export { BuildError } from "./build/pipeline.ts";
 export type { Facts, Grouping } from "./model/schema.ts";
+export type { Overlay, OverlayReport } from "./model/overlay.ts";
 export type { Model } from "./model/rollup.ts";
 export { PROFILES, type Profile } from "./model/profile.ts";
 export { DEFAULT_LIMITS, INPUT_CODES, LIMIT_MESSAGES } from "./build/limits.ts";
