@@ -19,6 +19,17 @@ Then open your repo and run `/map`. That's all.
 
 **Uninstall:** `/plugin uninstall repoladder@repoladder`. Delete `.repoladder/` from any repo you mapped if you don't want to keep the diagrams.
 
+## Which agents work
+
+Only what has been tried is listed. Other agents haven't been tried yet, so none is claimed to work with AI grouping.
+
+| Agent | Install | AI grouping tested |
+|---|---|---|
+| Claude Code | `/plugin marketplace add repoladder/repoladder` then `/plugin install repoladder@repoladder`, then run `/map` | Yes |
+| No agent (command line) | `npx repoladder build . --default` | n/a: groups by folders, no AI step |
+
+A row is added here once an agent has been tried, with the result.
+
 ## Without Claude Code (npm)
 
 ```

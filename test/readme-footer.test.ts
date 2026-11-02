@@ -10,6 +10,7 @@ const QUESTIONS = [
   "Which languages does it read?",
   "Does it cost tokens?",
   "Can I use it without Claude Code?",
+  "Which AI agents does it work with?",
   "Can I commit the grouping file?",
   "Why did my build fail?",
 ];
@@ -34,7 +35,7 @@ export function footerProblems(readme: string, license: string, exists: (f: stri
     p.push("Privacy, FAQ, Contributing, License should follow Documentation, License last");
   const faq = section(readme, "## FAQ");
   const qs = faq.split("\n").filter((l) => l.startsWith("### ")).map((l) => l.slice(4));
-  if (qs.join("|") !== QUESTIONS.join("|")) p.push("FAQ should have exactly the six questions");
+  if (qs.join("|") !== QUESTIONS.join("|")) p.push("FAQ should have exactly the seven questions");
   const priv = section(readme, "## Privacy");
   for (const l of ["](PRIVACY.md#where-things-run)", "](PRIVACY.md)", "](#is-it-safe-to-install)"])
     if (!priv.includes(l)) p.push(`Privacy should link ${l}`);
@@ -59,7 +60,7 @@ test("README closing sections are in place", () => {
 
 test("a removed question fails", () => {
   const bad = readme.replace("### Does it cost tokens?\n", "");
-  assert.ok(footerProblems(bad, license, exists).some((m) => m.includes("six questions")));
+  assert.ok(footerProblems(bad, license, exists).some((m) => m.includes("seven questions")));
 });
 
 test("a Discussions link fails", () => {
