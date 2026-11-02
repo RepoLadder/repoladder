@@ -74,7 +74,9 @@ async function main() {
     const m = await p.evaluate(() => { const r = document.querySelector(".xmenu")!.getBoundingClientRect(), b = document.getElementById("zexp")!.getBoundingClientRect(); return r.top >= b.bottom - 1 && r.bottom <= innerHeight + 1 && r.right <= innerWidth + 1 && r.left >= 0; });
     ok(m, "the export menu does not hang under the top-bar button inside the window");
     await p.keyboard.press("Escape");
-    const tour = await p.evaluate(() => { const t = document.querySelector<HTMLElement>("[data-tour]"); if (t) (window as any).__repoladder.tour(t.dataset.tour, 0); return !!t; });
+    const foot = await p.evaluate(() => { const f = document.querySelector(".made")!.getBoundingClientRect(); const hit = [".zoom", ".fbar", ".walk-card"].some((q) => { const e = document.querySelector(q); if (!e || (e as HTMLElement).hidden) return false; const r = e.getBoundingClientRect(); return r.width > 0 && f.left < r.right && f.right > r.left && f.top < r.bottom && f.bottom > r.top; }); return !hit; });
+    ok(foot, "the footer links overlap no zoom strip, filter card or tour card");
+    const tour = await p.evaluate(() => { const t = (window as any).__repoladder.tours()[0]; if (t) (window as any).__repoladder.tour(t.id, 0); return !!t; });
     if (tour && await p.waitForSelector(".walk-card", { timeout: 3000 }).then(() => true, () => false)) {
       await frame(p);
       const w = await vbw(p);

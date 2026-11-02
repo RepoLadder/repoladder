@@ -66,6 +66,11 @@
   color: var(--muted);
   font-size: var(--text-micro);
 }
+@media (min-width: 761px) {
+  html:not(.embed) .fbar {
+    bottom: 34px;
+  }
+}
 .fbar[hidden] {
   display: none;
 }

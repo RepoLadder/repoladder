@@ -101,8 +101,9 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
     <div class="dock" id="dock"></div>
   </div>
   </div>
-  <aside><section id="details" aria-live="polite"></section>${madeWith()}</aside>
+  <aside><section id="details" aria-live="polite"></section></aside>
 </main>
+${madeWith()}
 <script>
 ${assets.boot}
 repoladderBoot(${viewer},${packed},${inlineJson(assets.fonts)});

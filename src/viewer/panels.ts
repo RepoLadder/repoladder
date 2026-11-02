@@ -2,9 +2,7 @@
 import { fileItems } from "./files.ts";
 import { whereLine, whereText } from "./where.ts";
 import { box, lead, more } from "./box.ts";
-import { legend } from "./legend.ts";
 import { focusButton } from "./filterui.ts";
-import { tourList } from "./walk.ts";
 import { edgeId, idRow } from "./idchip.ts";
 import { countTiles } from "./counts.ts";
 import { CATEGORY_NAMES, catIcon } from "./categories.ts";
@@ -73,5 +71,5 @@ export function renderOverview(): void {
   const kids = !n.children.length ? fileItems() : n.children.map((id) => `<li><button class="item" data-sel="n:${esc(id)}"><span><i class="sw k-${N()[id].kind ?? "part"}"></i>${esc(N()[id].name)}</span><span class="num">${N()[id].count}</span></button></li>`).join("");
   const hubs = b.hubs.length ? `<p class="foot">Shared by most ${n.children.length ? "parts" : "files"} (arrows into it not drawn): ${b.hubs.map((x) => esc(nameOf(x))).join(", ")}.</p>` : "";
   const throughout = b.throughout.length ? `<p class="foot">Used throughout: ${b.throughout.map((x) => isStore(x) ? `<button class="open" data-sel="n:${esc(x)}">${esc(nameOf(x))}</button>` : esc(nameOf(x))).join(", ")}.</p>` : "";
-  $("details").innerHTML = box(st.cur === "root" ? "Overview" : "Inside", `${idRow(st.cur)}<ul class="list">${kids}</ul>`, { open: true }) + `${more(`${tourList()}${legend()}${notesBox(hubs, throughout, hidden, everyNote())}`)}`;
+  $("details").innerHTML = box(st.cur === "root" ? "Overview" : "Inside", `${idRow(st.cur)}<ul class="list">${kids}</ul>`, { open: true }) + `${more(`${notesBox(hubs, throughout, hidden, everyNote())}`)}`;
 }
