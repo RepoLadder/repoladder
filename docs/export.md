@@ -1,6 +1,6 @@
 # Export images
 
-The viewer's Export button saves or copies the current view (SVG, PNG); a published Artifact may block downloads, in which case it shows the image to save by hand. After a build, the CLI exports whole boards for READMEs, docs and slides:
+The viewer's Export button saves or copies the current view (SVG, PNG); a shared copy of the page may block downloads, in which case it shows the image to save by hand. After a build, the CLI exports whole boards for READMEs, docs and slides:
 
 ```bash
 npx repoladder export REPO [--board id] [--format svg|png] [--theme light|dark]

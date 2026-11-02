@@ -62,6 +62,8 @@ const GUARDRAILS = [
   "plugin/package-lock.json",
   "plugin/dist/repoladder.mjs",
   "plugin/skills/map/SKILL.md",
+  "plugin/skills/share-map/SKILL.md",
+  "plugin/skills/share-map-claude/SKILL.md",
   ".githooks/pre-push",
   ".gitleaks.toml",
   "scripts/build.ts",

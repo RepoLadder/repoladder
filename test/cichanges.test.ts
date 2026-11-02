@@ -21,7 +21,7 @@ test("any code, root markdown, deleted or renamed file runs the heavy jobs", () 
 });
 
 test("the Windows leg runs for install and packaging paths only", () => {
-  for (const p of ["src/install.ts", "package-lock.json", "plugin/skills/map/SKILL.md", ".github/workflows/ci.yml", "scripts/cichanges.ts", "tsconfig.json"]) {
+  for (const p of ["src/install.ts", "package-lock.json", "plugin/skills/map/SKILL.md", "plugin/skills/share-map/SKILL.md", "plugin/skills/share-map-claude/SKILL.md", ".github/workflows/ci.yml", "scripts/cichanges.ts", "tsconfig.json"]) {
     assert.equal(classify([e("M", p)]).windows, true, p);
   }
   assert.equal(classify([e("M", "src/analyze/fields.ts")]).windows, false);

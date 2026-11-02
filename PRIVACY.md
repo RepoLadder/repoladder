@@ -1,14 +1,14 @@
 # Privacy
 
-RepoLadder runs on your machine. It reads your repo locally, writes its output to `.repoladder/` in the repo, and publishes the diagram only where you ask it to (a private Claude Artifact). `repoladder serve` can also host the map on your own machine; [see below](#serving-the-map-on-your-machine).
+RepoLadder runs on your machine. It reads your repo locally, writes its output to `.repoladder/` in the repo, and publishes the diagram only when you run a share skill (for example a private Claude Artifact). `repoladder serve` can also host the map on your own machine; [see below](#serving-the-map-on-your-machine).
 
 The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never touch the network: they only read the repo they are given, and run `git` locally to list its files. A test ([test/no-network.test.ts](test/no-network.test.ts)) runs in CI on every change and fails if network code is added to them.
 
 ## Where things run
 
-- **The plugin and the engine run on your machine.** `/map` and the CLI behind it read your repo from disk and write their output only to `.repoladder/` inside it. The one file they write elsewhere is your usage-stats answer, in `~/.config/repoladder/`. They make no network requests of their own, except the usage ping below, which is off unless you say yes. The one other download is the plugin's own runtime dependencies from npm on first run, and that carries nothing about your repo. As with anything you do in Claude Code, Claude sees the repo summary `/map` gives it and publishes the diagram as a private Artifact, both through your own Claude account. RepoLadder adds no other destination.
+- **The plugin and the engine run on your machine.** `/map` and the CLI behind it read your repo from disk and write their output only to `.repoladder/` inside it. The one file they write elsewhere is your usage-stats answer, in `~/.config/repoladder/`. They make no network requests of their own, except the usage ping below, which is off unless you say yes. The one other download is the plugin's own runtime dependencies from npm on first run, and that carries nothing about your repo. As with anything you do in Claude Code, Claude sees the repo summary `/map` gives it through your own Claude account. RepoLadder adds no other destination.
 - **The website only ever reads public repos.** [repoladder.com](https://repoladder.com) and any maps hosted there are built only from public GitHub repos. The site never asks for a GitHub token, access to a private repo, or an upload of your code, and never accepts any of them. Its own [privacy page](https://repoladder.com/privacy) covers the waitlist and site analytics.
-- **Sharing from the plugin, if we ever add it, will be explicit and opt-in.** Today nothing you map is uploaded anywhere. A future way to send a map from the plugin to the website would be off by default and ask you every time, and this page would list exactly what it sends before it ships.
+- **Sharing from the plugin, if we ever add it, will be explicit and opt-in. `/share-map` and `/share-map-claude` only hand the page to your own platform's publishing tool when you run them, and send nothing to RepoLadder.** Today nothing you map is uploaded anywhere. A future way to send a map from the plugin to the website would be off by default and ask you every time, and this page would list exactly what it sends before it ships.
 
 ## Serving the map on your machine
 

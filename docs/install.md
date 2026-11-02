@@ -7,7 +7,7 @@ In Claude Code:
 /plugin install repoladder@repoladder
 ```
 
-Then open your repo and run `/map`. That's all.
+Then open your repo and run `/map`; it offers to open the map locally with Ask.
 
 **Requirements:** Node.js 20.6 or newer (with npm, which comes with it), and Claude Code. macOS, Linux and Windows all work.
 
@@ -15,7 +15,7 @@ Then open your repo and run `/map`. That's all.
 
 **If `/map` says it's installing the runtime:** that happens when Claude Code couldn't install the packages itself (for example, the plugin was loaded from a local folder, or the install timed out on a slow network). `/map` runs the same pinned install once and carries on.
 
-**Update:** `/plugin` → Marketplaces → repoladder → Update, or turn on auto-update there. Updates track every commit on main: the plugin's version is the commit id.
+**Update:** `/plugin` → Marketplaces → repoladder → Update, or turn on auto-update there. Updates track every commit on main: the plugin's version is the commit id. Updating is also what gets the `serve` command into the plugin's bundled engine, which the local Ask page needs.
 
 **Uninstall:** `/plugin uninstall repoladder@repoladder`. Delete `.repoladder/` from any repo you mapped if you don't want to keep the diagrams.
 
