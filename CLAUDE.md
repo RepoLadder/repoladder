@@ -1,12 +1,12 @@
 # RepoLadder
 
-A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architecture diagram, published as a Claude Artifact. The top level is plain-language; each level you open goes one step more technical.
+A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architecture diagram, opened locally with an Ask bar and shareable on request. The top level is plain-language; each level you open goes one step more technical.
 
 ## How it works
 1. `repoladder summary REPO --fresh` analyzes the repo deterministically into `.repoladder/facts.json` (files, imports, runtime calls, services, endpoints) and prints a digest. On a large repo the digest is folder-first, and `summary REPO --part <leaf id>` prints one part's digest.
 2. Claude (following `plugin/skills/map/SKILL.md`) writes `.repoladder/grouping.json`: a tree of named groups whose leaves claim files by glob.
 3. `repoladder build REPO` validates the grouping (every file exactly once), rolls the facts up into one board per group (`model.json`), lays each board out with D2 (wasm), and writes a self-contained `diagram.html`.
-4. The skill publishes the HTML as an Artifact.
+4. The skill offers `repoladder serve` for the local page; publishing is the separate `share-map` skills.
 
 **Core rule:** edges are never invented. Every arrow comes from facts and carries file:line evidence. Claude only groups, names and writes summaries.
 

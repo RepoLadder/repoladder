@@ -11,6 +11,8 @@
 /.claude-plugin/ @qtwehby
 /plugin/.claude-plugin/ @qtwehby
 /plugin/skills/map/SKILL.md @qtwehby
+/plugin/skills/share-map/SKILL.md @qtwehby
+/plugin/skills/share-map-claude/SKILL.md @qtwehby
 /plugin/dist/ @qtwehby
 /.claude/ @qtwehby
 /.githooks/ @qtwehby

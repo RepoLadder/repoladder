@@ -1,8 +1,8 @@
 ---
-description: Map this repo's architecture into a grounded, drill-down diagram published as an Artifact. Use when the user wants an architecture diagram or overview map of the current TS/JS repo.
+description: Map this repo's architecture into a grounded, drill-down diagram you can open locally with an Ask bar. Use when the user wants an architecture diagram or overview map of the current TS/JS repo.
 argument-hint: "[repo path]"
 disable-model-invocation: true
-allowed-tools: Bash(node ${CLAUDE_PLUGIN_ROOT}/dist/repoladder.mjs *), Read, Write, Edit, Artifact, AskUserQuestion
+allowed-tools: Bash(node ${CLAUDE_PLUGIN_ROOT}/dist/repoladder.mjs *), Read, Write, Edit, AskUserQuestion
 ---
 
 # RepoLadder: map this repo
@@ -179,17 +179,22 @@ Run `CLI build REPO`.
 
 Fixing `INVALID` errors and splitting over-budget boards share **up to 3 rebuilds** in all, as before. When they run out, continue with the last `BUILD_OK` build; a board still over budget is still a working diagram. `summary --part` runs don't count against these 3 rebuilds; they share their own limit of 12 per run (section 2). You may also run `--part` on a leaf whose board is over budget on names, to see its files.
 
-## 5. Publish
-Publish `REPO/.repoladder/diagram.html` with the Artifact tool. The page is already complete; don't rewrite it.
-- **First run:** publish it with `icon: "map"` and a one-sentence description. Then write the returned URL to `REPO/.repoladder/artifact.json` as `{"url": "<url>"}`.
-- **Later runs** (`artifact.json` exists): Read that artifact first with `action: "read"`, then publish with that `url` so the same link updates in place.
+## 5. Offer the local page
+Only after `BUILD_OK`, never before: `serve` builds a default grouping when the page is missing and would replace the named grouping.
+1. Ask once with AskUserQuestion: "Open it with Ask?" with the options "Yes, open it" and "No, just give me the file". Say what Yes does: it starts a local server on this machine and opens the map with the Ask bar, so you can ask questions about the repo (Ask uses your own Claude Code).
+2. **Yes:** start `CLI serve REPO --no-open` in the background (Bash with `run_in_background`), with no `--port` so a free port is chosen. Read its output until a line starting `SERVE_OK ` appears, then print that URL exactly as given (a localhost link with a one-run token). Tell the user the server stops when the session ends or on Ctrl+C, and the link stops working with it. Offer to open it in their browser; use the platform's open command only if they say yes.
+3. **No**, no answer, or no AskUserQuestion tool (unattended run): skip the server and go to the reply.
+4. **Any failure** (no `SERVE_OK` line, `PORT_IN_USE`, `INVALID_OPTIONS`, any other error, or usage text because the cached bundle is too old to have `serve`): retry at most once, do not stop the run, and go to the reply with one added line: "This copy of RepoLadder may be out of date; update the plugin to get the local Ask page."
 
 ## 6. Reply
 Keep it short:
-- The artifact link.
+- The local link when `serve` started. Otherwise the path `REPO/.repoladder/diagram.html`, the exact command `CLI serve REPO` (with `CLI` written out in full) to get Ask later, and "run `/share-map` to publish a static copy".
 - The first-rung parts in one line.
 - One sentence on how to explore: click a box or arrow for evidence; double-click a box to open it.
 - One tip: commit `.repoladder/grouping.json` so everyone gets the same boxes, and gitignore the rest of `.repoladder/`.
+- One line: a published copy has no Ask bar.
+
+Do not invoke the share skills yourself; only point to `/share-map`.
 
 ## Optional: export images
-If the user wants the diagram in a README, doc or slide, run `CLI export REPO [--board id] [--format svg|png] [--theme light|dark]` after a build. It writes one standalone SVG per board to `REPO/.repoladder/export/` (`EXPORT_OK <dir>`). PNG needs Playwright; without it the command prints `PNG_UNAVAILABLE` and writes SVG only. The viewer's own Export button saves or copies the current view (SVG, PNG), but a published Artifact may block downloads (it then shows the image to save by hand), so the CLI is the way to get every board, or a specific one, non-interactively.
+If the user wants the diagram in a README, doc or slide, run `CLI export REPO [--board id] [--format svg|png] [--theme light|dark]` after a build. It writes one standalone SVG per board to `REPO/.repoladder/export/` (`EXPORT_OK <dir>`). PNG needs Playwright; without it the command prints `PNG_UNAVAILABLE` and writes SVG only. The viewer's own Export button saves or copies the current view (SVG, PNG), but a shared copy of the page may block downloads, so the CLI is the way to get every board, or a specific one, non-interactively.
