@@ -61,12 +61,27 @@ async function main() {
       await p.evaluate(() => (document.activeElement as HTMLElement)?.blur());
       await p.evaluate(() => { document.querySelector<HTMLElement>(".brand")!.focus(); });
       const seen: string[] = [await active()];
-      for (let i = 0; i < 12 && !seen.includes("zexp"); i++) {
+      const last = m.n === "wide" ? "insp" : "zexp";
+      for (let i = 0; i < 12 && !seen.includes(last); i++) {
         await p.keyboard.press("Tab");
         seen.push(await active());
       }
-      const order = seen.map((s) => (s.includes("brand") ? "brand" : s.includes("sbtn") ? "search" : s)).filter((s) => ["brand", "search", "tbtours", "tbfilters", "zexp"].includes(s));
-      check(order.join() === "brand,search,tbtours,tbfilters,zexp", `${m.n}: tab order is brand, search, tours, filters, export (got ${order.join()})`);
+      const order = seen.map((s) => (s.includes("brand") ? "brand" : s.includes("sbtn") ? "search" : s)).filter((s) => ["brand", "search", "tbtours", "tbfilters", "zexp", "insp"].includes(s));
+      const want = m.n === "wide" ? "brand,search,tbtours,tbfilters,zexp,insp" : "brand,search,tbtours,tbfilters,zexp";
+      check(order.join() === want, `${m.n}: tab order is ${want} (got ${order.join()})`);
+      if (m.n === "wide") {
+        const st = () => p.evaluate(() => [document.getElementById("insp")!.getAttribute("aria-pressed"), document.querySelector("main > aside")!.getAttribute("data-inspector")].join());
+        const s0 = await st();
+        await p.locator("#insp").click();
+        const s1 = await st();
+        check(s1 !== s0, `wide: clicking Inspector toggles it (${s0} -> ${s1})`);
+        await p.locator("#insp").click();
+        check((await st()) === s0, "wide: clicking Inspector again restores it");
+        await p.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+        await p.keyboard.press("i");
+        check((await st()) === s1, "wide: the I key toggles the inspector");
+        await p.keyboard.press("i");
+      }
       // menus
       for (const id of ["tbtours", "tbfilters"]) {
         await p.locator(`#${id}`).focus();
@@ -87,12 +102,12 @@ async function main() {
       await p.keyboard.press("Enter");
       check(await p.locator(".xmenu button").count() === 3, `${m.n}: Enter opens Export`);
       await p.keyboard.press("Escape");
-      // the Tours menu lists what the panel's Tours box lists
+      // the Tours menu lists the tours; the overview panel no longer carries a Tours list
       await p.locator("#tbtours").focus();
       await p.keyboard.press("Enter");
       const menuRows = await p.evaluate(() => [...document.querySelectorAll(".bmenu [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
-      const panelRows = await p.evaluate(() => [...document.querySelectorAll("#details .walk-panel [data-tour]")].map((e) => (e as HTMLElement).dataset.tour).join());
-      check(!!menuRows && menuRows === panelRows, `${m.n}: the Tours menu matches the panel's Tours box`);
+      const panelRows = await p.evaluate(() => document.querySelectorAll("#details [data-tour]").length);
+      check(!!menuRows && panelRows === 0, `${m.n}: the Tours menu lists tours and the panel carries none`);
       await p.keyboard.press("Escape");
       // a tour row plays the tour
       await p.locator("#tbtours").focus();

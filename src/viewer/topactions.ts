@@ -1,5 +1,5 @@
 // The top bar's actions (#41): Tours and Filters as popovers over the same data as the panel's Tours and Key boxes,
-// and Export (the zoom strip's button, moved here). Tours and Filters appear only where the board has something to show.
+// Export (the zoom strip's button, moved here) and, in the markup, the Inspector toggle after it. Tours and Filters appear only where the board has something to show.
 import { closeBarMenu, openBarMenu } from "./barmenu.ts";
 import { ICONS } from "./baricons.ts";
 import { toggleRows } from "./legend.ts";
@@ -38,7 +38,7 @@ export function installTopActions(): void {
   // the header is not shown in full screen: Export joins the zoom strip there, and goes back after
   document.addEventListener("fullscreenchange", () => {
     const full = document.fullscreenElement === $("stage");
-    if (full) $("canvas").querySelector(".zoom")!.append(exp); else $("actions").append(exp);
+    if (full) $("canvas").querySelector(".zoom")!.append(exp); else $("actions").insertBefore(exp, document.getElementById("insp"));
   });
   const toggle = (b: HTMLElement, html: () => string, label: string, closeOnPick: boolean) => b.addEventListener("click", () => {
     const wasMine = b.getAttribute("aria-expanded") === "true";

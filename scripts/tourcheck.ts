@@ -82,7 +82,7 @@ async function main() {
     const ids: string[] = await p.evaluate(() => (window as any).__repoladder.boards);
     const tours = new Map<string, { id: string; board?: string }>();
     for (const id of ids) {
-      const t = await p.evaluate((id) => { (window as any).__repoladder.show(id); return [...document.querySelectorAll<HTMLElement>("[data-tour]")].map((e) => e.dataset.tour!); }, id);
+      const t = await p.evaluate(async (id) => { (window as any).__repoladder.show(id); const b = document.getElementById("tbtours"); if (!b) return []; b.click(); await new Promise((r) => setTimeout(r, 50)); const rows = [...document.querySelectorAll<HTMLElement>(".bmenu [data-tour]")].map((e) => e.dataset.tour!); document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })); return rows; }, id);
       for (const x of t) tours.set(x[0] === "@" ? `${id}/${x}` : x, x[0] === "@" ? { id: x, board: id } : { id: x });
     }
     for (const [name, { id, board }] of tours) {
