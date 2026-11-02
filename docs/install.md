@@ -27,6 +27,8 @@ npx repoladder build . --default
 
 Open `.repoladder/diagram.html` in a browser. This groups by folders instead of asking Claude, and still draws every arrow from your code. `npx repoladder export . --format svg` writes images.
 
+Want another coding agent to write the grouping instead of folders? [Map with your coding agent](agent-guide.md) walks it through the same steps `/map` runs. They have not been tried with any agent other than Claude Code.
+
 **Looking up facts (experimental; the output shape may change before 1.0).** `repoladder query` answers structural questions from `.repoladder/facts.json` as one line of JSON, every row with a `file` and `line`. It reads only what `analyze` (or `build`) already wrote and tells you to run `analyze` when that is missing; it never writes files.
 
 ```
