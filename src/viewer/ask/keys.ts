@@ -9,5 +9,11 @@ export function keyAction(k: KeyIn): KeyAct {
     if (k.key === "Escape") return k.hasPanelOpen ? "collapse" : "blur";
     return null;
   }
+  if (k.key === "Escape") return k.hasPanelOpen && !k.typing ? "collapse" : null;
   return k.key === "?" && !k.typing ? "focus" : null;
+}
+
+// A pointer press outside #ask closes an open panel.
+export function pointerAction(p: { open: boolean; insideAsk: boolean }): "collapse" | null {
+  return p.open && !p.insideAsk ? "collapse" : null;
 }
