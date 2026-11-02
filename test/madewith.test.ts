@@ -51,3 +51,10 @@ test("brandName: REPOLADDER_BRAND_NAME overrides NAME for recordings; unset or b
   assert.equal(brandName({ REPOLADDER_BRAND_NAME: "RepoLadder" }), "RepoLadder");
   assert.equal(brandName({ REPOLADDER_BRAND_NAME: "  " }), NAME);
 });
+
+test("the footer exists once and sits outside the inspector's <aside>", () => {
+  const html = page();
+  assert.equal(html.split('<footer class="made">').length - 1, 1);
+  const aside = html.match(/<aside>[\s\S]*?<\/aside>/)![0];
+  assert.ok(!aside.includes("made"), "no footer inside the aside");
+});
