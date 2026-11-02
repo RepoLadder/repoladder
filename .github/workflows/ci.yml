@@ -30,6 +30,7 @@ jobs:
       code: ${{ steps.f.outputs.code }}
       windows: ${{ steps.f.outputs.windows }}
       viewer: ${{ steps.f.outputs.viewer }}
+      workflows: ${{ steps.f.outputs.workflows }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -115,7 +116,12 @@ jobs:
           UNIT: ${{ needs.unit.result }}
           BUILD: ${{ needs.typecheck-build.result }}
           GUARD: ${{ needs.viewer-guard.result }}
-        run: '[ "$UNIT" = success ] && [ "$BUILD" = success ] && { [ "$GUARD" = success ] || [ "$GUARD" = skipped ]; } || { echo "unit=$UNIT typecheck-build=$BUILD viewer-guard=$GUARD"; exit 1; }'
+        run: |
+          if [ "$UNIT" = success ] && [ "$BUILD" = success ] && { [ "$GUARD" = success ] || [ "$GUARD" = skipped ]; }; then
+            exit 0
+          fi
+          echo "unit=$UNIT typecheck-build=$BUILD viewer-guard=$GUARD"
+          exit 1
 
   viewer-guard:
     # Structure guard for the restyle: per-board fit, wire geometry and drill-in timing against
@@ -279,3 +285,65 @@ jobs:
             exit 1
           fi
           echo "OK: plugin/dist untouched."
+
+  actionlint:
+    # Lints the workflow files (shellcheck included) when a PR changes any. The release tarball is pinned and
+    # checksum-verified, so no third-party action needs tracking. Reports through `gate`.
+    name: actionlint
+    needs: changes
+    if: needs.changes.outputs.workflows == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run actionlint
+        run: |
+          set -eu
+          version=1.7.12
+          sha256=8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+          tarball="actionlint_${version}_linux_amd64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$tarball" "https://github.com/rhysd/actionlint/releases/download/v${version}/${tarball}"
+          echo "$sha256  $RUNNER_TEMP/$tarball" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$tarball" -C "$RUNNER_TEMP" actionlint
+          "$RUNNER_TEMP/actionlint" -color
+
+  gate:
+    # The check to require on a ruleset: it always reports (unlike the heavy jobs and the install matrix, whose
+    # names never appear when they are skipped), so docs-only PRs can merge. It fails when `changes` did not
+    # succeed or any job failed or was cancelled. On a code run, unit, typecheck-build and install must have
+    # succeeded; on a docs-only run those are skipped. Jobs with their own condition may be skipped.
+    name: ci gate
+    needs: [changes, unit, typecheck-build, viewer-guard, install, version-bump, no-dist, actionlint]
+    if: ${{ always() && (github.event_name != 'pull_request' || github.event.pull_request.draft == false) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - env:
+          CODE: ${{ needs.changes.outputs.code }}
+          CHANGES: ${{ needs.changes.result }}
+          UNIT: ${{ needs.unit.result }}
+          BUILD: ${{ needs.typecheck-build.result }}
+          VIEWER: ${{ needs.viewer-guard.result }}
+          INSTALL: ${{ needs.install.result }}
+          VERSION_BUMP: ${{ needs.version-bump.result }}
+          NO_DIST: ${{ needs.no-dist.result }}
+          ACTIONLINT: ${{ needs.actionlint.result }}
+        run: |
+          set -u
+          fail=0
+          [ "$CHANGES" = success ] || fail=1
+          for r in "$UNIT" "$BUILD" "$VIEWER" "$INSTALL" "$VERSION_BUMP" "$NO_DIST" "$ACTIONLINT"; do
+            case "$r" in failure|cancelled) fail=1 ;; esac
+          done
+          if [ "$CODE" = true ]; then
+            for r in "$UNIT" "$BUILD" "$INSTALL"; do
+              [ "$r" = success ] || fail=1
+            done
+          fi
+          if [ "$fail" = 1 ]; then
+            echo "changes=$CHANGES code=$CODE unit=$UNIT typecheck-build=$BUILD viewer-guard=$VIEWER install=$INSTALL version-bump=$VERSION_BUMP no-dist=$NO_DIST actionlint=$ACTIONLINT"
+            exit 1
+          fi
+          echo "ci gate passed (code=$CODE)"
