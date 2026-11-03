@@ -122,17 +122,21 @@ npx repoladder export . --format svg
 
 `build` writes `.repoladder/diagram.html`; open it in a browser. `export` writes images. Requirements, what gets installed, updating and uninstalling are in [docs/install.md](docs/install.md).
 
+Which agents have been tried with AI grouping: [Which agents work](docs/install.md#which-agents-work).
+
 ## Quick start
 
 1. **Run the first command.** `/map` in your repo, or `npx repoladder build . --default` without Claude Code.
-2. **See the map.** `/map` replies with a link to the diagram and the main parts in one line. Click a box or arrow for the evidence; double-click a box to open it. The CLI writes the same diagram to `.repoladder/diagram.html`.
+2. **See the map.** `/map` replies with the path to the diagram, or with a local link if you accept Open it with Ask?, and the main parts in one line. Click a box or arrow for the evidence; double-click a box to open it. The CLI writes the same diagram to `.repoladder/diagram.html`.
 3. **First-run notes.** The plugin's first `/map` asks once whether to share anonymous usage stats (default no; see [PRIVACY.md](PRIVACY.md#usage-stats-off-unless-you-say-yes)). The CLI's first run downloads about 25MB and asks the same question once on an interactive terminal, never in CI or when piped.
 
 Things to try:
 
 | Try | What it does |
 |---|---|
-| `/map` | Maps the repo you are in and publishes the diagram as a private Artifact. |
+| `/map` | Maps the repo you are in, then offers to open it locally with the Ask bar. |
+| `/share-map` | Publishes the last built map with your platform's page-publishing tool, if it has one. |
+| `/share-map-claude` | Publishes the last built map as a private Claude Artifact (no Ask bar). |
 | `/map path/to/repo` | Maps another folder. |
 | `/map` again after changes | Keeps the same boxes and names; commit `.repoladder/grouping.json` so teammates get them too. |
 | Ask Claude: "regroup this map from scratch" | Rewrites the grouping instead of keeping it. |
@@ -166,8 +170,9 @@ How a build works, step by step: [docs/how-it-works.md](docs/how-it-works.md)
 
 | Page | What it covers |
 |---|---|
-| [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, and using the CLI without Claude Code. |
+| [Install](docs/install.md) | Requirements, what gets installed, updating and uninstalling, which agents work, and using the CLI without Claude Code. |
 | [How it works](docs/how-it-works.md) | The steps behind `/map`: facts, grouping, validation, layout and publishing. |
+| [Map with your coding agent](docs/agent-guide.md) | The steps `/map` runs, written for any coding agent that can run commands and edit files. Not yet tried with agents other than Claude Code. |
 | [Add a map badge](docs/badge.md) | A badge to paste into your README that links to a hosted map. |
 | [Export images](docs/export.md) | Saving boards as SVG or PNG for READMEs, docs and slides. |
 | [Reliability](docs/reliability.md) | The 15-repo sweep, build time and token cost by repo size, and known limits. |
@@ -184,7 +189,7 @@ RepoLadder runs on your machine and reads your repo from disk. It writes a `.rep
 
 ### Does it send my code anywhere?
 
-Not by itself: the analysis, layout and output run locally, and usage stats are off unless you opt in. Claude sees the summary of the repo, and the diagram is published as a private Artifact, both through your own Claude account. Details: [where things run](PRIVACY.md#where-things-run).
+Not by itself: the analysis, layout and output run locally, and usage stats are off unless you opt in. Claude sees the summary of the repo, and the diagram stays on your machine unless you run a share skill, which publishes it through your own account. Details: [where things run](PRIVACY.md#where-things-run).
 
 ### Which languages does it read?
 
@@ -197,6 +202,10 @@ TypeScript and JavaScript only. A repo with no such files stops with a message. 
 ### Can I use it without Claude Code?
 
 Yes: `npx repoladder build . --default` groups by folders and still draws every arrow from the code. See [Without Claude Code](docs/install.md#without-claude-code-npm).
+
+### Which AI agents does it work with?
+
+AI grouping has been tested in Claude Code only. Other agents haven't been tried yet. The command line (`npx repoladder build . --default`) uses no AI and runs anywhere with Node.js 20.6 or newer. See [which agents work](docs/install.md#which-agents-work).
 
 ### Can I commit the grouping file?
 

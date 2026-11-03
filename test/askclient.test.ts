@@ -2,8 +2,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { ask, probe, readToken, splitLines, TOKEN_HEADER, type AskEvent } from "../src/viewer/ask/api.ts";
-import { keyAction, type KeyIn } from "../src/viewer/ask/keys.ts";
-import { busy, initial, reduce, type Ev, type State } from "../src/viewer/ask/state.ts";
+import { keyAction, pointerAction, type KeyIn } from "../src/viewer/ask/keys.ts";
+import { busy, initial, placeholderFor, reduce, type Ev, type State } from "../src/viewer/ask/state.ts";
 import { dropToken } from "../src/viewer/embed.ts";
 
 const run = (evs: Ev[], from: State = initial()) => evs.reduce(reduce, from);
@@ -29,7 +29,7 @@ test("reducer: a submit while busy, empty, or without an agent is ignored", () =
   const loading = run([{ type: "submit", q: "a" }]);
   assert.equal(reduce(loading, { type: "submit", q: "b" }), loading);
   assert.deepEqual(reduce(initial(), { type: "submit", q: "  " }), initial());
-  const none = run([{ type: "unavailable", code: "NO_CLAUDE", message: "m" }]);
+  const none = run([{ type: "unavailable", code: "NO_AGENT", message: "m" }]);
   assert.equal(none.phase, "no-agent");
   assert.equal(reduce(none, { type: "submit", q: "x" }), none);
   assert.deepEqual(reduce(initial(), { type: "text", text: "x" }), initial());
@@ -121,7 +121,7 @@ test("probe: ok and unavailable mount; every other answer draws nothing", async 
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":["a","b"]}'), "t"), { available: true, starters: ["a", "b"] });
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":[1]}'), "t"), { available: true, starters: [] });
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":["1","2","3","4","5"]}'), "t"), { available: true, starters: [] });
-  assert.deepEqual(await probe(reply(200, '{"available":false,"code":"NO_CLAUDE","message":"m"}'), "t"), { available: false, code: "NO_CLAUDE", message: "m" });
+  assert.deepEqual(await probe(reply(200, '{"available":false,"code":"NO_AGENT","message":"m"}'), "t"), { available: false, code: "NO_AGENT", message: "m" });
   for (const f of [reply(401, "{}"), reply(404, "x"), reply(200, "<html>"), reply(200, '{"available":"yes"}'), reply(200, "null"), (async () => { throw new TypeError("x"); }) as unknown as typeof fetch]) {
     assert.equal(await probe(f, "t"), null);
   }
@@ -156,4 +156,25 @@ test("keyAction: ? focuses, Enter submits, Escape collapses then blurs, / and Cm
   assert.equal(keyAction(k({ key: "Escape" })), null);
   for (const key of ["/", "k"]) for (const inAsk of [false, true]) assert.equal(keyAction(k({ key, inAsk, metaKey: key === "k", typing: inAsk })), null);
   assert.equal(keyAction(k({ key: "a", typing: true })), null);
+});
+
+test("pointerAction: only an open panel and a press outside Ask collapses", () => {
+  assert.equal(pointerAction({ open: true, insideAsk: false }), "collapse");
+  assert.equal(pointerAction({ open: true, insideAsk: true }), null);
+  assert.equal(pointerAction({ open: false, insideAsk: false }), null);
+});
+
+test("keyAction: Escape outside Ask closes an open panel, never while typing elsewhere or when blocked", () => {
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true })), "collapse");
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: false })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, typing: true })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, blocked: true })), null);
+  assert.equal(keyAction(k({ key: "Escape", hasPanelOpen: true, metaKey: true })), null);
+});
+
+test("placeholderFor: tour prompt, follow-up, unavailable (unavailable wins)", () => {
+  assert.equal(placeholderFor("idle", false), "Give me a tour of how this code works");
+  assert.equal(placeholderFor("done", true), "Ask a follow-up");
+  assert.equal(placeholderFor("no-agent", false), "Ask is unavailable");
+  assert.equal(placeholderFor("no-agent", true), "Ask is unavailable");
 });

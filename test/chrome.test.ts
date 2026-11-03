@@ -50,7 +50,6 @@ test("shape tokens exist and the chrome uses them", () => {
   const css = viewerAssets().css;
   const radius = (sel: string) => css.match(new RegExp(`(?:^|[},])${sel.replace(/[.\[\]]/g, "\\$&")}\\{[^}]*?border-radius:([^;}]+)`))?.[1] ?? css.match(new RegExp(`(?:^|[},])(?:[^{}]*,)?${sel.replace(/[.\[\]]/g, "\\$&")}(?:,[^{}]*)?\\{[^}]*?border-radius:([^;}]+)`))?.[1];
   for (const s of [".zoom", ".hist", ".sbox", ".fbar", ".crumbmenu", ".dial", ".copy", ".panel"]) assert.equal(radius(s), "var(--radius)", s);
-  assert.match(css, /#insp\{[^}]*?border-radius:var\(--radius\)/);
   for (const s of [".sw", ".sbtn kbd", ".crumbs button.more"]) assert.equal(radius(s), "var(--pill)", s);
   assert.ok(css.includes(".mk-l") && css.includes(".mk-d") && /\[data-theme=dark\] \.brand \.mk-l/.test(css));
 });
@@ -66,6 +65,11 @@ test("the zoom row holds four buttons; Export sits in the top bar's actions", ()
   const bar = html.match(/<div class="actions" id="actions"[^>]*>([\s\S]*?)<\/div>/)![1];
   const exp = bar.match(/<button [^>]*id="zexp"[^>]*>/)![0];
   assert.ok(exp.includes('aria-label="Export this view"') && exp.includes('aria-haspopup="menu"'));
+  const insp = bar.match(/<button [^>]*id="insp"[^>]*>[\s\S]*?<\/button>/)![0];
+  assert.match(insp, /^<button class="tbact" id="insp"/);
+  assert.ok(bar.indexOf('id="insp"') > bar.indexOf('id="zexp"'), "Inspector follows Export");
+  assert.ok(insp.includes('aria-label="Inspector"') && insp.includes('aria-controls="details"') && insp.includes('aria-pressed="false"') && insp.includes('<span class="lbl">Inspector</span>'));
+  assert.ok(!/<div class="canvas"[\s\S]*?id="insp"[\s\S]*?<aside>/.test(html), "no inspector button in the canvas");
 });
 
 test("full screen takes the stage (canvas and tour card), not the page", () => {

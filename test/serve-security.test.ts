@@ -10,7 +10,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { startServer, type Running } from "../src/serve/index.ts";
-import { SECRET_DENY, askArgv } from "../src/serve/claude.ts";
+import { SECRET_DENY, askArgv } from "../src/serve/engines/claude.ts";
 import { compileGlob } from "../src/model/glob.ts";
 
 const root = fileURLToPath(new URL("..", import.meta.url));

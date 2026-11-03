@@ -3,12 +3,12 @@
 import type { Target } from "../../model/cite.ts";
 import { answerPlan, renderPlan } from "./answer.ts";
 import { ask, probe, type AskEvent, type Status } from "./api.ts";
-import { keyAction } from "./keys.ts";
-import { busy, initial, reduce, type Ev, type State } from "./state.ts";
+import { keyAction, pointerAction } from "./keys.ts";
+import { busy, initial, placeholderFor, reduce, type Ev, type State } from "./state.ts";
 
 export type Deps = { canvas: HTMLElement; token: string; status: Status; fetch: typeof fetch; locate: (t: Target) => boolean };
 
-const RECHECK = new Set(["NO_CLAUDE", "OLD_CLI", "SIGNED_OUT"]);
+const RECHECK = new Set(["NO_AGENT", "OLD_CLI", "SIGNED_OUT"]);
 
 function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: string): HTMLElementTagNameMap[K] {
   const el = document.createElement(tag);
@@ -21,6 +21,7 @@ function h<K extends keyof HTMLElementTagNameMap>(tag: K, cls: string, text?: st
 export function mount(d: Deps): void {
   let state: State = d.status.available ? initial() : reduce(initial(), { type: "unavailable", code: d.status.code, message: d.status.message });
   let starters = d.status.available ? d.status.starters : [];
+  let agentLabel = (d.status.available && d.status.agent) || "your agent";
   let open = false, ctrl: AbortController | undefined, frame = 0, lastQ = "";
 
   const root = h("div", ""), bar = h("div", "ask-bar"), input = h("input", "ask-input"), act = h("button", "ask-act", "Send");
@@ -62,7 +63,7 @@ export function mount(d: Deps): void {
   const recheck = async () => {
     const s = await probe(d.fetch, d.token);
     if (!s) return dispatch({ type: "unavailable", code: "AGENT_FAILED", message: "RepoLadder could not reach its local server. Run `repoladder serve` again if it is not running." });
-    if (s.available) { starters = s.starters; state = initial(); draw(); }
+    if (s.available) { starters = s.starters; agentLabel = s.agent || "your agent"; state = initial(); draw(); }
     else dispatch({ type: "unavailable", code: s.code, message: s.message });
   };
 
@@ -76,7 +77,7 @@ export function mount(d: Deps): void {
     root.dataset.phase = ph;
     root.classList.toggle("has-panel", showPanel);
     input.disabled = ph === "no-agent";
-    input.placeholder = ph === "no-agent" ? "Ask is unavailable" : hasTurns ? "Ask a follow-up" : "Ask about this code";
+    input.placeholder = placeholderFor(ph, hasTurns);
     act.textContent = busy(state) ? "Stop" : "Send";
     act.disabled = ph === "no-agent";
     act.onclick = busy(state) ? stop : () => send(input.value);
@@ -94,7 +95,7 @@ export function mount(d: Deps): void {
       turns.append(block);
     });
     const lastTurn = state.turns[state.turns.length - 1];
-    note.textContent = ph === "loading" ? "Asking Claude Code…" : ph === "streaming" && lastTurn?.tools.length ? "Looking at the code…" : "";
+    note.textContent = ph === "loading" ? `Asking ${agentLabel}…` : ph === "streaming" && lastTurn?.tools.length ? "Looking at the code…" : "";
     note.hidden = !note.textContent;
     tray.replaceChildren();
     row.replaceChildren();
@@ -122,6 +123,17 @@ export function mount(d: Deps): void {
   });
   input.addEventListener("focus", () => { if (!open) { open = true; draw(); } });
   input.addEventListener("click", () => { if (!open) { open = true; draw(); } });
+  // capture phase: the canvas stops pointer events before they reach document; never stop or prevent, so the click still lands
+  document.addEventListener("pointerdown", (ev) => {
+    if (pointerAction({ open, insideAsk: root.contains(ev.target as Node) }) === "collapse") { open = false; draw(); }
+  }, true);
+  // Escape with focus outside Ask closes the panel first; menus that already took Escape (defaultPrevented) keep winning
+  document.addEventListener("keydown", (ev) => {
+    if (ev.defaultPrevented || root.contains(ev.target as Node)) return;
+    const t = ev.target as Element | null;
+    const a = keyAction({ key: ev.key, typing: !!t?.closest?.("input,textarea,select,[contenteditable]"), inAsk: false, metaKey: ev.metaKey, ctrlKey: ev.ctrlKey, altKey: ev.altKey, hasPanelOpen: open && !panel.hidden && state.phase !== "no-agent", blocked: !!document.fullscreenElement || !!document.querySelector("dialog[open]") });
+    if (a === "collapse") { open = false; draw(); ev.preventDefault(); ev.stopPropagation(); }
+  }, true);
   document.addEventListener("keydown", (ev) => {
     if (root.contains(ev.target as Node)) return;
     const t = ev.target as Element | null;

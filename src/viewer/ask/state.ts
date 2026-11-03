@@ -18,6 +18,7 @@ export type Ev =
   | { type: "unavailable"; code: string; message: string };
 
 export const initial = (): State => ({ phase: "idle", turns: [] });
+export const placeholderFor = (phase: Phase, hasTurns: boolean) => phase === "no-agent" ? "Ask is unavailable" : hasTurns ? "Ask a follow-up" : "Give me a tour of how this code works";
 export const busy = (s: State) => s.phase === "loading" || s.phase === "streaming";
 
 const last = (s: State, f: (t: Turn) => Turn): Turn[] => s.turns.map((t, i) => (i === s.turns.length - 1 ? f(t) : t));

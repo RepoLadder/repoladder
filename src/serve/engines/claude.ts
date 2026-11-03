@@ -1,4 +1,5 @@
-// Pure helpers for the Ask endpoint: the exact `claude` arguments, the child's environment, stream parsing and plain-language failures. No I/O, no `process`.
+// The Claude Code engine for Ask: the exact `claude` arguments, the child's environment, stream parsing and plain-language failures. No I/O, no `process`.
+import { BASE_PASS, cleanStderr, filterEnv, type AskEvent, type Engine, type Failure, type FailureInput } from "./types.ts";
 
 /** Glob patterns (gitignore style) of files the agent may never read. */
 export const SECRET_DENY = [
@@ -30,6 +31,7 @@ export function systemPrompt(cmdPrefix: string): string {
 
 export type AskArgs = { prompt: string; session: string; resume: boolean; cmdPrefix: string; guardCmd: string };
 
+
 export function askArgv({ prompt, session, resume, cmdPrefix, guardCmd }: AskArgs): string[] {
   const deny = denyList();
   const question = prompt.trim();
@@ -48,20 +50,9 @@ export function askArgv({ prompt, session, resume, cmdPrefix, guardCmd }: AskArg
   ];
 }
 
-const PASS = /^(PATH|HOME|USER|LOGNAME|SHELL|LANG|LC_.*|TERM|TMPDIR|TEMP|TMP|SystemRoot|XDG_.*|ANTHROPIC_.*|CLAUDE_.*|AWS_.*|GOOGLE_APPLICATION_CREDENTIALS|CLOUD_ML_REGION|(HTTP|HTTPS|ALL|NO)_PROXY|(http|https|all|no)_proxy|SSL_CERT_FILE|SSL_CERT_DIR|NODE_EXTRA_CA_CERTS)$/;
+const PASS = new RegExp(`^(${BASE_PASS}|ANTHROPIC_.*|CLAUDE_.*|AWS_.*|GOOGLE_APPLICATION_CREDENTIALS|CLOUD_ML_REGION)$`);
 
-export function childEnv(parent: Record<string, string | undefined>): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const [k, v] of Object.entries(parent)) if (v !== undefined && PASS.test(k)) env[k] = v;
-  env.REPOLADDER_NO_USAGE = "1";
-  env.REPOLADDER_READONLY = "1";
-  return env;
-}
-
-export type AskEvent =
-  | { type: "text"; text: string }
-  | { type: "tool"; name: string }
-  | { type: "result"; ok: boolean; text: string; error?: string };
+export const childEnv = (parent: Record<string, string | undefined>): Record<string, string> => filterEnv(parent, PASS);
 
 const TOOLS = new Set(["Read", "Grep", "Glob", "Bash"]);
 
@@ -88,18 +79,29 @@ export function parseStreamLine(line: string): AskEvent[] {
   return [];
 }
 
-export type Failure = { code: string; message: string };
-
-export function explainFailure(f: { spawnError?: string; exitCode?: number | null; stderr?: string; resultError?: string; timedOut?: boolean }): Failure {
+export function explainFailure(f: FailureInput): Failure {
   const text = `${f.stderr ?? ""}\n${f.resultError ?? ""}`;
-  if (f.spawnError === "ENOENT") return { code: "NO_CLAUDE", message: "Claude Code isn't installed or isn't on your PATH. Install Claude Code, then try again." };
+  if (f.spawnError === "ENOENT") return { code: "NO_AGENT", message: "Claude Code isn't installed or isn't on your PATH. Install Claude Code, then try again." };
   if (f.timedOut) return { code: "TIMEOUT", message: "Claude took too long to answer, so the question was stopped. Try a narrower question." };
   if (/unknown option|unrecognized/i.test(text)) return { code: "OLD_CLI", message: "Your Claude Code is too old for this feature (tested with 2.1.296 and newer). Update it, then try again." };
   if (/not logged in|please run \/login|invalid (or expired )?(api key|credentials)|expired credentials|oauth|authentication_error|\/login/i.test(text)) {
     return { code: "SIGNED_OUT", message: "Claude Code is installed but signed out. Run `claude` once in a terminal to sign in, then ask again." };
   }
   if (/rate.?limit|usage limit|limit reached|\b429\b|overloaded/i.test(text)) return { code: "RATE_LIMIT", message: "Claude says you've reached a usage limit on your plan. Try again later." };
-  const clean = (f.stderr ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").trim().slice(0, 200);
+  const clean = cleanStderr(f.stderr);
   const code = f.spawnError ? `could not start (${f.spawnError})` : `exit code ${f.exitCode ?? "unknown"}`;
   return { code: "AGENT_FAILED", message: `Claude Code stopped unexpectedly (${code})${clean ? `: ${clean}` : "."}` };
 }
+
+export const claudeEngine: Engine = {
+  id: "claude",
+  label: "Claude Code",
+  binEnv: "REPOLADDER_CLAUDE_BIN",
+  defaultBin: "claude",
+  versionArgv: ["--version"],
+  sessions: "assigned",
+  argv: (r) => askArgv({ prompt: r.prompt, session: r.session ?? "", resume: r.resume, cmdPrefix: r.cmdPrefix, guardCmd: r.guardCmd }),
+  env: childEnv,
+  parser: () => parseStreamLine,
+  explainFailure,
+};

@@ -1,4 +1,4 @@
-// The inspector: a floating panel that is closed until something is selected, with a button (#insp) and
+// The inspector: a floating panel that is closed until something is selected, with a top-bar button (#insp) and
 // the I key to show or hide it. The reader's choice ("open" | "closed"; none = automatic) is kept in a
 // module variable and localStorage where the page may use it. Wide windows only: the phone's bottom sheet
 // (sheet.ts) is unchanged. `shown`, `readPref` and `typing` are pure, so node can test them.

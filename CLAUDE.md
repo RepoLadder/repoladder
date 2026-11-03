@@ -1,12 +1,12 @@
 # RepoLadder
 
-A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architecture diagram, published as a Claude Artifact. The top level is plain-language; each level you open goes one step more technical.
+A Claude Code plugin (`/map`) that turns a TS/JS repo into a drill-down architecture diagram, opened locally with an Ask bar and shareable on request. The top level is plain-language; each level you open goes one step more technical.
 
 ## How it works
 1. `repoladder summary REPO --fresh` analyzes the repo deterministically into `.repoladder/facts.json` (files, imports, runtime calls, services, endpoints) and prints a digest. On a large repo the digest is folder-first, and `summary REPO --part <leaf id>` prints one part's digest.
 2. Claude (following `plugin/skills/map/SKILL.md`) writes `.repoladder/grouping.json`: a tree of named groups whose leaves claim files by glob.
 3. `repoladder build REPO` validates the grouping (every file exactly once), rolls the facts up into one board per group (`model.json`), lays each board out with D2 (wasm), and writes a self-contained `diagram.html`.
-4. The skill publishes the HTML as an Artifact.
+4. The skill offers `repoladder serve` for the local page; publishing is the separate `share-map` skills.
 
 **Core rule:** edges are never invented. Every arrow comes from facts and carries file:line evidence. Claude only groups, names and writes summaries.
 
@@ -17,8 +17,8 @@ Each file starts with a comment saying what it is for; read it before editing.
 - `src/build/`: D2 layout per board (`layout.ts`, `d2pool.ts`, `layoutsession.ts`, `passes.ts`), the page shell and packing (`html.ts`, `filepack.ts`), the layout lint and the digestibility budget (`lint.ts`, `budget.ts`), and `pipeline.ts`, which ties model, layout and HTML together for `cli.ts` and `lib.ts`.
 - `src/viewer/`: the in-page app, a typed TS module that runs in the browser (board drawing, navigation, panels, the tour player, deep links, the detail dial; `ask/` holds the served Ask bar (state machine, stream client, safe answer renderer, view; with `ask.css`), built as a separate bundle that `repoladder serve` appends to the page it serves, never part of the page file). It may import types from `src/model` and `src/build`, but nothing that pulls Node code into the page. Keep each module under about 200 lines; add a module rather than growing one. `DESIGN.md` explains the visual identity. `npm run build` bakes the viewer into the plugin bundle, so the shipped plugin never needs esbuild.
 - `src/cli.ts`: commands `preflight | install | usage | analyze | summary | build | export | serve`. `src/usage.ts` is the opt-in usage ping (see PRIVACY.md); `server/ping/` is its Cloudflare Worker.
-- `src/serve/`: local server for `repoladder serve` (`ask.ts` runs the user's own `claude` CLI read-only for the Ask endpoint; `claude.ts` pins its arguments); the only code that listens on a port; engine dirs never import it.
-- `src/lib.ts`: the library entry `buildFromFiles(files, opts)`: files in, `{ ok: true, html, facts, model, engineVersion, coverage, profile }` or `{ ok: false, code, message }` out; no disk, env, ping or exit. `analyzeFiles(files, opts)` returns `{ ok: true, facts, engineVersion }` or `{ ok: false, code, message }` without grouping, layout or HTML. Input limits live in `src/build/limits.ts`.
+- `src/serve/`: local server for `repoladder serve` (`ask.ts` runs the chosen agent's CLI read-only for the Ask endpoint; `engines/` holds one file per agent behind the `Engine` interface); the only code that listens on a port; engine dirs never import it.
+- `src/lib.ts`: the library entry `buildFromFiles(files, opts)`: files in, `{ ok: true, html, facts, model, engineVersion, coverage, profile }` or `{ ok: false, code, message }` out; no disk, env, ping or exit. `analyzeFiles(files, opts)` returns `{ ok: true, facts, engineVersion }` or `{ ok: false, code, message }` without grouping, layout or HTML. `buildFromFiles` also takes an `overlay` option (`src/model/overlay.ts`) that marks given boxes and connections on the page; the result then carries an `overlay` report, and `ENGINE_FEATURES` lists the optional features this engine has (`"overlay"`). Input limits live in `src/build/limits.ts`.
 - `src/features.ts`: the launch switches (`dial`, `story`), both off by default. `REPOLADDER_DIAL=1` or `--dial` after the repo root builds a page with the detail dial; `REPOLADDER_STORY=1` or `--story` builds the story level (People and systems) and makes `summary` ask for one.
 - npm package `repoladder` (`npm run npm:pack`): the CLI bundle plus the library, published only from a `v*` tag on `main` through npm trusted publishing (`.github/workflows/publish.yml`).
 - `plugin/`: what ships. `plugin/dist/repoladder.mjs` is the esbuild bundle; `typescript` and `@terrastruct/d2` are pinned in `plugin/package-lock.json`, which Claude Code installs on plugin install. `npm run installcheck` installs the plugin with the real `claude plugin install` and builds a fixture. User-facing install text is `docs/install.md`.
@@ -27,7 +27,7 @@ Each file starts with a comment saying what it is for; read it before editing.
 ## Conventions
 - Node 22 runs the `.ts` sources directly (type stripping): use `.ts` import extensions and erasable syntax only (no enums, no parameter properties).
 - Output must be deterministic: the same repo gives byte-identical facts, model and HTML. Sort everything.
-- Keep the page self-contained and small: under `VIEWER_KB` (95KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
+- Keep the page self-contained and small: under `VIEWER_KB` (102KB) + `FONT_KB` (60KB) + 1KB per board (`budgetKb` in `src/build/pagesize.ts`). It must follow the Artifact page rules:
   - The only external scripts allowed are from cdnjs, jsdelivr or unpkg, pinned to an exact version.
   - Light and dark themes are defined through color tokens (`test/colors.test.ts` keeps colors out of other files).
   - It works at phone width.

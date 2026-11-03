@@ -13,7 +13,7 @@ import { packFonts } from "./filepack.ts";
  * `boot` is the small inline script that unpacks the packed `css` and `js` in the page (viewer/boot.ts).
  * `fonts` is the packed Geist and Geist Mono subsets with their licence (filepack.ts `packFonts`), which boot registers.
  */
-export interface ViewerAssets { js: string; css: string; boardCss: string; boot: string; fonts: string }
+export interface ViewerAssets { js: string; css: string; boardCss: string; boot: string; fonts: string; /** The overlay option's bundle (viewer/overlay.ts), appended to `js` and `css` only for a page that has an overlay. */ overlay?: { js: string; css: string } }
 
 declare const __REPOLADDER_VIEWER__: ViewerAssets | undefined;
 declare const __REPOLADDER_ASK__: { js: string; css: string } | undefined;
@@ -60,5 +60,5 @@ export function buildViewer(): ViewerAssets {
   }).outputFiles[0].text.trim();
   const font = (f: string) => readFileSync(dir + "fonts/" + f);
   const license = readFileSync(fileURLToPath(new URL("../../LICENSE-Geist.txt", import.meta.url)), "utf8");
-  return { js, css: tokenCss() + sheet("styles.css"), boardCss: sheet("board.css"), boot: iife("boot.ts"), fonts: packFonts(font("geist.woff2"), font("geist-mono.woff2"), license) };
+  return { js, css: tokenCss() + sheet("styles.css"), boardCss: sheet("board.css"), boot: iife("boot.ts"), overlay: { js: iife("overlay.ts", "repoladderOverlay"), css: sheet("overlay.css") }, fonts: packFonts(font("geist.woff2"), font("geist-mono.woff2"), license) };
 }

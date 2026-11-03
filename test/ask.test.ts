@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { writeFileSync } from "node:fs";
 import { analyze } from "../src/analyze/index.ts";
 import { startServer, type Running } from "../src/serve/index.ts";
-import { askArgv } from "../src/serve/claude.ts";
+import { askArgv } from "../src/serve/engines/claude.ts";
 
 const repo = fileURLToPath(new URL("fixtures/basic-app", import.meta.url));
 const fake = fileURLToPath(new URL("helpers/fake-claude/claude.mjs", import.meta.url));
@@ -23,7 +23,7 @@ async function boot(t: { after(f: () => unknown): void }, ask: boolean = true): 
   const extra: Record<string, string> = { FAKE_CLAUDE_LOG: log };
   process.env.REPOLADDER_CLAUDE_BIN = fake;
   const out = mkdtempSync(join(tmpdir(), "rl-askout-"));
-  const s = await startServer({ page: () => "x", ask: ask ? { root: repo, out, extraEnv: extra } : false });
+  const s = await startServer({ page: () => "x", ask: ask ? { root: repo, out, extraEnv: extra, agent: "claude" } : false });
   t.after(() => s.close());
   t.after(() => { delete process.env.REPOLADDER_CLAUDE_BIN; delete process.env.REPOLADDER_ASK_TIMEOUT_MS; });
   return { s, log, extra, out };
@@ -94,16 +94,16 @@ test("status reports the CLI, or a plain reason when it is missing", { skip }, a
   const e = await boot(t);
   e.extra.FAKE_CLAUDE_MODE = "version";
   const ok = JSON.parse((await call(e.s, "GET", "/api/ask/status")).body);
-  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)", starters: [] });
+  assert.deepEqual(ok, { available: true, version: "9.9.9 (Claude Code)", agent: { id: "claude", label: "Claude Code" }, starters: [] });
 
   const e2 = await boot(t);
   process.env.REPOLADDER_CLAUDE_BIN = "/nonexistent/claude-nope";
   const st = JSON.parse((await call(e2.s, "GET", "/api/ask/status")).body);
   assert.equal(st.available, false);
-  assert.equal(st.code, "NO_CLAUDE");
+  assert.equal(st.code, "NO_AGENT");
   assert.match(st.message, /isn't installed/);
   const ev = events(await ask(e2.s, "hi"));
-  assert.deepEqual(ev.at(-1), { type: "error", code: "NO_CLAUDE", message: st.message });
+  assert.deepEqual(ev.at(-1), { type: "error", code: "NO_AGENT", message: st.message });
 });
 
 test("signed-out, old CLI and rate limit each get their own error event", { skip }, async (t) => {

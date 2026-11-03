@@ -31,7 +31,9 @@ export function commands(md: string): string[] {
 }
 
 const ANCHORS: Array<{ row: RegExp; file: string; needle: string }> = [
-  { row: /^\| `\/map` \|/, file: "plugin/skills/map/SKILL.md", needle: "Publish `REPO/.repoladder/diagram.html` with the Artifact tool" },
+  { row: /^\| `\/map` \|/, file: "plugin/skills/map/SKILL.md", needle: "Open it with Ask?" },
+  { row: /^\| `\/share-map` \|/, file: "plugin/skills/share-map/SKILL.md", needle: "REPO/.repoladder/diagram.html" },
+  { row: /^\| `\/share-map-claude` \|/, file: "plugin/skills/share-map-claude/SKILL.md", needle: "artifact.json" },
   { row: /^\| `\/map path\/to\/repo` \|/, file: "plugin/skills/map/SKILL.md", needle: 'argument-hint: "[repo path]"' },
   { row: /^\| `\/map` again/, file: "plugin/skills/map/SKILL.md", needle: "keep its structure, ids, names and summaries" },
   { row: /regroup/, file: "plugin/skills/map/SKILL.md", needle: "regroup" },

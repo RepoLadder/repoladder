@@ -6,17 +6,19 @@ import { FEEDBACK_URL, brandName, madeWithUrl } from "./brand.ts";
 import { FAVICON_HREF, HEADER_MARK } from "./mark.ts";
 import { FILE, filePath } from "../model/fileboards.ts";
 import { packData, packViewer } from "./filepack.ts";
+import { ICONS } from "../viewer/baricons.ts";
 import { esc } from "../viewer/esc.ts";
 import { usedIcons } from "../viewer/icons.ts";
 import type { CodeData } from "../viewer/codelink.ts";
 import { DEFAULT_FEATURES, bakedFeatures, type Features } from "../features.ts";
 import { PACKAGE, VERSION } from "../version.ts";
+import type { Marks } from "../model/overlay.ts";
 import { STORY, type PageBoard, type PageCollection, type PageEdge, type PageField, type ViewerData } from "../viewer/state.ts";
 
 // Same character class as parseGithubRemote (analyze/files.ts); the code links are dropped when a model carries anything else.
 const GH_REPO = /^[\w.-]+\/[\w.-]+$/, GH_SHA = /^[0-9a-f]{7,64}$/i;
 
-export function renderHtml(model: Model, layout: Record<string, BoardLayout>, features: Features = DEFAULT_FEATURES): string {
+export function renderHtml(model: Model, layout: Record<string, BoardLayout>, features: Features = DEFAULT_FEATURES, overlay?: Marks): string {
   // Paths repeat across file lists and evidence; store each once and refer to it by index.
   const paths: string[] = [];
   const index = new Map<string, number>();
@@ -76,7 +78,11 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   if (model.fgraph) data.fgraph = model.fgraph.map(([a, b, ...r]) => [ref(a), ref(b), ...r]);
   // the Simple stop, as what differs from Default (model/simple.ts); absent without splits
   if (model.simple) data.simple = { nodes: Object.fromEntries(Object.entries(model.simple.nodes).map(([id, n]) => [id, { ...n, files: n.files.map(ref) }])), boards: pageBoards(model.simple.boards) };
-  const assets = viewerAssets();
+  const base = viewerAssets();
+  // With an overlay, its small bundle rides after the viewer (and `install` runs before the viewer starts); without one the assets are used untouched.
+  const assets = overlay && base.overlay
+    ? { ...base, css: base.css + base.overlay.css, js: `${base.js};${base.overlay.js};repoladderOverlay.install(${inlineJson(overlay)})` }
+    : base;
   // The viewer travels packed like the data, at about a third of its size: the boot script
   // unpacks it, adds the stylesheet and starts it, synchronously, before the page first paints.
   const viewer = inlineJson(packViewer(assets)), packed = inlineJson(packData(data));
@@ -89,20 +95,20 @@ export function renderHtml(model: Model, layout: Record<string, BoardLayout>, fe
   <a class="brand" href="${esc(madeWithUrl())}" target="_blank" rel="noopener" aria-label="${esc(brandName())}" title="${esc(brandName())}">${HEADER_MARK}</a>
   <nav class="crumbs" id="crumbs" aria-label="Diagram depth"></nav>
   <span class="meta" id="meta"></span>
-  <div class="actions" id="actions" role="group" aria-label="Actions"><button class="tbact" id="zexp" aria-label="Export this view" title="Export this view" aria-haspopup="menu" aria-expanded="false"></button></div>
+  <div class="actions" id="actions" role="group" aria-label="Actions"><button class="tbact" id="zexp" aria-label="Export this view" title="Export this view" aria-haspopup="menu" aria-expanded="false"></button><button class="tbact" id="insp" aria-label="Inspector" title="Inspector (I)" aria-controls="details" aria-expanded="false" aria-pressed="false">${ICONS.inspector}<span class="lbl">Inspector</span></button></div>
 </header>
 <main>
   <div class="stage" id="stage">
   <div class="canvas" id="canvas">
     <div class="board-title" id="boardtitle"><p class="bt-level"></p><h1>${esc(model.repo)}</h1><p class="bt-sum"></p><button class="bt-more" hidden aria-haspopup="dialog" aria-expanded="false">More</button><span class="bt-gauge"></span></div>
-    <button id="insp" aria-label="Inspector" title="Inspector (I)" aria-controls="details" aria-expanded="false" aria-pressed="false">${INSPECTOR_ICON}</button>
     <div class="zoom"><button id="zfs" hidden aria-label="Full screen" aria-pressed="false">${FS_ICON}</button><button id="zfit" hidden aria-label="Reframe" title="Reframe (F)">${REFRAME_ICON}</button><button id="zin" aria-label="Zoom in" title="Zoom in (+)">+</button><button id="zout" aria-label="Zoom out" title="Zoom out (-)">−</button></div>
     <!-- the bottom dock (phone.css): the tour card sits in it on a phone; the Ask bar will dock here too -->
     <div class="dock" id="dock"></div>
   </div>
   </div>
-  <aside><section id="details" aria-live="polite"></section>${madeWith()}</aside>
+  <aside><section id="details" aria-live="polite"></section></aside>
 </main>
+${madeWith()}
 <script>
 ${assets.boot}
 repoladderBoot(${viewer},${packed},${inlineJson(assets.fonts)});
@@ -114,7 +120,6 @@ repoladderBoot(${viewer},${packed},${inlineJson(assets.fonts)});
 // states; styles.css shows the corners out or in by aria-pressed. Reframe is a viewfinder.
 const ICON = (d: string) => `<svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">${d}</svg>`;
 const FS_ICON = ICON('<path class="fs-out" d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4"/><path class="fs-in" d="M6 2v4H2M14 6h-4V2M10 14v-4h4M2 10h4v4"/>');
-const INSPECTOR_ICON = ICON('<rect x="2" y="2.5" width="12" height="11" rx="2"/><path d="M10 2.5v11"/>');
 const REFRAME_ICON = ICON('<path d="M2 5V2h3M11 2h3v3M14 11v3h-3M5 14H2v-3"/><circle cx="8" cy="8" r="1.2"/>');
 
 // Plain links in the shell, not viewer code: an Artifact frame blocks window.open, and the

@@ -12,7 +12,7 @@ npm run build
 git checkout -- plugin/dist
 ```
 
-Branch from `develop` and open PRs into `develop`; non-draft PRs into `develop` and `main` run CI (tests, typecheck and build, the gallery gate, and a plugin install check; Windows only when install or packaging code changes), draft PRs run none, and every push to `main` runs it. See "Branches and releases" below. What a PR should include is in [the PR template](.github/pull_request_template.md).
+Branch from `develop` and open PRs into `develop`; non-draft PRs into `develop` and `main` run CI (tests, typecheck and build, the gallery gate, and a plugin install check; Windows only when install or packaging code changes; docs-only PRs skip the heavy jobs and are gated by `ci gate`, and workflow changes also run actionlint), draft PRs run none, and every push to `main` runs it. See "Branches and releases" below. What a PR should include is in [the PR template](.github/pull_request_template.md).
 
 ## Don't commit `plugin/dist/`
 

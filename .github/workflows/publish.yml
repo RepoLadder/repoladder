@@ -117,11 +117,13 @@ jobs:
             else echo "::warning::could not read the latest version from npm; treating this publish as a major release"; BUMP=major; fi
             [ "$BUMP" = major ] || BUMP="$(node scripts/versionbump.ts "$LATEST" "$VERSION")"
           fi
-          echo "bump=$BUMP" >> "$GITHUB_OUTPUT"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "dry=$DRY" >> "$GITHUB_OUTPUT"
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "exists=$EXISTS" >> "$GITHUB_OUTPUT"
+          {
+            echo "bump=$BUMP"
+            echo "version=$VERSION"
+            echo "dry=$DRY"
+            echo "tag=$TAG"
+            echo "exists=$EXISTS"
+          } >> "$GITHUB_OUTPUT"
       - if: steps.decide.outputs.exists != 'true'
         run: npm ci
       # a fresh build from source, never the bot-committed plugin/dist
