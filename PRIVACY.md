@@ -16,18 +16,20 @@ The analyzer and diagram builder (`src/analyze`, `src/build`, `src/model`) never
 
 ## Asking questions about your repo (repoladder serve)
 
-While `repoladder serve` runs, it can answer a question about your repo with your own Claude Code. The flow: your browser, then the local server on your machine, then your own `claude` command, then Anthropic under your own Claude account and plan. RepoLadder never sees or stores a key or a sign-in.
+While `repoladder serve` runs, it can answer a question about your repo with your own agent: Claude Code or Codex. The flow: your browser, then the local server on your machine, then your own `claude` or `codex` command, then the agent's provider under your own account. RepoLadder never sees or stores a key or a sign-in with either. Which agent is used: `--agent claude|codex`, else `REPOLADDER_AGENT`, else Claude Code if it is installed, otherwise Codex. The page shows its name.
 
-- **What Claude can do here:** read files, search them, and run `repoladder query` in your repo. With its default settings it cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar).
-- **What leaves your machine:** only what your own Claude Code already sends when it answers: your question and the file excerpts it reads, to Anthropic, under your own account. RepoLadder sends nothing of its own and stores nothing.
+- **What the agent can do here:** read files, search them, and run `repoladder query` in your repo.
+  - Claude Code, with its default settings, cannot write or edit files, use the web, or run any other command. A deny list blocks reads of secret-looking files (`.env`, keys, `.ssh`, `.aws` and similar), and a guard refuses reads outside the repo.
+  - Codex runs in its own read-only sandbox with approvals off, so it cannot write files or reach the network. RepoLadder has no way to stop it reading secret-looking files or files outside the repo, or running other read-only commands; only the instructions it is given ask it not to. Use Claude Code if that matters.
+- **What leaves your machine:** only what your own agent already sends when it answers: your question and the file excerpts it reads. With Claude Code that goes to Anthropic under your own Claude account; with Codex it goes to OpenAI under your own Codex or ChatGPT sign-in or API key. RepoLadder sends nothing of its own and stores nothing.
 - **Where it runs:** the page, the server and the agent all run on your machine. The Ask path exists only while `repoladder serve` runs, and `--no-ask` turns it off.
 - **Who can reach it:** only your own machine, with a random token made for each run. The token is printed only in your terminal. Pages on other websites cannot use it, and requests that carry a foreign origin are refused.
 - **The browser opener:** the link (token included) is also handed to your browser opener, so for a moment it is visible in the process list. On a shared machine, use `--no-open` and open the link yourself.
 - **Logs:** your question text and the token are never logged.
-- **Limits:** one question at a time, up to 2,000 characters; a stopped or timed-out question also stops everything Claude started for it.
-- **Where it shows up:** the conversation appears in Claude Code's own session history for that folder.
-- **Your repo's own Claude settings are not loaded** for these questions; your personal Claude Code settings still apply, so any extra permissions you have granted there (a shell command or tool you always allow) apply to these questions too.
-- **How the limits are enforced, honestly:** by Claude Code's own permission system. RepoLadder's tests prove the exact settings it passes (see [docs/serve-security.md](docs/serve-security.md)), and the maintainers check real enforcement by hand against a real install; a test cannot prove Claude Code enforces them. The Claude Code version and date of that check are recorded in that file once it is done.
+- **Limits:** one question at a time, up to 2,000 characters; a stopped or timed-out question also stops everything the agent started for it.
+- **Where it shows up:** the conversation appears in the agent's own session history for that folder (Claude Code's or Codex's). Codex answers each question as a fresh session, so it does not remember earlier questions.
+- **Repo-local settings:** with Claude Code your repo's own settings are not loaded for these questions; your personal Claude Code settings still apply, so any extra permissions you have granted there apply too. With Codex RepoLadder does not turn off repo-local Codex configuration or instructions, and your personal Codex settings apply.
+- **How the limits are enforced, honestly:** by Claude Code's own permission system, or by Codex's own sandbox. RepoLadder's tests prove the exact settings it passes (see [docs/serve-security.md](docs/serve-security.md)), and the maintainers check real enforcement by hand against a real install; a test cannot prove an agent enforces them. The version and date of each check are recorded in that file; the Codex check is still pending.
 
 ## Usage stats: off unless you say yes
 

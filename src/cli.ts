@@ -207,7 +207,7 @@ async function runExport() {
   console.log(`EXPORT_OK ${dir} (${files.length} board${files.length === 1 ? "" : "s"}, ${theme})`);
 }
 
-const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export|serve> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--port n] [--no-open] [--no-ask] [--help] [--version]`;
+const USAGE = `usage: repoladder <preflight|install|usage|analyze|summary|query|build|export|serve> [root] [definitions|importers|callers|touches|files <arg>] [--out dir] [--default] [--grouping file] [--fresh] [--title name] [--part leafId] [--limit n] [--board id] [--format svg|png] [--theme light|dark] [--no-lane] [--profile full|hosted] [--dial] [--story] [--quiet] [--port n] [--no-open] [--no-ask] [--agent claude|codex] [--help] [--version]`;
 if (cmd === "--help" || cmd === "-h" || cmd === "help") { console.log(USAGE); process.exit(0); }
 if (cmd === "--version" || cmd === "-v" || cmd === "version") { console.log(version()); process.exit(0); }
 
@@ -322,6 +322,11 @@ switch (cmd) {
       port = portFlag === true || !/^\d+$/.test(portFlag) ? -1 : Number(portFlag);
       if (port < 0 || port > 65535) { console.error("INVALID_OPTIONS: --port needs a number from 0 to 65535"); process.exit(2); }
     }
+    const { chooseAgent } = await import("./serve/engines/index.ts");
+    const agentFlag = flags.get("agent");
+    const agent = chooseAgent(agentFlag, process.env);
+    if (agentFlag !== undefined && (agent === undefined || agent === "auto")) { console.error("INVALID_OPTIONS: --agent needs claude or codex"); process.exit(2); }
+    if (agent === undefined && !flags.has("no-ask")) { console.error("INVALID_OPTIONS: REPOLADDER_AGENT needs claude or codex"); process.exit(2); }
     const page = join(out, "diagram.html");
     if (!existsSync(page)) {
       console.error(`NO_MAP: no map at ${page}; building one with the folder-based grouping (run /map for a named one)`);
@@ -330,12 +335,19 @@ switch (cmd) {
     }
     const { startServer, pageFromFile } = await import("./serve/index.ts");
     let running;
-    try { running = await startServer({ page: pageFromFile(page), port, ask: flags.has("no-ask") ? false : { root, out } }); }
+    try { running = await startServer({ page: pageFromFile(page), port, ask: flags.has("no-ask") ? false : { root, out, agent } }); }
     catch (e) {
       if ((e as NodeJS.ErrnoException).code === "EADDRINUSE") { console.error(`PORT_IN_USE: port ${port} is in use; pick another or omit --port`); process.exit(1); }
       throw e;
     }
     console.log(`SERVE_OK ${running.url}`);
+    if (!flags.has("no-ask")) void (async () => {
+      try {
+        const r = await fetch(`${running.url.split("?")[0]}api/ask/status`, { headers: { "x-repoladder-token": running.token } });
+        const b: any = await r.json();
+        if (b?.available === true && typeof b.agent?.label === "string") console.error(`Ask uses ${b.agent.label}`);
+      } catch { /* the status line is a courtesy */ }
+    })();
     console.error("Press Ctrl+C to stop.");
     if (!flags.has("no-open")) (await import("./serve/open.ts")).openBrowser(running.url);
     const stop = async () => { await running.close(); console.log("SERVE_STOPPED"); process.exit(0); };

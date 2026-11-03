@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { GUARDED_TOOLS, SECRET_DENY, TOOL_DENY, askArgv, childEnv, explainFailure, parseStreamLine, systemPrompt } from "../src/serve/claude.ts";
+import { GUARDED_TOOLS, SECRET_DENY, TOOL_DENY, askArgv, childEnv, explainFailure, parseStreamLine, systemPrompt } from "../src/serve/engines/claude.ts";
 
 const PREFIX = "/tmp/rl-ask-x/node /tmp/rl-ask-x/cli.ts query --out /tmp/rl-ask-x/out";
 const GUARD = "/tmp/rl-ask-x/node /tmp/rl-ask-x/cli.ts readguard /tmp/rl-ask-x/root";
@@ -72,7 +72,7 @@ test("parseStreamLine maps Claude's stream-json and ignores the rest", () => {
 
 test("explainFailure gives a distinct plain-language code for each case", () => {
   const code = (f: Parameters<typeof explainFailure>[0]) => explainFailure(f).code;
-  assert.equal(code({ spawnError: "ENOENT" }), "NO_CLAUDE");
+  assert.equal(code({ spawnError: "ENOENT" }), "NO_AGENT");
   assert.equal(code({ exitCode: 1, stderr: "Not logged in. Please run /login" }), "SIGNED_OUT");
   assert.equal(code({ exitCode: 1, resultError: "Invalid API key · Please run /login" }), "SIGNED_OUT");
   assert.equal(code({ exitCode: 1, stderr: "error: unknown option '--x'" }), "OLD_CLI");

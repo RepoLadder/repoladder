@@ -246,9 +246,9 @@ test("src/serve may spawn only with an argv array: exec* and a shell option are 
   bad.forEach(([line, what], i) => assert.ok(found.includes(`src/serve/bad.ts:${i + 1}: ${what}`), `not caught: ${line}`));
 });
 
-test("claude.ts and stage.ts stay free of child_process", () => {
+test("engine files and stage.ts stay free of child_process", () => {
   const root = fileURLToPath(new URL("..", import.meta.url));
-  for (const f of ["src/serve/claude.ts", "src/serve/stage.ts"]) {
+  for (const f of ["src/serve/engines/claude.ts", "src/serve/engines/codex.ts", "src/serve/engines/types.ts", "src/serve/stage.ts"]) {
     assert.ok(!(f in CHILD_PROCESS_OK), f);
     assert.doesNotMatch(readFileSync(join(root, f), "utf8"), /child_process/, f);
   }

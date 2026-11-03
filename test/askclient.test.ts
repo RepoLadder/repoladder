@@ -29,7 +29,7 @@ test("reducer: a submit while busy, empty, or without an agent is ignored", () =
   const loading = run([{ type: "submit", q: "a" }]);
   assert.equal(reduce(loading, { type: "submit", q: "b" }), loading);
   assert.deepEqual(reduce(initial(), { type: "submit", q: "  " }), initial());
-  const none = run([{ type: "unavailable", code: "NO_CLAUDE", message: "m" }]);
+  const none = run([{ type: "unavailable", code: "NO_AGENT", message: "m" }]);
   assert.equal(none.phase, "no-agent");
   assert.equal(reduce(none, { type: "submit", q: "x" }), none);
   assert.deepEqual(reduce(initial(), { type: "text", text: "x" }), initial());
@@ -121,7 +121,7 @@ test("probe: ok and unavailable mount; every other answer draws nothing", async 
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":["a","b"]}'), "t"), { available: true, starters: ["a", "b"] });
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":[1]}'), "t"), { available: true, starters: [] });
   assert.deepEqual(await probe(reply(200, '{"available":true,"starters":["1","2","3","4","5"]}'), "t"), { available: true, starters: [] });
-  assert.deepEqual(await probe(reply(200, '{"available":false,"code":"NO_CLAUDE","message":"m"}'), "t"), { available: false, code: "NO_CLAUDE", message: "m" });
+  assert.deepEqual(await probe(reply(200, '{"available":false,"code":"NO_AGENT","message":"m"}'), "t"), { available: false, code: "NO_AGENT", message: "m" });
   for (const f of [reply(401, "{}"), reply(404, "x"), reply(200, "<html>"), reply(200, '{"available":"yes"}'), reply(200, "null"), (async () => { throw new TypeError("x"); }) as unknown as typeof fetch]) {
     assert.equal(await probe(f, "t"), null);
   }

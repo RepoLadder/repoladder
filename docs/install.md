@@ -27,6 +27,7 @@ Only what has been tried is listed. Other agents haven't been tried yet, so none
 |---|---|---|
 | Claude Code | `/plugin marketplace add repoladder/repoladder` then `/plugin install repoladder@repoladder`, then run `/map` | Yes |
 | No agent (command line) | `npx repoladder build . --default` | n/a: groups by folders, no AI step |
+| Codex | `npx repoladder serve . --agent codex` (Ask only) | No: only Ask has been tried, not AI grouping |
 
 A row is added here once an agent has been tried, with the result.
 
@@ -61,6 +62,8 @@ npx repoladder serve . --no-open
 ```
 
 Hosts the built map (building a folder-grouped one first if there is none) at a link like `http://127.0.0.1:52341/?t=<token>`. The link carries a random access token made fresh on every run; requests without it are refused. `--port 8080` picks the port (default: any free one), `--no-open` skips opening your browser, Ctrl+C stops it. It binds only to your own machine, and there is no option to change that.
+
+Ask works with Claude Code and Codex. `--agent claude|codex` or `REPOLADDER_AGENT` picks one; otherwise Claude Code is used if it is installed, then Codex. What each agent is and is not stopped from doing is in [docs/serve-security.md](serve-security.md).
 
 The first `build` from an interactive terminal asks once whether to share anonymous usage stats (default no; see [PRIVACY.md](../PRIVACY.md)). It never asks in CI or when piped.
 

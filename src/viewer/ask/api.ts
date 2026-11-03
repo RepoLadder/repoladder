@@ -1,7 +1,7 @@
 // The Ask calls to the local server: the feature probe, the streamed question, and the token. The token is passed in and
 // sent as a header only; nothing here writes it to a URL, cookie or storage.
 export const TOKEN_HEADER = "x-repoladder-token";
-export type Status = { available: true; starters: string[] } | { available: false; code: string; message: string };
+export type Status = { available: true; starters: string[]; agent?: string } | { available: false; code: string; message: string };
 export type AskEvent =
   | { type: "start"; conversation: string }
   | { type: "text"; text: string }
@@ -26,9 +26,10 @@ export async function probe(f: Fetch, token: string): Promise<Status | null> {
     if (!b || typeof b !== "object" || typeof b.available !== "boolean") return null;
     if (b.available) {
       const s = Array.isArray(b.starters) && b.starters.length <= 4 && b.starters.every((x: unknown) => typeof x === "string") ? b.starters : [];
-      return { available: true, starters: s };
+      const label = typeof b.agent?.label === "string" && b.agent.label.length >= 1 && b.agent.label.length <= 40 ? b.agent.label : undefined;
+      return { available: true, starters: s, ...(label ? { agent: label } : {}) };
     }
-    return { available: false, code: String(b.code ?? "NO_CLAUDE"), message: String(b.message ?? "Claude Code is not available.") };
+    return { available: false, code: String(b.code ?? "NO_AGENT"), message: String(b.message ?? "Ask is not available.") };
   } catch { return null; }
 }
 
