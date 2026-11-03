@@ -52,7 +52,15 @@ export function askArgv({ prompt, session, resume, cmdPrefix, guardCmd }: AskArg
 
 const PASS = new RegExp(`^(${BASE_PASS}|ANTHROPIC_.*|CLAUDE_.*|AWS_.*|GOOGLE_APPLICATION_CREDENTIALS|CLOUD_ML_REGION)$`);
 
-export const childEnv = (parent: Record<string, string | undefined>): Record<string, string> => filterEnv(parent, PASS);
+// Variables a host app (the Claude desktop app, an SDK session) sets for its own session. Passed on, they make the child
+// report "Authentication required" even when the user's own login works, so the child gets the user's login instead.
+const HOST_SESSION = /^(CLAUDECODE|CLAUDE_CODE_(ENTRYPOINT|EXECPATH|CHILD_SESSION|HOST_SESSION_ID|SESSION_ID|SESSION_ATTENDED|MESSAGING_.*|SDK_.*|DESKTOP_.*|ACCOUNT_UUID|ORGANIZATION_UUID|USER_EMAIL|OAUTH_SCOPES)|CLAUDE_AGENT_SDK_.*)$/;
+
+export const childEnv = (parent: Record<string, string | undefined>): Record<string, string> => {
+  const env = filterEnv(parent, PASS);
+  for (const k of Object.keys(env)) if (HOST_SESSION.test(k)) delete env[k];
+  return env;
+};
 
 const TOOLS = new Set(["Read", "Grep", "Glob", "Bash"]);
 

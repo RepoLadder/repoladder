@@ -91,3 +91,8 @@ test("explainFailure messages carry no stack traces or staged paths and cap stde
     assert.ok(!/\/tmp\/|\bat \w+ \(/.test(explainFailure(f).message));
   }
 });
+
+test("childEnv drops the variables a host app sets for its own session", () => {
+  const env = childEnv({ PATH: "/bin", CLAUDECODE: "1", CLAUDE_CODE_ENTRYPOINT: "claude-desktop", CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH: "1", CLAUDE_AGENT_SDK_VERSION: "1", CLAUDE_CODE_MESSAGING_TOKEN: "t", CLAUDE_CODE_USE_BEDROCK: "1", CLAUDE_CONFIG_DIR: "/c" });
+  assert.deepEqual(Object.keys(env).sort(), ["CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CONFIG_DIR", "PATH", "REPOLADDER_NO_USAGE", "REPOLADDER_READONLY"]);
+});

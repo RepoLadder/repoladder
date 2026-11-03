@@ -31,7 +31,7 @@ else if (mode === "grandchild") {
   setInterval(() => {}, 1000);
 } else if (mode === "manytools") {
   if (process.env.FAKE_CODEX_KID) log({ childPid: spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }).pid });
-  for (let i = 0; i < 40; i++) cmd();
+  for (let i = 0; i < 80; i++) cmd();
   setInterval(() => {}, 1000);
 } else if (mode === "cites") {
   msg(process.env.FAKE_CODEX_TEXT || "It lives in src/lib/cart.ts:1 but not in src/invented/ghost.ts.");
