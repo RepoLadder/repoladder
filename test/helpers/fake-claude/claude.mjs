@@ -25,7 +25,7 @@ if (mode === "grandchild") {
 else if (mode === "manytools") {
   if (process.env.FAKE_CLAUDE_KID) log({ childPid: spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" }).pid });
   emit({ type: "system", subtype: "init" });
-  for (let i = 0; i < 40; i++) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } });
+  for (let i = 0; i < 80; i++) emit({ type: "assistant", message: { content: [{ type: "tool_use", name: "Read", input: {} }] } });
   setInterval(() => {}, 1000);
 } else if (mode === "stream") {
   // for screenshots: deltas with pauses, so loading and streaming can be captured

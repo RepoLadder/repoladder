@@ -127,7 +127,7 @@ test("a slow turn times out and its child is gone", { skip }, async (t) => {
   assert.ok(await until(() => !alive(seen.pid)), "child still running");
 });
 
-test("more than 25 tool calls stops the turn", { skip }, async (t) => {
+test("more than 60 tool calls stops the turn", { skip }, async (t) => {
   const e = await boot(t);
   e.extra.FAKE_CLAUDE_MODE = "manytools";
   const last = events(await ask(e.s, "hi")).at(-1);

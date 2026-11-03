@@ -28,7 +28,7 @@ export type Ask = { routes: Record<string, Handler>; close(): void };
 const MAX_BODY = 16 * 1024;
 const MAX_QUESTION = 2000;
 const POSIX = process.platform !== "win32";
-const MAX_TOOLS = 25;
+const MAX_TOOLS = 60;
 const MAX_CONVERSATIONS = 20;
 const DEFAULT_TIMEOUT_MS = 120_000;
 const STATUS_TTL_MS = 10_000;
