@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.7.0
+
+### Minor Changes
+
+- db19b46: Ask can now run through Codex as well as Claude Code (`repoladder serve --agent codex`), with the same loopback and token checks and verified citations; the docs say what each agent enforces.
+- 3deaa1d: Add an `overlay` option to `buildFromFiles` that marks given boxes and connections on the page: changed boxes are highlighted, added connections are drawn heavier in the accent color, removed ones dashed, and new boxes are badged. Builds without the option are unchanged.
+
+### Patch Changes
+
+- b0a01c3: The Ask panel now closes when you click outside it or press Escape, and the Ask box suggests asking for a tour.
+- e75411f: Tidy the diagram's inspector panel: flatter, quieter and without the Tours and Key lists (they stay in the top bar); the Made with and Feedback links move to the window's corner.
+- 2b66b73: The inspector toggle now lives in the top bar next to Export.
+- a0c67b1: The package readme now says AI grouping has been tested in Claude Code only, and links to a table of which agents have been tried.
+
 ## 0.6.0
 
 ### Minor Changes
