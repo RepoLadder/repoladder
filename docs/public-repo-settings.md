@@ -98,6 +98,7 @@ branch (`ruleset-exists`). Rules:
   - `plugin install (ubuntu-latest)`
   - `PR does not touch plugin/dist`
   - `PR carries a changeset or version bump`
+  - `ci gate` (aggregates the jobs above; see below)
 - Block force pushes (`ruleset-no-force-push`) and deletion (`ruleset-no-delete`).
 - Bypass list (`ruleset-bot-only-bypass`): the GitHub Actions integration only, no admins, teams or users.
 
@@ -105,16 +106,28 @@ branch (`ruleset-exists`). Rules:
 id. A required name that matches nothing stays "Expected" forever and blocks every merge, so a list written
 with job ids (`check`, `install (...)`, `no-dist`) never works. `changes` must be required: every other heavy
 job needs it, a job whose dependency failed is skipped, and a skipped required check counts as passing, so
-without it a failed `changes` job would let a PR merge green. Jobs skipped by their `if` (drafts, docs-only
-pull requests) also count as passing, so docs-only PRs are not blocked. Left out on purpose: the gallery
+without it a failed `changes` job would let a PR merge green. A job skipped by its `if` never reports a check
+name, so a docs-only PR (which skips the heavy jobs and the `plugin install (ubuntu-latest)` matrix) stays
+blocked on the three heavy names. `ci gate` is the fix: it always reports on non-draft PRs, fails when `changes`
+did not succeed or any job failed or was cancelled, requires `unit`, `typecheck-build` and `install` to succeed
+on a code run, and accepts them skipped on a docs-only run. `.github/workflows` changes also run `actionlint`,
+which reports through the gate. Left out on purpose: the gallery
 default-grouping gate, because it clones a private repository and cannot pass in a public one, and the
 Windows install leg, because it only runs when the changed files ask for it and a name that sometimes never
 reports would deadlock merges. A test compares this list with the job names in `ci.yml`, so a renamed job
 fails `npm test` instead.
 
-**Version Packages PR.** `release.yml` dispatches `ci.yml` on `changeset-release/main`, so the PR's required
-checks are satisfied by that run (a check is matched by its name on the PR's head commit, whichever event ran
-it). `PR does not touch plugin/dist` and `PR carries a changeset or version bump` run only for pull requests
+**The `develop` ruleset.** Require `changes`, `leak guard` and `ci gate` on `develop`. The matrix name
+`plugin install (ubuntu-latest)` cannot be required there: a skipped matrix job never reports a name, so a
+docs-only PR would be blocked. The older `test, typecheck, build`, `plugin install (ubuntu-latest)` and
+`PR does not touch plugin/dist` stay listed in `scripts/public-repo-settings.json` until the owner has switched
+the rulesets to `ci gate`; a follow-up then removes them from the list and from this document. Add `ci gate` to a
+ruleset only after it has reported at least once on the base branch, since requiring a check that does not
+exist blocks every PR.
+
+**Version Packages PR.** `release.yml` opens the PR with the `RELEASE_PR_TOKEN` secret, so the PR's own
+`pull_request` CI runs and satisfies the required checks (see `test/versionpr-automerge.test.ts`).
+`PR does not touch plugin/dist` and `PR carries a changeset or version bump` run only for pull requests
 and report as skipped, which counts as passing. A ruleset with required checks is what makes `--auto` wait for
 CI; `release.yml` refuses to enable auto-merge when `main` requires none. A minor or patch PR then merges by
 itself and the workflow dispatches the publish; a major is merged by a person.

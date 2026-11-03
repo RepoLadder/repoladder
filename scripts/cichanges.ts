@@ -2,18 +2,18 @@
 //
 //   EVENT=pull_request BASE_REF=develop BASE_SHA=<sha> HEAD_SHA=<sha> node scripts/cichanges.ts
 //
-// Writes `code=`, `windows=` and `viewer=` to $GITHUB_OUTPUT (stdout when unset). Fails safe: any doubt
-// (not a PR, a PR into main, a git error, an empty or unparsable diff) means both are true, so every job runs.
+// Writes `code=`, `windows=`, `viewer=` and `workflows=` to $GITHUB_OUTPUT (stdout when unset). Fails safe: any doubt
+// (not a PR, a PR into main, a git error, an empty or unparsable diff) means all are true, so every job runs.
+// A docs-only PR skips the heavy jobs; the `ci gate` job in ci.yml always reports, so it is the check to require.
 import { execFileSync } from "node:child_process";
 import { appendFileSync } from "node:fs";
 import { pathToFileURL } from "node:url";
 
 export type Entry = { status: string; path: string };
-export type Decision = { code: boolean; windows: boolean };
+export type Decision = { code: boolean; windows: boolean; workflows: boolean };
 
 // Added or modified files here cannot affect any test, typecheck, build or install check.
-// Caveat: a PR touching only these skips the matrix jobs, whose required names ("plugin install (ubuntu-latest)") then never
-// report, so branch protection keeps it BLOCKED. Pair a docs-only change with a file outside this list, or merge it as admin.
+// A PR touching only these skips the heavy jobs; `ci gate` still reports, so the PR can merge.
 // Not server/ (tests import server/ping/worker.ts).
 const SKIP = [/^docs\//, /^CLAUDE\.md$/];
 
@@ -25,6 +25,9 @@ const WINDOWS = [
   /^\.github\/workflows\/ci\.yml$/,
 ];
 
+// Workflow files; the actionlint job runs for these.
+const WORKFLOWS = [/^\.github\/workflows\//];
+
 // Paths that can change the viewer's fit, wire routing or drill-in timing; the viewer guard job (guardbase + motioncheck) runs for these.
 const VIEWER = [
   /^src\/(viewer|build)\//, /^scripts\/(guardbase|guardcompare|motioncheck|cichanges)\.ts$/,
@@ -35,11 +38,15 @@ export function touchesViewer(entries: Entry[]): boolean {
   return entries.some((e) => VIEWER.some((r) => r.test(e.path)));
 }
 
+export function touchesWorkflows(entries: Entry[]): boolean {
+  return entries.some((e) => WORKFLOWS.some((r) => r.test(e.path)));
+}
+
 export function classify(entries: Entry[]): Decision {
-  if (entries.length === 0) return { code: true, windows: true };
+  if (entries.length === 0) return { code: true, windows: true, workflows: true };
   const code = !entries.every((e) => (e.status === "A" || e.status === "M") && SKIP.some((r) => r.test(e.path)));
   const windows = entries.some((e) => WINDOWS.some((r) => r.test(e.path)));
-  return { code, windows };
+  return { code, windows, workflows: touchesWorkflows(entries) };
 }
 
 // `git diff --name-status --no-renames` lines: "<status>\t<path>". Returns null when any line is unparsable.
@@ -61,7 +68,7 @@ export function runsEverything(event: string | undefined, baseRef: string | unde
 }
 
 export function decide(env: Record<string, string | undefined>, git: (range: string) => string): Decision & { files: number } {
-  const all = { code: true, windows: true, files: 0 };
+  const all = { code: true, windows: true, workflows: true, files: 0 };
   if (runsEverything(env.EVENT, env.BASE_REF) || !env.BASE_SHA || !env.HEAD_SHA) return all;
   try {
     const entries = parseNameStatus(git(`${env.BASE_SHA}...${env.HEAD_SHA}`));
@@ -86,8 +93,8 @@ export function decideViewer(env: Record<string, string | undefined>, git: (rang
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const git = (range: string) => execFileSync("git", ["diff", "--name-status", "--no-renames", range], { encoding: "utf8" });
   const d = decide(process.env, git), viewer = decideViewer(process.env, git);
-  const lines = `code=${d.code}\nwindows=${d.windows}\nviewer=${viewer}\n`;
+  const lines = `code=${d.code}\nwindows=${d.windows}\nviewer=${viewer}\nworkflows=${d.workflows}\n`;
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, lines);
   else process.stdout.write(lines);
-  console.log(`::notice title=CI scope::code=${d.code} windows=${d.windows} viewer=${viewer} (${d.files} files)`);
+  console.log(`::notice title=CI scope::code=${d.code} windows=${d.windows} viewer=${viewer} workflows=${d.workflows} (${d.files} files)`);
 }
